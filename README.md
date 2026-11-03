@@ -1,16 +1,31 @@
-# Mesai — ARGE çalışma süresi
+# Mesai
 
-Kurulum sayfası: bu klasörün GitHub Pages adresi (index.html).
+ARGE Portal için çalışma saati hesabı.
 
-## Yayınlama (bir kez)
-1. GitHub’da **public** bir repo aç, ör. `mesai`.
-2. Bu klasördeki her şeyi (`.nojekyll` dahil) reponun köküne yükle (Add file → Upload files).
-3. Settings → Pages → Branch: `main` / `(root)` → Save.
-4. 1–2 dakika sonra adres: `https://<kullanıcı-adın>.github.io/mesai/` — bu linki ekibe gönder.
+Kurulum ve çalışan örnek: https://berkant-jotform.github.io/mesai/
+
+Sayfadaki **Mesai** düğmesini yer işaretleri çubuğuna sürükle. Portalda PDKS kartını açıp bu yer işaretine tıkla.
+
+## 3.0.1
+
+- Ana yer işareti kodun tamamını içerir. Portal içinde GitHub’dan betik yüklemesi gerekmez.
+- Eski “Mesai yüklenemedi” hatasını alanlar yer işaretini kurulum sayfasından yeniden eklemeli.
+- Kurulum sayfasında beş görünüm de çalışır; açık/koyu ve TR/EN seçimleri önizlemeyi de değiştirir.
+- Önizleme örnek kayıtlar ve bellekte tutulan ayarlar kullanır. Gerçek portal verileriyle bağlantısı yoktur.
 
 ## Güncelleme
-Yeni sürümde yalnızca `mesai.js` (ve `version.json`) dosyasını değiştir. Otomatik yer işaretini kullanan herkes bir sonraki tıklamada yeni sürümü alır. GitHub Pages önbelleği birkaç dakika sürebilir.
 
-## Notlar
-- Yalnızca açık sayfadaki tabloları okur, hiçbir yere veri göndermez. Veriler tarayıcının yerel deposunda kalır.
-- Portal dış betikleri engellerse “çevrimdışı” yer işaretini kullanın.
+1. `mesai.js` ve `version.json` dosyalarını güncelle.
+2. `python3 build.py` çalıştır. Böylece `index.html` içindeki yer işareti de yenilenir.
+3. Değişen dosyaları `main` dalına gönder. Pages kaynağı `main / root`.
+
+Kullanıcılar yeni sürüm için düğmeyi yeniden sürüklemeli. Önceden kullanılan uzaktan yükleyici bu sürümde ana kurulum yöntemi değildir.
+
+## Dosyalar
+
+- `page.template.html`, `page.css`, `page.js`: kurulum sayfası.
+- `preview.html`, `preview.js`: aynı uygulamayla çalışan, örnek verili önizleme.
+- `demo.html`: dönem/personel yüklemelerini ve birden fazla kartı taklit eden mevcut test ekranı.
+- `.nojekyll`: Pages’in dosyaları doğrudan sunması için.
+
+Mesai portal tablolarını okur; planları ve ayarları portalın tarayıcı deposunda tutar. Hesapların resmi kaynağı ARGE Portal’dır.
