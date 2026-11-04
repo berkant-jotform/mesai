@@ -284,3 +284,7 @@
 .H.L-clock .clock-forecast .bar{height:16px}
 
 .H.L-clock.T-wide:not(.narrow) .clock-settings,.H.L-clock.T-wide:not(.narrow) .clock-question{left:calc(50% - 6.5px)}
+/* Wide timeline rules must win over the earlier pill-shaped geometry. */
+.H.L-knight.T-wide.illuminated .sg,.H.L-knight.T-wide.illuminated .sp2,.H.L-knight.T-wide.illuminated .gh,.H.L-knight.T-wide.illuminated .cr,.H.L-knight.T-wide.illuminated .oz{border-radius:1px}
+.H.L-knight.T-wide.illuminated .sg,.H.L-knight.T-wide.illuminated .sp2{border:2px ridge color-mix(in srgb,var(--frame) 65%,var(--acc));box-shadow:inset 0 0 0 1px #ffffff28}
+.H.L-knight.T-wide.illuminated .sp2~.sg{border:0;box-shadow:none}
