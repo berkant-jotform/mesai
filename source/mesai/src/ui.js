@@ -872,7 +872,7 @@
     W.dataset.dark=String(isDark());
     var grip=root.querySelector('.rz-br');grip.title=S.ui.lang==='en'?'Resize: drag or use arrow keys; double-click to reset':'Boyut: sürükle veya ok tuşlarını kullan; sıfırlamak için çift tıkla';grip.setAttribute('aria-label',grip.title);
     W.style.setProperty('--ms',String(widthFor()/1350));
-    if(lay==='knight'){W.style.setProperty('--bar-art','url('+MesaiArt.bar+')');W.style.setProperty('--control-frame','url('+MesaiArt[isDark()?'controlDark':'controlLight']+')');}
+    if(lay==='knight'||lay==='clock'){W.style.setProperty('--bar-art','url('+MesaiArt.bar+')');W.style.setProperty('--control-frame','url('+MesaiArt[isDark()?'controlDark':'controlLight']+')');}
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
     if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
     st.lastTier = tier;

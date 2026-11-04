@@ -174,3 +174,13 @@
 /* Portal totals count the entire first-entry/last-exit span; avoid false break seams. */
 .H.L-knight.illuminated .sp2~.sg{background:none;border:0;box-shadow:none}
 .H.L-knight.illuminated .manuscript-question .sugs{max-height:none;overflow:visible}
+
+/* Shared manuscript finishing; the clock retains its circular architecture. */
+.H.L-clock .clock-forecast .bar{height:8px;border:1px solid var(--frame);border-radius:4px;overflow:hidden;background:var(--sunk)}
+.H.L-clock .clock-forecast .bar>i{background-image:var(--bar-art)!important;background-size:100% 100%;border-radius:2px}
+.H.L-clock .ed .fi,.H.L-clock .ed .oo{border:solid transparent;border-width:3px 7px;border-image:var(--control-frame) 10 28 stretch;background:none;border-radius:0;box-sizing:border-box}
+.H.L-clock .ed .fi{width:80px;padding:0 3px}
+.H.L-clock .ed .fi.sm{width:80px}
+.H.L-clock .ed .oo{height:36px}
+.H.L-clock .ed .oo button{height:28px}
+.H.L-clock .ed .fi:focus-visible{outline:1px solid var(--accInk);outline-offset:2px}
