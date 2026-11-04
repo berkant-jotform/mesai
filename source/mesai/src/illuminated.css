@@ -184,3 +184,16 @@
 .H.L-clock .ed .oo{height:36px}
 .H.L-clock .ed .oo button{height:28px}
 .H.L-clock .ed .fi:focus-visible{outline:1px solid var(--accInk);outline-offset:2px}
+
+/* Bundled canvas artwork is independent of host image/font URL policies. */
+.H.L-knight.illuminated .surface-stack{background:var(--card)}
+.H .progress-paint{position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;pointer-events:none}
+.H .control-shell{display:inline-flex;position:relative;vertical-align:middle;flex:none}
+.H .control-paint{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.H .ed .oo{position:relative}
+.H .ed .oo button,.H .ed .oo b{position:relative;z-index:1}
+.H .control-painted>.fi,.H .ed .oo.control-painted{border-color:transparent!important}
+.H.L-knight.illuminated .ed .fi,.H.L-knight.illuminated .ed .oo,.H.L-clock .ed .fi,.H.L-clock .ed .oo{border-image:none;border-color:var(--frame)}
+.H .clock-forecast .bar>i{position:relative}
+.H canvas.celestial-art{display:block}
+.H.L-clock .clock-forecast .bar>i{display:block;height:100%}

@@ -16,7 +16,7 @@
   } catch (_) {}
   const installed=new URLSearchParams(location.search).get('from');
   function paint() {
-    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.2.2'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
+    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.2.3'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
     document.documentElement.lang = state.lang;
     document.documentElement.dataset.look = state.look;
     document.documentElement.dataset.theme = state.theme;
@@ -55,7 +55,7 @@
     resetting = true;
     state.size = 'full'; paint();
     document.querySelectorAll('[data-question]').forEach(button => { button.disabled = true; });
-    frame.src = 'preview.html?v=322&reset=' + Date.now();
+    frame.src = 'preview.html?v=323&reset=' + Date.now();
   });
   document.querySelectorAll('[data-question]').forEach(button => {
     button.addEventListener('click', () => {

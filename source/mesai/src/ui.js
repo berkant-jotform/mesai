@@ -1,8 +1,8 @@
 // Mesai widget: one instance per tab; a second bookmark click reopens/refreshes it.
 (function () {
-  if (window.__mesai) { if (window.__mesai.version === '3.2.2') { window.__mesai.poke(); return; } window.__mesai.close(); }
+  if (window.__mesai) { if (window.__mesai.version === '3.2.3') { window.__mesai.poke(); return; } window.__mesai.close(); }
   var C = MesaiCore, A = MesaiAdapter(C, document), Q = MesaiAsk, SC = MesaiScen, HOL = MesaiHolidays, TH = MesaiThemes, TX = MesaiText;
-  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.2';
+  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.3';
   var KEY = 'mesai.v3';
 
   // ---------------- persistence (local to this browser and portal) ----------------
@@ -830,7 +830,50 @@
     PILL.innerHTML = '<span class="dot' + (v && v.today && v.today.inside ? ' on' : '') + '"></span>' + a + (v ? '<small>%' + Math.floor(Math.min(1, v.done / v.W) * 100) + ' · ' + esc(v.thisWeek ? forecastText(v).big : '') + '</small>' : '');
   }
 
-  function art(name, cls) { return '<img class="' + cls + '" src="' + MesaiArt[name] + '" alt="" aria-hidden="true" draggable="false">'; }
+  // Decode bundled bytes directly: no image/font URL requests on the host page.
+  var artCache = {}, artPending = {};
+  function embeddedBytes(data) {
+    var raw = atob(data.slice(data.indexOf(',') + 1)), bytes = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    return bytes;
+  }
+  function art(name, cls) { return '<canvas class="' + cls + '" data-art="' + name + '" aria-hidden="true"></canvas>'; }
+  function bitmap(name) {
+    if (artCache[name]) return Promise.resolve(artCache[name]);
+    if (!artPending[name]) artPending[name] = createImageBitmap(new Blob([embeddedBytes(MesaiArt[name])], {type:'image/webp'})).then(function(b) { if(closed){b.close();return null;} artCache[name]=b;return b; });
+    return artPending[name];
+  }
+  function paintArt() {
+    if (!window.createImageBitmap) return;
+    MAIN.querySelectorAll('canvas[data-art]').forEach(function(canvas) {
+      bitmap(canvas.dataset.art).then(function(b) {
+        if (!b || !canvas.isConnected) return;
+        canvas.width=b.width;canvas.height=b.height;
+        canvas.getContext('2d').drawImage(b,0,0);canvas.dataset.painted='true';
+      }).catch(function() { /* Opaque surfaces and ordinary control borders remain usable. */ });
+    });
+    if (S.ui.theme !== 'knight' && S.ui.theme !== 'clock') return;
+    MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i').forEach(function(el) {
+      if(el.classList.contains('sg') && el.parentElement.querySelector('.sp2'))return;
+      el.insertAdjacentHTML('afterbegin',art('bar','progress-paint'));
+    });
+    MAIN.querySelectorAll('.ed .fi,.ed .oo').forEach(function(el) {
+      var shell=el;
+      if(el.classList.contains('fi')){shell=document.createElement('span');shell.className='control-shell';el.parentNode.insertBefore(shell,el);shell.appendChild(el);}
+      shell.insertAdjacentHTML('beforeend',art(isDark()?'controlDark':'controlLight','control-paint'));
+    });
+    MAIN.querySelectorAll('canvas.progress-paint,canvas.control-paint').forEach(function(canvas) {
+      bitmap(canvas.dataset.art).then(function(b) {
+        if(!b || !canvas.isConnected)return;
+        if(canvas.classList.contains('progress-paint')){canvas.width=b.width;canvas.height=b.height;canvas.getContext('2d').drawImage(b,0,0);canvas.dataset.painted='true';return;}
+        var rc=canvas.parentElement.getBoundingClientRect();if(rc.width<15||rc.height<7)return;var dpr=Math.min(window.devicePixelRatio||1,2), w=rc.width,h=rc.height;
+        canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);var ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+        var sx=[0,28,b.width-28,b.width],sy=[0,10,b.height-10,b.height],dx=[0,7,w-7,w],dy=[0,3,h-3,h];
+        for(var y=0;y<3;y++)for(var x=0;x<3;x++)ctx.drawImage(b,sx[x],sy[y],sx[x+1]-sx[x],sy[y+1]-sy[y],dx[x],dy[y],dx[x+1]-dx[x],dy[y+1]-dy[y]);
+        canvas.dataset.painted='true';canvas.parentElement.classList.add('control-painted');
+      }).catch(function(){});
+    });
+  }
   function heritage(v, pv, lay) {
     if (lay === 'knight') return '<div class="herald-body"><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + '</div>' + editor(v);
     var t=L(), td=v.today, daily=v.thisWeek&&td&&td.office&&v.milestone, f=forecastText(v), pct=v.W?Math.min(100,Math.floor(v.done/v.W*100)):100;
@@ -872,7 +915,6 @@
     W.dataset.dark=String(isDark());
     var grip=root.querySelector('.rz-br');grip.title=S.ui.lang==='en'?'Resize: drag or use arrow keys; double-click to reset':'Boyut: sürükle veya ok tuşlarını kullan; sıfırlamak için çift tıkla';grip.setAttribute('aria-label',grip.title);
     W.style.setProperty('--ms',String(widthFor()/1350));
-    if(lay==='knight'||lay==='clock'){W.style.setProperty('--bar-art','url('+MesaiArt.bar+')');W.style.setProperty('--control-frame','url('+MesaiArt[isDark()?'controlDark':'controlLight']+')');}
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
     if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
     st.lastTier = tier;
@@ -918,6 +960,7 @@
     if (!st.placed) place0();
     else if(!st.rs&&!st.move){var bounds=W.getBoundingClientRect();setPos(bounds.left,bounds.top);}
     keepInView();
+    paintArt();
   }
 
   // ---------------- placement ----------------
@@ -1140,10 +1183,10 @@
   var api = window.__mesai = {
     version: VERSION,
     poke: function () { S.ui.col = false; save(); st.fp = ''; st.placed = !!S.ui.pos; tick(true); flash(); },
-    close: function () { closed=true;clearTimeout(updateTimer);if(updateController)updateController.abort(); clearInterval(timer); obs.disconnect(); window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('resize', onResize); if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq); host.remove(); delete window.__mesai; },
+    close: function () { closed=true;Object.keys(artCache).forEach(function(k){artCache[k].close();});clearTimeout(updateTimer);if(updateController)updateController.abort(); clearInterval(timer); obs.disconnect(); window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('resize', onResize); if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq); host.remove(); delete window.__mesai; },
     state: function () { return { st: st, S: S }; }
   };
   tick(true);
-  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,'url('+MesaiFonts[name]+')',name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
+  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,embeddedBytes(MesaiFonts[name]),name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
   checkVersion();
 })();
