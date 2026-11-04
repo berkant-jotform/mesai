@@ -23,15 +23,16 @@
     if (!root || !window.__mesai || window.__mesai.state().st.code !== 'ready') return;
     clearInterval(boot);
     const style = document.createElement('style');
-    style.textContent = ':host{display:block!important}:host([data-demo-look="dark"]){color-scheme:dark}:host([data-demo-look="light"]){color-scheme:light}.hd [data-a="close"],.hd [data-a="min"]{display:none!important}.rz-br{opacity:.65!important}';
+    style.textContent = ':host{display:block!important}:host([data-demo-look="dark"]){color-scheme:dark}:host([data-demo-look="light"]){color-scheme:light}.rz-br{opacity:.65!important}';
     root.appendChild(style);
     new ResizeObserver(() => report()).observe(root.querySelector('.w'));
-    root.addEventListener('click', () => setTimeout(() => report(),0));
+    root.addEventListener('click', () => setTimeout(() => {if(!window.__mesai){parent.postMessage({type:'mesai-preview-closed'},location.origin);return;}report();},0));
     root.addEventListener('dblclick', () => setTimeout(() => report(),0));
     report(true);
   },50);
   window.addEventListener('message', event => {
     if (event.source !== parent || event.origin !== location.origin || event.data?.type !== 'mesai-preview' || !root) return;
+    if(!window.__mesai){parent.postMessage({type:'mesai-preview-closed'},location.origin);return;}
     const ui = window.__mesai.state().S.ui;
     for (const key of Object.keys(allowed)) {
       const value = event.data[key];

@@ -3,7 +3,7 @@
   const frame = document.querySelector('#preview');
   const bookmark = document.querySelector('#bookmark');
   const themes = ['cizelge', 'knight', 'sutunlar', 'sor', 'bilet', 'clock'];
-  let resetting = false;
+  let resetting = false, previewClosed = false;
   const state = {lang:'tr', look:'light', theme:'cizelge', size:'full'};
   const questions = {
     tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
@@ -24,7 +24,7 @@
   document.querySelectorAll('[data-install]').forEach(b=>b.addEventListener('click',()=>{installMode=b.dataset.install;installPaint();}));
   installPaint();
   function paint() {
-    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.2.3'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
+    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.2.4'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
     document.documentElement.lang = state.lang;
     document.documentElement.dataset.look = state.look;
     document.documentElement.dataset.theme = state.theme;
@@ -41,11 +41,14 @@
     button.addEventListener('click', () => {
       for (const key of ['lang','look','theme','size']) if (button.dataset[key]) state[key] = button.dataset[key];
       if (button.dataset.theme) state.size = 'full';
+      if(previewClosed){resetExample(true);return;}
       paint(); send();
     });
   });
   window.addEventListener('message', event => {
-    if (event.source !== frame.contentWindow || event.origin !== location.origin || event.data?.type !== 'mesai-preview-state') return;
+    if (event.source !== frame.contentWindow || event.origin !== location.origin) return;
+    if(event.data?.type==='mesai-preview-closed'){previewClosed=true;document.querySelectorAll('[data-question]').forEach(b=>b.disabled=true);document.querySelector('.frame-wrap').hidden=true;document.querySelector('#preview-empty').hidden=false;return;}
+    if(event.data?.type!=='mesai-preview-state')return;
     const data = event.data;
     if (resetting && !data.ready) return;
     if (data.ready) {
@@ -59,12 +62,14 @@
     if (['full','compact','pocket'].includes(data.size)) state.size = data.size;
     paint();
   });
-  document.querySelector('#reset').addEventListener('click', () => {
-    resetting = true;
-    state.size = 'full'; paint();
-    document.querySelectorAll('[data-question]').forEach(button => { button.disabled = true; });
-    frame.src = 'preview.html?v=323&reset=' + Date.now();
-  });
+  function resetExample(keepSize=false){
+    resetting=true;previewClosed=false;document.querySelector('.frame-wrap').hidden=false;document.querySelector('#preview-empty').hidden=true;
+    if(!keepSize)state.size='full';paint();
+    document.querySelectorAll('[data-question]').forEach(button=>{button.disabled=true;});
+    frame.src='preview.html?v=324ux1&reset='+Date.now();
+  }
+  document.querySelector('#reset').addEventListener('click',()=>resetExample());
+  document.querySelector('#reopen').addEventListener('click',()=>resetExample());
   document.querySelectorAll('[data-question]').forEach(button => {
     button.addEventListener('click', () => {
       state.size = 'full'; paint();
@@ -75,6 +80,7 @@
   window.addEventListener('keydown', event => {
     if (!event.altKey || !['KeyK','KeyM'].includes(event.code)) return;
     event.preventDefault();
+    if(previewClosed){resetExample();return;}
     if (event.code === 'KeyK') {
       state.size = state.size === 'full' ? 'compact' : 'full';
       paint(); send();

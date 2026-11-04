@@ -25,3 +25,4 @@ html[data-look=dark]{color-scheme:dark;--bg:#181b19;--surface:#222623;--ink:#e7e
 .toolbar #motion-toggle{font-size:11px;border:1px solid var(--line);padding:4px 8px;border-radius:4px}.toolbar #motion-toggle[aria-pressed=true]{color:var(--muted);background:none}
 @media(max-width:900px){.install{gap:28px}.setup-card{padding:18px}.theme-controls{gap:7px}.toolbar{gap:9px}}
 @media(max-width:760px){.install{grid-template-columns:1fr;gap:26px;align-items:start}.setup-card{width:100%}.intro{max-width:500px}.theme-controls{align-items:flex-start}.control-label{width:100%}.setup-tabs{margin-bottom:14px}.toolbar #motion-toggle{display:none}}
+.preview-empty{padding:42px 20px;min-height:220px;text-align:center;display:grid;place-content:center;justify-items:center;gap:12px;color:var(--muted)}.preview-empty p{margin:0}.preview-empty button{color:var(--ink);border-color:var(--muted)}

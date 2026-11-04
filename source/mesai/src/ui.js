@@ -1,8 +1,8 @@
 // Mesai widget: one instance per tab; a second bookmark click reopens/refreshes it.
 (function () {
-  if (window.__mesai) { if (window.__mesai.version === '3.2.3') { window.__mesai.poke(); return; } window.__mesai.close(); }
+  if (window.__mesai) { if (window.__mesai.version === '3.2.4') { window.__mesai.poke(); return; } window.__mesai.close(); }
   var C = MesaiCore, A = MesaiAdapter(C, document), Q = MesaiAsk, SC = MesaiScen, HOL = MesaiHolidays, TH = MesaiThemes, TX = MesaiText;
-  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.3';
+  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.4';
   var KEY = 'mesai.v3';
 
   // ---------------- persistence (local to this browser and portal) ----------------
@@ -14,6 +14,7 @@
   })();
   S.cfg = Object.assign({ W: 45, D: 9, start: '09:00', coreS: '10:00', coreE: '16:00', cap: 0, days: [0, 1, 2, 3, 4], hol: true }, S.cfg || {});
   S.ui = Object.assign({ lang: 'tr', theme: 'cizelge', look: 'auto', col: false, bell: false, planOpen: true, cmp: false, w: null, h: null }, S.ui || {});
+  if(S.ui.col&&(S.ui.theme==='knight'||S.ui.theme==='clock')){S.ui.col=false;S.ui.cmp=false;S.ui.w=220;S.ui.h=null;}
   if (!S.ui.lang) S.ui.lang = 'tr';
   if (S.ui.theme === 'sutunsor') { S.ui.theme = 'sutunlar'; S.ui.ask = true; }   // "Sütunlar + Sor" is now Sütunlar with the question panel on
   S.ppl = S.ppl || {};
@@ -438,13 +439,13 @@
       '<span class="sp"></span>' +
       (v && lay !== 'sor' ? '<button class="askb' + (S.ui.ask ? ' on' : '') + '" data-a="askOpen" title="' + t.ask + ' (Alt+M)">' + ic('search', 14) + '<span>' + t.ask + '</span></button>' : '') +
       (v ? '<button class="ib' + (st.view === 'history' ? ' on' : '') + '" data-a="hist" title="' + t.history + '" aria-label="' + t.history + '">' + ic('hist', 15) + '</button>' : '') +
-      '<span class="sws">' + sw + '</span>' +
+      (illustrated ? '<button class="theme-entry" data-a="themes" aria-expanded="'+!!st.themes+'">'+(S.ui.lang==='en'?'Themes':'Tema')+'</button>' : '<span class="sws">' + sw + '</span>') +
       '<span class="seg"><button data-a="lang" data-v="tr" class="' + (S.ui.lang !== 'en' ? 'on' : '') + '">TR</button><button data-a="lang" data-v="en" class="' + (S.ui.lang === 'en' ? 'on' : '') + '">EN</button></span>' +
       '<button class="ib' + (illustrated ? ' celestial' : '') + '" data-a="dark" aria-label="' + (dark ? t.light : t.dark) + '" title="' + (dark ? t.light : t.dark) + '">' + (illustrated ? art('toggle','toggle-art') : ic(dark ? 'sun' : 'moon', 16)) + '</button>' +
       '<button class="ib' + (st.set ? ' on' : '') + '" data-a="set" aria-label="' + t.settings + '" title="' + t.settings + '">' + ic('set', 16) + '</button>' +
       '<button class="ib" data-a="cmp" aria-label="' + t.compact + '" title="' + t.compact + ' (Alt+K)">' + ic('cmp', 15) + '</button>' +
       '<button class="ib" data-a="min" aria-label="' + t.min + '" title="' + t.min + '">' + ic('min', 16) + '</button>' +
-      '<button class="ib" data-a="close" aria-label="' + t.close + '" title="' + t.close + '">' + ic('x', 15) + '</button></div>';
+      '<button class="ib" data-a="close" aria-label="' + (S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat') + '" title="' + (S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat') + '">' + ic('x', 15) + '</button></div>';
   }
   // ---------------- small sizes ----------------
   function liveOf(v) { return v && v.today && v.today.inside && st.code === 'ready' && !st.off; }
@@ -455,6 +456,7 @@
     else lbl = L()[st.code] || t.loading;
     if (v && v.thisWeek) f = forecastText(v).big;
     var pct = v && v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 0;
+    if(S.ui.theme==='knight'||S.ui.theme==='clock') return '<div class="pk themed-pocket" data-drag><div class="pocket-heading"><a class="pocket-brand" href="'+UPDATE_URL+'?from='+VERSION+'" target="_blank" rel="noopener">Mesai <small>v'+VERSION+'</small></a><span class="sp"></span><button class="ib" data-a="cmpx" aria-label="'+t.expand+'" title="'+t.expand+'">'+ic('exp',15)+'</button><button class="ib" data-a="close" aria-label="'+(S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat')+'" title="'+(S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat')+'">'+ic('x',15)+'</button></div><div class="pocket-values"><span class="pkv"><small>'+esc(lbl)+'</small><b>'+esc(big)+'</b></span><span class="pkv f"><small>'+esc(t.pkW)+'</small><b>'+esc(f||'—')+'</b></span></div><div class="pocket-meter" role="progressbar" aria-label="'+t.week+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i class="pkbar" style="width:'+pct+'%"></i></div></div>';
     return '<div class="pk" data-drag title="' + esc(t.resizeHint) + '"><span class="dot' + (liveOf(v) ? ' on' : '') + '"></span>' +
       '<span class="pkv"><small>' + esc(lbl) + '</small><b>' + esc(big) + '</b></span>' +
       (f ? '<span class="pkv f"><small>' + esc(t.pkW) + '</small><b>' + esc(f) + '</b></span>' : '') +
@@ -464,9 +466,10 @@
   function compactView(v) {
     var t = L(), D = hrs((v ? v.cfg.D : 540) * MIN);
     var head = '<div class="hd hc" data-drag><span class="brand" aria-label="Mesai"><span class="dot' + (liveOf(v) ? ' on' : '') + '"></span>Mesai</span>' + (st.name ? '<span class="who" style="max-width:110px">' + esc(st.name.replace(/^\s*\d+\s*[-–:]\s*/, '')) + '</span>' : '') + '<span class="sp"></span>' +
+      ((S.ui.theme==='knight'||S.ui.theme==='clock')?'<button class="theme-entry" data-a="themes">'+(S.ui.lang==='en'?'Themes':'Tema')+'</button>':'') +
       '<button class="ib" data-a="cmpx" title="' + t.expand + ' (Alt+K)" aria-label="' + t.expand + '">' + ic('exp', 15) + '</button>' +
       '<button class="ib" data-a="min" aria-label="' + t.min + '" title="' + t.min + '">' + ic('min', 16) + '</button>' +
-      '<button class="ib" data-a="close" aria-label="' + t.close + '" title="' + t.close + '">' + ic('x', 15) + '</button></div>';
+      '<button class="ib" data-a="close" aria-label="' + (S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat') + '" title="' + (S.ui.lang==='en'?'Close Mesai':'Mesai’yi kapat') + '">' + ic('x', 15) + '</button></div>';
     if (!v) return head + '<div class="empty">' + (st.code === 'loading' ? '<span class="spin"></span> ' : '') + '<b>' + esc(L()[st.code] || t.loading) + '</b></div>';
     var body = '', td = v.today;
     if (st.ask) {
@@ -725,12 +728,24 @@
     }).join('');
     return '<div class="hist"><div class="lg"><b style="font-size:13px;color:var(--ink)">' + t.history + '</b><span class="sp"></span><button class="btn" data-a="thisweek">' + t.thisWeek + '</button></div>' + (rows || '<div class="empty">' + t.noData + '</div>') + '</div>';
   }
+  function panelHead(title,kind){return '<div class="panel-head"><b>'+esc(title)+'</b><button class="panel-close" data-a="dismiss" data-panel="'+kind+'" aria-label="'+esc(title+' · '+L().close)+'" title="'+L().close+'">'+ic('x',18)+'</button></div>';}
+  function themePanel(){return '<section class="theme-panel" aria-label="'+(S.ui.lang==='en'?'Themes':'Temalar')+'">'+panelHead(S.ui.lang==='en'?'Themes':'Temalar','themes')+'<div class="theme-choices">'+TH.ORDER.map(function(k){return '<button class="theme-choice'+(S.ui.theme===k?' on':'')+'" data-a="theme" data-v="'+k+'" aria-pressed="'+(S.ui.theme===k)+'"><span class="theme-sample" style="--sample:'+TH.T[k].swatch+'">'+(k==='knight'?art('fleuron','theme-mini'):k==='clock'?art('clock','theme-mini'):'<i></i><i></i><i></i>')+'</span><b>'+esc(L().themes[k])+'</b></button>';}).join('')+'</div></section>';}
+  function dismissPanel(kind){
+    var trigger=kind==='themes'?'themes':kind==='settings'?'set':kind==='history'?'hist':kind==='question'?'askOpen':'rev';
+    if(kind==='themes')st.themes=false;
+    if(kind==='settings')st.set=false;
+    if(kind==='history')st.view='week';
+    if(kind==='question'){S.ui.ask=false;st.ask=null;st.askText='';save();}
+    if(kind==='reverse')st.rev=null;
+    render(nowFn(),true);var btn=root.querySelector('.hd [data-a="'+trigger+'"],.strip [data-a="'+trigger+'"]');if(btn)btn.focus();
+  }
+  function closeActivePanel(){var kind=st.themes?'themes':st.set?'settings':st.rev?'reverse':S.ui.ask?'question':st.view==='history'?'history':null;if(kind){dismissPanel(kind);return true;}return false;}
   function settings() {
     var t = L(), c = S.cfg;
     var tcards = TH.ORDER.map(function (k) { var x = TH.T[k], tok = isDark() ? x.dark : x.light; return '<button class="tcard' + (S.ui.theme === k ? ' on' : '') + '" data-a="theme" data-v="' + k + '"><span style="background:' + tok.card + ';border:1px solid ' + tok.frame + ';box-shadow:inset 0 -8px 0 ' + x.swatch + '"></span>' + esc(t.themes[k]) + '</button>'; }).join('');
     var looks = [['auto', t.autoLook], ['light', t.light], ['dark', t.dark]].map(function (x) { return '<button data-a="look" data-v="' + x[0] + '" class="' + (S.ui.look === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('');
     var cores = [['10:00', '16:00'], ['10:00', '15:00'], ['09:00', '16:00']].map(function (x) { var on = c.coreS === x[0] && c.coreE === x[1]; return '<button class="wchip" data-a="core" data-s="' + x[0] + '" data-e="' + x[1] + '" style="' + (on ? 'background:var(--acc);color:var(--card)' : '') + '">' + (+x[0].slice(0, 2)) + '–' + (+x[1].slice(0, 2)) + '</button>'; }).join('');
-    return '<div class="set">' +
+    return '<div class="set">' + panelHead(t.settings,'settings') + '<div class="tcards">' + tcards + '</div>' +
       '<label class="fl">' + t.weekly + ' (' + t.h + ')<input data-c="W" type="number" min="1" max="100" step="0.5" value="' + c.W + '"></label>' +
       '<label class="fl">' + t.daily + ' (' + t.h + ')<input data-c="D" type="number" min="0.5" max="16" step="0.25" value="' + c.D + '"></label>' +
       '<label class="fl">' + t.defStart + '<input data-c="start" value="' + esc(c.start) + '" maxlength="5"></label>' +
@@ -739,7 +754,7 @@
       '<div class="fl" style="grid-column:span 2">&nbsp;<span style="display:flex;gap:6px">' + cores + '</span></div>' +
       '<div class="full"><span class="k">' + t.workdays + '</span><span class="days7">' + t.days.map(function (d, i) { return '<button data-a="wday" data-v="' + i + '" class="' + (c.days.indexOf(i) >= 0 ? 'on' : '') + '">' + d + '</button>'; }).join('') + '</span>' +
       '<span class="sp"></span><span class="k">' + t.look + '</span><span class="seg">' + looks + '</span></div>' +
-      '<div class="tcards">' + tcards + '</div>' + holSettings() +
+      holSettings() +
       '<div class="full"><button class="btn" data-a="backup">' + ic('dl', 14) + t.backup + '</button><button class="btn" data-a="restore">' + ic('ul', 14) + t.restore + '</button><span class="sp"></span><span class="k">' + t.version + ' ' + VERSION + (window.__MESAI_BASE ? ' · ↻' : '') + '</span></div></div>';
   }
   function holSettings() {
@@ -853,7 +868,7 @@
       }).catch(function() { /* Opaque surfaces and ordinary control borders remain usable. */ });
     });
     if (S.ui.theme !== 'knight' && S.ui.theme !== 'clock') return;
-    MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i').forEach(function(el) {
+    MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i,.pkbar,.cwk i:not(.pl):not(.cr)').forEach(function(el) {
       if(el.classList.contains('sg') && el.parentElement.querySelector('.sp2'))return;
       el.insertAdjacentHTML('afterbegin',art('bar','progress-paint'));
     });
@@ -904,7 +919,7 @@
   function render(now, force) {
     var p = P(), v = p ? compute(now) : null; st.v = v;
     var tier = tierOf(); st.narrow = widthFor() < 760;
-    var sig = JSON.stringify([st.code, st.fp, Math.floor(now / 30000), st.off, st.sel, st.view, st.set, S.ui.ask, st.ask && st.ask.q, st.rev && [st.rev.day, st.rev.t, st.rev.from, st.rev.day2, st.rev.t2], st.undo ? 1 : 0, st.toast, S.cfg, S.ui, p && [p.types, p.plan, p.ovr, p.ooo, p.pick], st.job, st.count, st.paged, isDark(), st.narrow, tier, st.imp ? st.imp.on : 0]);
+    var sig = JSON.stringify([st.code, st.fp, Math.floor(now / 30000), st.off, st.sel, st.view, st.set, st.themes, S.ui.ask, st.ask && st.ask.q, st.rev && [st.rev.day, st.rev.t, st.rev.from, st.rev.day2, st.rev.t2], st.undo ? 1 : 0, st.toast, S.cfg, S.ui, p && [p.types, p.plan, p.ovr, p.ooo, p.pick], st.job, st.count, st.paged, isDark(), st.narrow, tier, st.imp ? st.imp.on : 0]);
     if (sig === st.sig && !force) return;
     var act = root.activeElement, fkey = act && act.dataset && (act.dataset.e || act.dataset.c), fsel = act && act.selectionStart;
     if (fkey && !force && act.tagName === 'INPUT') return;   // never yank an input mid-edit
@@ -918,7 +933,7 @@
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
     if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
     st.lastTier = tier;
-    var html = small ? '' : header(v) + (st.set ? settings() : '') + notices(v);
+    var html = small ? '' : header(v) + (st.themes ? themePanel() : '') + (st.set ? settings() : '') + notices(v);
     if (tier === 'pocket') html += pocketView(v);
     else if (tier === 'compact') html += compactView(v);
     else if (!v) html += '<div class="empty">' + (st.code === 'loading' ? '<span class="spin"></span> ' : '') + '<b>' + esc(L()[st.code] || L().loading) + '</b>' + (st.code === 'nocard' ? '<span>ARGE Portal · PDKS</span>' : '') + '</div>';
@@ -934,6 +949,7 @@
       html += strip(v) + revPanel(v) + impPanel();
     }
     if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo">' + L().undo + '</button>' : '') + '</div>';
+    if(tier==='compact'&&st.themes)html+=themePanel();
     html += releaseLink();
     MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     if(lay==='knight'&&(tier==='wide'||tier==='std')){
@@ -951,10 +967,15 @@
       page.insertAdjacentHTML('afterbegin',art(tier==='wide'?(isDark()?'plateDark':'plateLight'):(isDark()?'compactDark':'compactLight'),'manuscript-plate'));
       if(tier==='std'){var namePart=page.querySelector('.brand-rest');if(namePart)namePart.textContent='Mesai';}
       var query=page.querySelector('.askr'), response=page.querySelector('.askp');
-      if(query&&response){var dialog=document.createElement('section');dialog.className='manuscript-question';dialog.setAttribute('aria-label',L().ask);page.appendChild(dialog);dialog.appendChild(query);dialog.appendChild(response);}
+      if(query&&response){var dialog=document.createElement('section');dialog.className='manuscript-question';dialog.setAttribute('aria-label',L().ask);page.appendChild(dialog);dialog.insertAdjacentHTML('afterbegin',panelHead(L().ask,'question'));dialog.appendChild(query);dialog.appendChild(response);}
       var settingsPanel=page.querySelector('.set');if(settingsPanel)settingsPanel.classList.add('manuscript-settings');
-      var historyPanel=page.querySelector('.hist');if(historyPanel)historyPanel.classList.add('manuscript-history');
+      var historyPanel=page.querySelector('.hist');if(historyPanel){historyPanel.classList.add('manuscript-history');historyPanel.insertAdjacentHTML('afterbegin',panelHead(L().history,'history'));}
     }
+    if(lay==='clock'&&tier==='wide'){
+      var composition=MAIN.querySelector('.clock-composition');
+      if(composition){var cp=MAIN.querySelector('.set');if(cp){cp.classList.add('clock-settings');composition.appendChild(cp);}var cq=MAIN.querySelector('.askr'),ca=MAIN.querySelector('.askp');if(cq&&ca){var cs=document.createElement('section');cs.className='clock-question';composition.appendChild(cs);cs.appendChild(cq);cs.appendChild(ca);}}
+    }
+    if(lay!=='knight'){var askBox=MAIN.querySelector('.askp');if(S.ui.ask&&askBox)askBox.insertAdjacentHTML('afterbegin',panelHead(L().ask,'question'));var histBox=MAIN.querySelector('.hist');if(histBox)histBox.insertAdjacentHTML('afterbegin',panelHead(L().history,'history'));}
     if (fkey) { var el = root.querySelector('[data-e="' + fkey + '"],[data-c="' + fkey + '"]'); if (el && !el.disabled) { el.focus(); try { if (fsel != null && el.setSelectionRange) el.setSelectionRange(fsel, fsel); } catch (e) { /* select */ } } }
     pill(v);
     if (!st.placed) place0();
@@ -1056,21 +1077,24 @@
     if (a === 'impT') { if (st.imp) st.imp.on[+v] = !st.imp.on[+v]; return; }
     if (a === 'impClear') { st.imp = null; render(now, true); return; }
     if (a === 'impApply') { var im = st.imp, cnt = 0; if (im) { mut(function (p) { im.items.forEach(function (it, i) { if (!im.on[i]) return; cnt++; if (it.kind === 'ooo') p.ooo[it.date] = { m: it.m, s: it.s }; else { p.types[it.date] = it.kind; delete p.plan[it.date]; } }); }); st.imp = null; toast(fill(t.icsApplied, { n: cnt })); render(now, true); } return; }
+    if (a === 'min' && (S.ui.theme==='knight'||S.ui.theme==='clock')) { st.themes=false;st.set=false;st.rev=null;st.view='week';S.ui.ask=false;S.ui.pre={w:S.ui.w,h:S.ui.h};S.ui.w=220;S.ui.h=null;S.ui.cmp=false;S.ui.col=false;save();render(now,true);return; }
     if (a === 'min') { S.ui.col = true; save(); render(now, true); var rc = W.getBoundingClientRect(); setPos(rc.left, rc.top); return; }
-    if (a === 'theme') { S.ui.theme = v; save(); render(now, true); return; }
+    if (a === 'theme') { st.themes=false;st.set=false;S.ui.ask=false;st.view='week';st.rev=null;S.ui.theme = v; save(); render(now, true); return; }
     if (a === 'lang') { S.ui.lang = v; save(); render(now, true); return; }
     if (a === 'dark') { S.ui.look = isDark() ? 'light' : 'dark'; save(); render(now, true); return; }
     if (a === 'look') { S.ui.look = v; save(); render(now, true); return; }
-    if (a === 'set') { st.set = !st.set; render(now, true); return; }
+    if (a === 'dismiss') {dismissPanel(b.dataset.panel);return;}
+    if (a === 'themes') {var open=!st.themes;st.set=false;st.view='week';S.ui.ask=false;st.rev=null;st.themes=open;render(now,true);if(open){var choice=root.querySelector('.theme-panel .theme-choice.on');if(choice)choice.focus();}return;}
+    if (a === 'set') {st.themes=false;S.ui.ask=false;st.view='week';st.rev=null;st.set = !st.set; render(now, true);if(st.set){var closer=root.querySelector('.set .panel-close');if(closer)closer.focus();}return; }
     if (a === 'prev') { st.off--; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
     if (a === 'next') { if (st.off < 0) st.off++; st.view = 'week'; st.sel = null; tick(true); return; }
     if (a === 'thisweek') { st.off = 0; st.view = 'week'; st.sel = null; tick(true); return; }
     if (a === 'goweek') { st.off = +v; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
-    if (a === 'hist') { st.view = st.view === 'history' ? 'week' : 'history'; render(now, true); return; }
+    if (a === 'hist') {st.themes=false;st.set=false;S.ui.ask=false;st.rev=null;st.view = st.view === 'history' ? 'week' : 'history'; render(now, true); return; }
     if (a === 'sel') { st.sel = +v; render(now, true); return; }
     if (a === 'plan') { S.ui.planOpen = !S.ui.planOpen; save(); render(now, true); return; }
     if (a === 'bell') { S.ui.bell = !S.ui.bell; save(); if (S.ui.bell && window.Notification && Notification.permission === 'default') { try { Notification.requestPermission(); } catch (x) { /* */ } } render(now, true); return; }
-    if (a === 'askOpen') { S.ui.ask = !S.ui.ask; save(); if (!S.ui.ask) { st.ask = null; st.askText = ''; } render(now, true); var inp = root.querySelector('[data-e="ask"]'); if (inp) inp.focus(); return; }
+    if (a === 'askOpen') {st.themes=false;st.set=false;st.view='week';st.rev=null;S.ui.ask = !S.ui.ask; save(); if (!S.ui.ask) { st.ask = null; st.askText = ''; } render(now, true); var inp = root.querySelector('[data-e="ask"]'); if (inp) inp.focus(); return; }
     if (a === 'sug') { runAsk(SG()[+v]); render(now, true); return; }
     if (a === 'askApply') { var s2 = st.ask && st.ask.store; if (s2) { var p1 = P(); st.undo = C.clone(storeOf(p1)); p1.types = s2.types; p1.plan = s2.plan; p1.ooo = s2.ooo; p1.ovr = s2.ovr; save(); st.ask = null; st.askText = ''; toast(t.applied); render(now, true); } return; }
     if (a === 'oooYes') { if (st.ask && st.ask.sc) { st.ask.sc.oooOK = true; compute(now); } render(now, true); return; }
@@ -1078,7 +1102,7 @@
     if (a === 'undo') { var p0 = P(), u = st.undo; if (p0 && u) { p0.types = u.types; p0.plan = u.plan; p0.ooo = u.ooo; p0.ovr = u.ovr; p0.pick = u.pick || {}; st.undo = null; st.toast = null; save(); render(now, true); } return; }
     if (a === 'loadm') { delete st.tried[b.dataset.m]; startJob(b.dataset.m, st.period); tick(true); return; }
     if (a === 'focus') { var f = st.focusEl; if (f) { try { f.scrollIntoView({ block: 'center' }); f.focus(); if (f.showPicker) f.showPicker(); } catch (x) { /* */ } } return; }
-    if (a === 'rev') {
+    if (a === 'rev') {st.themes=false;st.set=false;S.ui.ask=false;
       if (st.rev) { st.rev = null; render(now, true); return; }
       var vv = st.v, flex = vv.rows.filter(function (r) { return !r.past && r.office; });
       var last = flex.length ? flex[flex.length - 1].dow : 4, other = flex.filter(function (r) { return r.dow !== last; });
@@ -1115,6 +1139,7 @@
     var el = e.target, k = el.dataset && el.dataset.e;
     e.stopPropagation();
     if(el.dataset.rz && /^Arrow/.test(e.key)){e.preventDefault();var rr=W.getBoundingClientRect(),step=e.shiftKey?50:10;S.ui.cmp=false;S.ui.w=Math.max(200,Math.min(window.innerWidth-12,rr.width+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0)));if(e.key==='ArrowUp'||e.key==='ArrowDown')S.ui.h=Math.max(180,Math.min(window.innerHeight-12,rr.height+(e.key==='ArrowDown'?step:-step)));save();render(nowFn(),true);root.querySelector('.rz-br').focus();return;}
+    if (e.key === 'Escape' && closeActivePanel()) {e.preventDefault();return;}
     if (e.key === 'Escape') { if (st.rev) st.rev = null; else if (st.ask) { st.ask = null; st.askText = ''; } else if (st.set) st.set = false; else if (S.ui.ask) { S.ui.ask = false; save(); } render(nowFn(), true); return; }
     if (k === 'ask' && e.key === 'Enter') { runAsk(el.value); el.blur(); render(nowFn(), true); return; }
     if ((k === 's' || k === 'e' || k === 'm' || k === 'os' || k === 'rt' || k === 'rt2' || el.dataset.c) && e.key === 'Enter') { el.blur(); return; }
@@ -1132,7 +1157,7 @@
     setTimeout(function () { if (!root.activeElement) render(nowFn(), false); }, 0);
   });
   root.addEventListener('input', function (e) { if (e.target.dataset && e.target.dataset.e === 'ask') st.askText = e.target.value; });
-  function onKey(e) { if (e.altKey && e.code === 'KeyK') { e.preventDefault(); toggleCmp(); return; } if (e.altKey && e.code === 'KeyM') { e.preventDefault(); S.ui.col = false; S.ui.ask = true; save(); render(nowFn(), true); var i = root.querySelector('[data-e="ask"]'); if (i) i.focus(); } }
+  function onKey(e) { if(e.key==='Escape'&&closeActivePanel()){e.preventDefault();return;} if (e.altKey && e.code === 'KeyK') { e.preventDefault(); toggleCmp(); return; } if (e.altKey && e.code === 'KeyM') { e.preventDefault(); S.ui.col = false; S.ui.ask = true; save(); render(nowFn(), true); var i = root.querySelector('[data-e="ask"]'); if (i) i.focus(); } }
   window.addEventListener('keydown', onKey);
 
   root.addEventListener('pointerdown', function (e) {
@@ -1144,7 +1169,7 @@
       W.classList.add('rsz'); return;
     }
     var hd = e.target.closest('[data-drag], .pl0'); if (!hd) return;
-    if (e.target.closest('button,input,select') && !e.target.closest('.pl0')) return;
+    if (e.target.closest('button,input,select,a') && !e.target.closest('.pl0')) return;
     var rc = W.getBoundingClientRect(); st.move = { dx: e.clientX - rc.left, dy: e.clientY - rc.top, x0: e.clientX, y0: e.clientY }; st.moved = false;
   });
   function resizeMove(e) {
