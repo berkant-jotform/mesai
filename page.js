@@ -3,6 +3,7 @@
   const frame = document.querySelector('#preview');
   const bookmark = document.querySelector('#bookmark');
   const themes = ['cizelge', 'knight', 'sutunlar', 'sor', 'bilet', 'clock'];
+  let resetting = false;
   const state = {lang:'tr', look:'light', theme:'cizelge', size:'full'};
   const questions = {
     tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
@@ -38,7 +39,9 @@
   window.addEventListener('message', event => {
     if (event.source !== frame.contentWindow || event.origin !== location.origin || event.data?.type !== 'mesai-preview-state') return;
     const data = event.data;
+    if (resetting && !data.ready) return;
     if (data.ready) {
+      resetting = false;
       document.querySelectorAll('[data-question]').forEach(button => { button.disabled = false; });
       send(); return;
     }
@@ -49,6 +52,7 @@
     paint();
   });
   document.querySelector('#reset').addEventListener('click', () => {
+    resetting = true;
     state.size = 'full'; paint();
     document.querySelectorAll('[data-question]').forEach(button => { button.disabled = true; });
     frame.src = 'preview.html?v=320&reset=' + Date.now();
