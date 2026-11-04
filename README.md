@@ -29,3 +29,23 @@ Kullanıcılar yeni sürüm için düğmeyi yeniden sürüklemeli. Önceden kull
 - `.nojekyll`: Pages’in dosyaları doğrudan sunması için.
 
 Mesai portal tablolarını okur; planları ve ayarları portalın tarayıcı deposunda tutar. Hesapların resmi kaynağı ARGE Portal’dır.
+
+## Yerel geliştirme ve kontrol
+
+Python 3 ve JavaScript sözdizimi kontrolü için Node.js gerekir. Ek paket kurulumu gerekmez.
+
+```sh
+python3 build.py
+node --check mesai.js
+node --check page.js
+node --check preview.js
+python3 -m http.server 8080 --bind 127.0.0.1
+```
+
+Kurulum sayfasını `http://127.0.0.1:8080` adresinde aç. `demo.html` ve `preview.html` örnek veriyle arayüz kontrolü içindir; gerçek personel kayıtlarını doğrulamaz. Yer işaretini gerçek portalda kullanırken görünen hesapları portalın resmi kayıtlarıyla karşılaştır.
+
+## Veri ve katkı
+
+Depoya portal kayıtları, personel dışa aktarımları, oturum bilgileri veya tarayıcı depolarının kopyaları eklenmemeli. Hata bildirirken kişisel verileri çıkar ve beklenen/gerçekleşen davranışı yaz. Güvenlik sorunlarını depo sahibine özel kanaldan bildir. Yeni değişiklikleri odaklı bir dal ve pull request ile öner. Bu yükleme yeni bir açık kaynak lisansı vermez.
+
+3 Kasım 2026 kontrolünde yerel uygulama kaynakları GitHub ile eşleşiyordu; bu değişiklik README geliştirmesidir.

@@ -43,7 +43,7 @@ window.portal = (function () {
     w.className = 'ui-dialog active_card'; w.id = 'window_' + id;
     w.style.left = (40 + id * 30) + 'px'; w.style.top = (60 + id * 30) + 'px'; w.style.zIndex = ++z;
     document.querySelectorAll('.ui-dialog').forEach(x => x.classList.remove('active_card'));
-    const persons = opts.persons || [['1001', 'Berkant Gül']];
+    const persons = opts.persons || [['1001', 'Örnek Kullanıcı']];
     const months = opts.months || ['2026-10', '2026-11', '2026-12'];
     w.innerHTML = `<div id="form_pdks"><b>PDKS Giriş Çıkış Bilgi Kartı</b>
       <div>Dönem <select id="Donem_Id"><option value="">Seçiniz</option>${months.map(m => `<option value="${m}">${MONTHS[+m.slice(5) - 1]} ${m.slice(0, 4)}</option>`).join('')}</select>
