@@ -2,7 +2,7 @@
   'use strict';
   const frame = document.querySelector('#preview');
   const bookmark = document.querySelector('#bookmark');
-  const themes = ['cizelge', 'sutunlar', 'sor', 'sutunsor', 'bilet'];
+  const themes = ['cizelge', 'sutunlar', 'sor', 'bilet'];
   const state = {lang:'tr', look:'light', theme:'cizelge'};
   try {
     const saved = JSON.parse(localStorage.getItem('mesai.page') || '{}');

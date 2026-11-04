@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   let root;
-  const allowed = {theme:['cizelge','sutunlar','sor','sutunsor','bilet'],lang:['tr','en'],look:['light','dark']};
+  const allowed = {theme:['cizelge','sutunlar','sor','bilet'],lang:['tr','en'],look:['light','dark']};
   function report(ready = false) {
     if (!window.__mesai || !root) return;
     const ui = window.__mesai.state().S.ui;
@@ -16,7 +16,7 @@
     if (!root || !window.__mesai) return;
     clearInterval(boot);
     const style = document.createElement('style');
-    style.textContent = ':host{display:block!important}.w{position:relative!important;left:0!important;top:0!important;width:100%!important;box-shadow:none!important}.hd [data-a="close"],.hd [data-a="min"]{display:none!important}.hd{cursor:default!important}';
+    style.textContent = ':host{display:block!important}.w{position:relative!important;left:0!important;top:0!important;width:100%!important;box-shadow:none!important}.hd [data-a="close"],.hd [data-a="min"]{display:none!important}.hd{cursor:default!important}.main{max-height:none!important}.rz,.rzl,.hd [data-a="cmp"]{display:none!important}';
     root.appendChild(style);
     new ResizeObserver(() => report()).observe(root.querySelector('.w'));
     root.addEventListener('click', () => setTimeout(() => report(),0));

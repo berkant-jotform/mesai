@@ -13,6 +13,16 @@ node --check preview.js
 
 Use the configured project environment for these commands. Any optional live-service check needs its own setup and approval. Do not run paid jobs, send email or publish content as an incidental test.
 
+## 3.1.0
+
+- **Sor senaryo hesaplar:** “her gün 10 saat yapsam cuma 8’de gelsem kaçta çıkarım”, “cuma 14’te çıkmak için her gün kaç saat”, “perşembe 15’te çıkmak için kaçta gelmeliyim”, “bu hafta kaç saat yaptım”, “kaç saat fazlam var”, “bugün 17’de çıksam yeter mi”. Cevabın altında “Anladığım” etiketleri; uygulanmamış cevaplar “Önizleme” olarak işaretlenir.
+- **Zorunlu saat dışına taşan planlarda OOO önce sorulur**, kullanıcı onaylamadan eklenmez (onaylanınca hedef artar, örn. 45 → 47 sa).
+- **Portal satırı ile giriş-çıkış listesi farklıysa** (örn. portal 08:23–11:56 = 3:33, liste 08:23–17:38 = 9:14) uyarı gösterilir; varsayılan olarak liste sayılır, gün bazında “Portal” seçilebilir.
+- Pencere kenar/köşeden boyutlandırılır; daralınca Standart → Kompakt → Cep. Tek tıkla kompakt görünüm (Alt+K, başlığa çift tık).
+- Resmi tatiller (Jotform 2026 TR, 2027 resmi takvim; arife tam gün) 9 saat sayılır; ayarlardan kapatılabilir. Google Takvim .ics içe aktarma (yerelde okunur, onayla eklenir).
+- **Soru paneli her temada:** başlıktaki “Sor” düğmesi soru kutusunu, cevabı ve örnekleri açıp kapatır. Bu yüzden “Sütunlar + Sor” teması kaldırıldı (Sütunlar + Sor düğmesi aynı şey); bu temayı kullananlar otomatik olarak Sütunlar’a ve açık soru paneline geçer.
+- Okunabilirlik: “Hafta biter · 45 sa”, süreler “9:41 sa”, “tahmin”, “{D} sa sayılır”, başlıkta görünür “Sor” düğmesi.
+
 ## 3.0.1
 
 - Ana yer işareti kodun tamamını içerir. Portal içinde GitHub’dan betik yüklemesi gerekmez.
