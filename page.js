@@ -3,7 +3,11 @@
   const frame = document.querySelector('#preview');
   const bookmark = document.querySelector('#bookmark');
   const themes = ['cizelge', 'sutunlar', 'sor', 'bilet'];
-  const state = {lang:'tr', look:'light', theme:'cizelge'};
+  const state = {lang:'tr', look:'light', theme:'cizelge', size:'full'};
+  const questions = {
+    tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
+    en:{friday:'when do I leave Friday?',early:'leave Friday at 14:00, how many hours per day?',total:'how many hours have I worked this week?'}
+  };
   try {
     const saved = JSON.parse(localStorage.getItem('mesai.page') || '{}');
     if (['tr','en'].includes(saved.lang)) state.lang = saved.lang;
@@ -12,7 +16,8 @@
   function paint() {
     document.documentElement.lang = state.lang;
     document.documentElement.dataset.look = state.look;
-    for (const key of ['lang','look','theme']) {
+    frame.style.height = {full:720,compact:440,pocket:180}[state.size] + 'px';
+    for (const key of ['lang','look','theme','size']) {
       document.querySelectorAll(`[data-${key}]`).forEach(button => {
         if (button.tagName === 'BUTTON') button.setAttribute('aria-pressed', String(button.dataset[key] === state[key]));
       });
@@ -20,23 +25,49 @@
     try { localStorage.setItem('mesai.page', JSON.stringify({lang:state.lang, look:state.look})); } catch (_) {}
   }
   function send() { frame.contentWindow.postMessage({type:'mesai-preview', ...state}, location.origin); }
-  document.querySelectorAll('button[data-lang],button[data-look],button[data-theme]').forEach(button => {
+  document.querySelectorAll('button[data-lang],button[data-look],button[data-theme],button[data-size]').forEach(button => {
     button.addEventListener('click', () => {
-      for (const key of ['lang','look','theme']) if (button.dataset[key]) state[key] = button.dataset[key];
+      for (const key of ['lang','look','theme','size']) if (button.dataset[key]) state[key] = button.dataset[key];
+      if (button.dataset.theme) state.size = 'full';
       paint(); send();
     });
   });
   window.addEventListener('message', event => {
     if (event.source !== frame.contentWindow || event.origin !== location.origin || event.data?.type !== 'mesai-preview-state') return;
     const data = event.data;
-    if (data.ready) { send(); return; }
+    if (data.ready) {
+      document.querySelectorAll('[data-question]').forEach(button => { button.disabled = false; });
+      send(); return;
+    }
     if (themes.includes(data.theme)) state.theme = data.theme;
     if (['tr','en'].includes(data.lang)) state.lang = data.lang;
     if (['light','dark'].includes(data.look)) state.look = data.look;
-    if (Number.isFinite(data.height)) frame.style.height = Math.min(1400, Math.max(340, data.height)) + 'px';
+    if (['full','compact','pocket'].includes(data.size)) state.size = data.size;
     paint();
   });
-  document.querySelector('#reset').addEventListener('click', () => { frame.src = 'preview.html?reset=' + Date.now(); });
+  document.querySelector('#reset').addEventListener('click', () => {
+    state.size = 'full'; paint();
+    document.querySelectorAll('[data-question]').forEach(button => { button.disabled = true; });
+    frame.src = 'preview.html?v=310-page2&reset=' + Date.now();
+  });
+  document.querySelectorAll('[data-question]').forEach(button => {
+    button.addEventListener('click', () => {
+      state.size = 'full'; paint();
+      frame.contentWindow.postMessage({type:'mesai-preview', ...state, question:questions[state.lang][button.dataset.question]}, location.origin);
+      frame.scrollIntoView({block:'center',behavior:'smooth'});
+    });
+  });
+  window.addEventListener('keydown', event => {
+    if (!event.altKey || !['KeyK','KeyM'].includes(event.code)) return;
+    event.preventDefault();
+    if (event.code === 'KeyK') {
+      state.size = state.size === 'full' ? 'compact' : 'full';
+      paint(); send();
+    } else {
+      state.size = 'full'; paint();
+      frame.contentWindow.postMessage({type:'mesai-preview', ...state, openAsk:true}, location.origin);
+    }
+  });
   bookmark.addEventListener('click', event => {
     event.preventDefault();
     const hint = document.querySelector('#install-hint');
