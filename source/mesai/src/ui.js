@@ -1,8 +1,8 @@
 // Mesai widget: one instance per tab; a second bookmark click reopens/refreshes it.
 (function () {
-  if (window.__mesai) { if (window.__mesai.version === '3.2.1') { window.__mesai.poke(); return; } window.__mesai.close(); }
+  if (window.__mesai) { if (window.__mesai.version === '3.2.2') { window.__mesai.poke(); return; } window.__mesai.close(); }
   var C = MesaiCore, A = MesaiAdapter(C, document), Q = MesaiAsk, SC = MesaiScen, HOL = MesaiHolidays, TH = MesaiThemes, TX = MesaiText;
-  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.1';
+  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.2';
   var KEY = 'mesai.v3';
 
   // ---------------- persistence (local to this browser and portal) ----------------
@@ -432,7 +432,7 @@
     var lay = TH.T[th] ? TH.T[th].layout : 'cizelge';
     var illustrated=lay==='knight'||lay==='clock';
     return '<div class="hd" data-drag>' +
-      '<span class="brand" aria-label="Mesai"><span class="dot' + (live ? ' on' : '') + '"></span>' + (lay==='knight'?art('initial','manuscript-initial')+'<span class="brand-rest">esai</span>':esc(title)) + '</span>' +
+      '<span class="brand" aria-label="Mesai"><span class="dot' + (live ? ' on' : '') + '"></span>' + (lay==='knight'?'<span class="brand-rest">esai</span>':esc(title)) + '</span>' +
       (st.name && th !== 'bilet' ? '<span class="who">' + esc(st.name.replace(/^\s*\d+\s*[-–:]\s*/, '')) + '</span>' : '') +
       (v ? '<span class="vr"></span><button class="ib" data-a="prev" aria-label="‹">' + ic('l', 14) + '</button><span class="wk">' + esc(wk) + '</span><button class="ib" data-a="next" aria-label="›"' + (st.off >= 0 ? ' disabled style="opacity:.25"' : '') + '>' + ic('r', 14) + '</button>' : '') +
       '<span class="sp"></span>' +
@@ -488,7 +488,7 @@
       return '<button class="' + (r.today ? 'td' : '') + '" data-a="sel" data-v="' + i + '" title="' + esc(t.daysL[i] + ' · ' + hm(hv)) + '"><i class="' + cls + '" style="height:' + Math.round(hv / mx * 34) + 'px"></i>' + t.days[i] + '</button>';
     }).join('') + '</div>';
     var ask = '<label class="cask">' + ic('search', 15) + '<input data-e="ask" value="' + esc(st.askText || '') + '" placeholder="' + esc(t.sugg[0]) + '" aria-label="' + t.ask + '"></label>';
-    var ornament=S.ui.theme==='knight'?art('knight','compact-art compact-knight'):S.ui.theme==='clock'?'<div class="compact-clock-wrap">'+art('clock','compact-art compact-clock')+'<span>'+pct+'%</span></div>':'';
+    var ornament=S.ui.theme==='clock'?'<div class="compact-clock-wrap">'+art('clock','compact-art compact-clock')+'<span>'+pct+'%</span></div>':'';
     return head + '<div class="cpt'+(ornament&&!st.ask?' illustrated-compact':'')+'">' + (st.ask?'':ornament) + body + stats + bars + ask + '</div>';
   }
   function impPanel() {
@@ -526,7 +526,7 @@
     out.push('<span>' + t.target + ' <b>' + hrs(cfg.W * MIN) + (v.ooo ? ' + OOO ' + hm(v.ooo) + ' = ' + hrs(v.W) : '') + ' ' + t.h + '</b></span>');
     out.push('<span class="vr"></span><button class="wchip" data-a="set" title="' + t.settings + '">' + t.core + ' ' + mm(cfg.coreS) + '–' + mm(cfg.coreE) + '</button>');
     var hist = savedWeeks(3);
-    if (hist.length) out.push('<span class="vr"></span><span>' + t.saved + '</span>' + hist.map(function (h) { return '<button class="wchip" data-a="goweek" data-v="' + h.off + '" style="color:' + h.color + '">' + esc(h.lbl) + ' ' + hm(h.done) + (h.ok ? ' ✓' : '') + '</button>'; }).join(''));
+    if (hist.length && S.ui.theme !== 'knight') out.push('<span class="vr"></span><span>' + t.saved + '</span>' + hist.map(function (h) { return '<button class="wchip" data-a="goweek" data-v="' + h.off + '" style="color:' + h.color + '">' + esc(h.lbl) + ' ' + hm(h.done) + (h.ok ? ' ✓' : '') + '</button>'; }).join(''));
     out.push('<span class="sp"></span>');
     if (st.undo) out.push('<button class="btn" data-a="undo">' + ic('undo', 14) + t.undo + '</button>');
     if (v.thisWeek) out.push('<button class="btn' + (st.rev ? ' pri' : '') + '" data-a="rev">' + ic('rev', 14) + t.reverse + '</button>');
@@ -552,7 +552,7 @@
     var t = L(), td = v.today, now = v.now, D = hrs(v.cfg.D * MIN), out = '';
     if (v.thisWeek && td && td.first != null && td.office) {
       var rem = v.milestone - now;
-      out += '<div><div class="k">' + fill(t.milestone, { D: D }) + '</div><div class="big" style="font-size:50px">' + clk(v.milestone) + '</div>' +
+      out += '<div class="milestone-section"><div class="k">' + fill(t.milestone, { D: D }) + '</div><div class="big" style="font-size:50px">' + clk(v.milestone) + '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;margin-top:8px">' + (rem > 0 ? '<span class="pill">' + ic('clock') + dur(rem, true) + ' ' + t.left + '</span>' : '<span class="pill ok">' + ic('check') + t.done + ' +' + hm(-rem) + '</span>') +
         '<button class="ib' + (S.ui.bell ? ' on' : '') + '" data-a="bell" title="' + t.bell + '" aria-label="' + t.bell + '">' + ic('bell', 14) + '</button></div>' + earliestLine(v) + '</div>';
     } else if (v.thisWeek && td && td.credit) {
@@ -627,7 +627,7 @@
         var xe = X(r, r.end); lbl = '<span class="el' + (r.auto ? ' au' : '') + (xe > 86 ? ' lft' : '') + '" style="left:' + xe + '%">' + clk(r.end, r.date) + '</span>';
       }
       if (r.ooo && r.ooo.s != null) bars += '<i class="oz" title="OOO" style="left:' + X(r, r.date + r.ooo.s * MIN) + '%;width:' + (X(r, r.date + (r.ooo.s + r.ooo.m) * MIN) - X(r, r.date + r.ooo.s * MIN)) + '%"></i>';
-      if (r.today && w.thisWeek) { bars += '<i class="nl" style="left:' + X(r, w.now) + '%"></i>'; if (r.inside) bars += '<i class="lv" style="left:' + X(r, w.now) + '%"></i>'; }
+      if (r.today && w.thisWeek) { bars += '<i class="nl" style="left:' + X(r, w.now) + '%"></i>'; if (r.inside) bars += '<i class="lv" role="img" aria-label="' + (S.ui.lang==='en'?'Now':'Şimdi') + ' · ' + clk(w.now) + '" title="' + (S.ui.lang==='en'?'Now':'Şimdi') + ' · ' + clk(w.now) + '" style="left:' + X(r, w.now) + '%"></i>';  }
       if (r.past || !w.thisWeek) { val = r.count ? hm(r.count) : (r.flags.length ? '!' : '0:00'); if (r.flags.length && !r.count) vc = 'var(--bad)'; }
       else if (r.today && !r.credit) { val = hm(r.actual); vc = 'var(--accInk)'; }
       else if (r.credit) { val = hm(r.credit); vc = 'var(--ok)'; }
@@ -832,7 +832,7 @@
 
   function art(name, cls) { return '<img class="' + cls + '" src="' + MesaiArt[name] + '" alt="" aria-hidden="true" draggable="false">'; }
   function heritage(v, pv, lay) {
-    if (lay === 'knight') return '<div class="herald-body"><aside class="knight-margin">' + art('knight','knight-art knight-manuscript') + '</aside><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + '</div>' + editor(v);
+    if (lay === 'knight') return '<div class="herald-body"><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + '</div>' + editor(v);
     var t=L(), td=v.today, daily=v.thisWeek&&td&&td.office&&v.milestone, f=forecastText(v), pct=v.W?Math.min(100,Math.floor(v.done/v.W*100)):100;
     var nums='';
     function position(hour, radius) { var a=(hour-14)/24*Math.PI*2;return 'left:'+(49.4+Math.sin(a)*radius)+'%;top:'+(53.6-Math.cos(a)*radius)+'%'; }
@@ -871,7 +871,10 @@
     var small = tier === 'pocket' || tier === 'compact';
     W.dataset.dark=String(isDark());
     var grip=root.querySelector('.rz-br');grip.title=S.ui.lang==='en'?'Resize: drag or use arrow keys; double-click to reset':'Boyut: sürükle veya ok tuşlarını kullan; sıfırlamak için çift tıkla';grip.setAttribute('aria-label',grip.title);
+    W.style.setProperty('--ms',String(widthFor()/1350));
+    if(lay==='knight'){W.style.setProperty('--bar-art','url('+MesaiArt.bar+')');W.style.setProperty('--control-frame','url('+MesaiArt[isDark()?'controlDark':'controlLight']+')');}
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
+    if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
     st.lastTier = tier;
     var html = small ? '' : header(v) + (st.set ? settings() : '') + notices(v);
     if (tier === 'pocket') html += pocketView(v);
@@ -890,20 +893,25 @@
     }
     if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo">' + L().undo + '</button>' : '') + '</div>';
     html += releaseLink();
-    MAIN.innerHTML = lay==='knight'&&(tier==='wide'||tier==='std')?'<div class="surface-stack">'+html+'</div>':html;
-    if(lay==='knight'&&tier==='compact'){var compactHead=MAIN.querySelector('.hd');if(compactHead)compactHead.insertAdjacentHTML('beforeend',art('rule','manuscript-rule compact-rule'));}
+    MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     if(lay==='knight'&&(tier==='wide'||tier==='std')){
-      var manuscriptHead=MAIN.querySelector('.hd'), manuscriptEditor=MAIN.querySelector('.ed');
-      if(manuscriptHead)manuscriptHead.insertAdjacentHTML('beforeend',art('rule','manuscript-rule head-rule'));
-      if(manuscriptEditor)manuscriptEditor.insertAdjacentHTML('afterbegin',art('rule','manuscript-rule editor-rule'));
       MAIN.querySelectorAll('.side>div>.k:first-child,.side>.sec>div:first-child>.k,.tr .dn').forEach(function(el){el.insertAdjacentHTML('afterbegin',art('fleuron','manuscript-fleuron'));});
       MAIN.querySelectorAll('.tl .lv').forEach(function(el){el.innerHTML=art('timeMarker','time-marker');});
-      var manuscriptSurface=MAIN.querySelector('.surface-stack');if(manuscriptSurface&&v)manuscriptSurface.insertAdjacentHTML('beforeend','<div class="manuscript-bas-de-page">'+art('manuscriptTown','manuscript-town')+'</div>');
     }
     if(lay==='clock'&&tier==='wide'&&v&&st.view!=='history'){
       var dialBody=MAIN.querySelector('.clock-body'), head=MAIN.querySelector('.hd');
       if(dialBody&&head){var shell=document.createElement('div');shell.className='clock-composition';shell.innerHTML=art(isDark()?'panelDark':'panelLight','clock-panel-art');MAIN.prepend(shell);shell.appendChild(head);shell.appendChild(dialBody);}
       ['.wstrip','.ed'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el){el.classList.add('clock-framed-rail');el.insertAdjacentHTML('afterbegin',art(isDark()?'railDark':'railLight','clock-rail-art'));}});
+    }
+    if(lay==='knight'&&tier!=='pocket'){
+      var page=MAIN.querySelector('.surface-stack');
+      page.querySelectorAll('.knight-margin,.manuscript-initial,.manuscript-rule,.manuscript-bas-de-page,.compact-art').forEach(function(el){el.remove();});
+      page.insertAdjacentHTML('afterbegin',art(tier==='wide'?(isDark()?'plateDark':'plateLight'):(isDark()?'compactDark':'compactLight'),'manuscript-plate'));
+      if(tier==='std'){var namePart=page.querySelector('.brand-rest');if(namePart)namePart.textContent='Mesai';}
+      var query=page.querySelector('.askr'), response=page.querySelector('.askp');
+      if(query&&response){var dialog=document.createElement('section');dialog.className='manuscript-question';dialog.setAttribute('aria-label',L().ask);page.appendChild(dialog);dialog.appendChild(query);dialog.appendChild(response);}
+      var settingsPanel=page.querySelector('.set');if(settingsPanel)settingsPanel.classList.add('manuscript-settings');
+      var historyPanel=page.querySelector('.hist');if(historyPanel)historyPanel.classList.add('manuscript-history');
     }
     if (fkey) { var el = root.querySelector('[data-e="' + fkey + '"],[data-c="' + fkey + '"]'); if (el && !el.disabled) { el.focus(); try { if (fsel != null && el.setSelectionRange) el.setSelectionRange(fsel, fsel); } catch (e) { /* select */ } } }
     pill(v);

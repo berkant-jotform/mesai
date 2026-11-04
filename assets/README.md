@@ -20,3 +20,10 @@ The application overlays live digits, labels and controls. The compact layouts u
 ## 3.2.1 manuscript refinement
 New ImageGen transparent raster assets: knight-tall.webp (natural figure with taller canopy), manuscript-rule.webp, manuscript-town.webp, fleuron.webp, time-marker.webp and clock-face.webp. Embedded in the bookmark with no art fetches.
 Grenze Gotisch (gothic.woff2) by Renata Polastri/Omnibus-Type and Almendra (almendra.woff2) by Ana Sanfelippo, downloaded from the official google/fonts repository, OFL licenses included. Gothic supplies Turkish labels; Almendra supplies calligraphic numerals and supporting copy.
+
+
+## 3.2.2 illuminated page
+
+The knight composition uses paired dark/light full-page plates with live HTML controls. Historical ornament references: [Getty Book of Hours](https://www.getty.edu/art/collection/object/105SWS), [Leeds floral border, 1470–1480](https://digital.library.leeds.ac.uk/10862/), and [Fitzwilliam Book of Hours](https://www.fitzmuseum.cam.ac.uk/illuminated/manuscript/discover/book-of-hours/folio/folio-15r-411). Generated artwork interprets manuscript borders rather than reproducing a historical object. Almendra Bold is bundled under the existing Almendra SIL Open Font License.
+
+The 3.2.2 finishing assets add a restrained painted-blue progress strip and transparent notched input borders for both palettes. Actual hours remain a continuous first-entry-to-last-exit span; planned hours, leave and OOO retain distinct outlines and hatching.
