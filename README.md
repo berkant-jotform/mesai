@@ -1,51 +1,29 @@
 # Mesai
 
-ARGE Portal için çalışma saati hesabı.
+ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work hours and plan your week in ARGE Portal.
 
-Kurulum ve çalışan örnek: https://berkant-jotform.github.io/mesai/
+**Status:** 3.0.1 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
-Sayfadaki **Mesai** düğmesini yer işaretleri çubuğuna sürükle. Portalda PDKS kartını açıp bu yer işaretine tıkla.
+![Three-step workflow overview](docs/images/workflow.svg)
 
-## 3.0.1
+## Start here
 
-- Ana yer işareti kodun tamamını içerir. Portal içinde GitHub’dan betik yüklemesi gerekmez.
-- Eski “Mesai yüklenemedi” hatasını alanlar yer işaretini kurulum sayfasından yeniden eklemeli.
-- Kurulum sayfasında beş görünüm de çalışır; açık/koyu ve TR/EN seçimleri önizlemeyi de değiştirir.
-- Önizleme örnek kayıtlar ve bellekte tutulan ayarlar kullanır. Gerçek portal verileriyle bağlantısı yoktur.
+[Kurulum ve örnek önizleme / Setup and sample preview](https://berkant-jotform.github.io/mesai/).
 
-## Güncelleme
+Kurulum sayfasını aç, **Mesai** düğmesini yer işaretleri çubuğuna sürükle. ARGE Portal’da PDKS (personel giriş-çıkış) kartını açıp yer işaretine tıkla. Önce kurulum sayfasındaki örnek önizlemeyi deneyebilirsin.
 
-1. `mesai.js` ve `version.json` dosyalarını güncelle.
-2. `python3 build.py` çalıştır. Böylece `index.html` içindeki yer işareti de yenilenir.
-3. Değişen dosyaları `main` dalına gönder. Pages kaynağı `main / root`.
+[Adım adım kullanım / Step-by-step guide](docs/GETTING_STARTED.md).
 
-Kullanıcılar yeni sürüm için düğmeyi yeniden sürüklemeli. Önceden kullanılan uzaktan yükleyici bu sürümde ana kurulum yöntemi değildir.
+## What needs configuration
 
-## Dosyalar
+| Item | What to know |
+| --- | --- |
+| Kurulum / Installation | Use the linked setup page; there is no executable installer. |
+| Portal erişimi / Portal access | Needed only for real records, not for the sample preview. |
+| Güncelleme / Update | Drag the bookmark again after a new version; old bookmarks do not update themselves. |
 
-- `page.template.html`, `page.css`, `page.js`: kurulum sayfası.
-- `preview.html`, `preview.js`: aynı uygulamayla çalışan, örnek verili önizleme.
-- `demo.html`: dönem/personel yüklemelerini ve birden fazla kartı taklit eden mevcut test ekranı.
-- `.nojekyll`: Pages’in dosyaları doğrudan sunması için.
+## Downloads and help
 
-Mesai portal tablolarını okur; planları ve ayarları portalın tarayıcı deposunda tutar. Hesapların resmi kaynağı ARGE Portal’dır.
-
-## Yerel geliştirme ve kontrol
-
-Python 3 ve JavaScript sözdizimi kontrolü için Node.js gerekir. Ek paket kurulumu gerekmez.
-
-```sh
-python3 build.py
-node --check mesai.js
-node --check page.js
-node --check preview.js
-python3 -m http.server 8080 --bind 127.0.0.1
-```
-
-Kurulum sayfasını `http://127.0.0.1:8080` adresinde aç. `demo.html` ve `preview.html` örnek veriyle arayüz kontrolü içindir; gerçek personel kayıtlarını doğrulamaz. Yer işaretini gerçek portalda kullanırken görünen hesapları portalın resmi kayıtlarıyla karşılaştır.
-
-## Veri ve katkı
-
-Depoya portal kayıtları, personel dışa aktarımları, oturum bilgileri veya tarayıcı depolarının kopyaları eklenmemeli. Hata bildirirken kişisel verileri çıkar ve beklenen/gerçekleşen davranışı yaz. Güvenlik sorunlarını depo sahibine özel kanaldan bildir. Yeni değişiklikleri odaklı bir dal ve pull request ile öner. Bu yükleme yeni bir açık kaynak lisansı vermez.
-
-3 Kasım 2026 kontrolünde yerel uygulama kaynakları GitHub ile eşleşiyordu; bu değişiklik README geliştirmesidir.
+- [Download and build guide](docs/DOWNLOADS.md) — source files versus packaged apps.
+- [Developer reference](docs/REFERENCE.md) — workflow details and relevant limits.
+- [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Usage and licensing](USAGE.md).
