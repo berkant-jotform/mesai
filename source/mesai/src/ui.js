@@ -1136,6 +1136,6 @@
     state: function () { return { st: st, S: S }; }
   };
   tick(true);
-  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){if(Array.from(document.fonts).some(function(f){return f.family===name;}))return;var font=new FontFace(name,'url('+MesaiFonts[name]+')',name==='Mesai Gothic'?{weight:'100 900'}:{});font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
+  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,'url('+MesaiFonts[name]+')',name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
   checkVersion();
 })();
