@@ -27,3 +27,5 @@ Grenze Gotisch (gothic.woff2) by Renata Polastri/Omnibus-Type and Almendra (alme
 The knight composition uses paired dark/light full-page plates with live HTML controls. Historical ornament references: [Getty Book of Hours](https://www.getty.edu/art/collection/object/105SWS), [Leeds floral border, 1470–1480](https://digital.library.leeds.ac.uk/10862/), and [Fitzwilliam Book of Hours](https://www.fitzmuseum.cam.ac.uk/illuminated/manuscript/discover/book-of-hours/folio/folio-15r-411). Generated artwork interprets manuscript borders rather than reproducing a historical object. Almendra Bold is bundled under the existing Almendra SIL Open Font License.
 
 The 3.2.2 finishing assets add a restrained painted-blue progress strip and transparent notched input borders for both palettes. Actual hours remain a continuous first-entry-to-last-exit span; planned hours, leave and OOO retain distinct outlines and hatching.
+
+The 3.2.5 theme chooser uses 12 real Mesai layout captures (six layouts, both palettes), downsampled to bundled WebP thumbnails. These previews contain synthetic example data and no personal portal records.

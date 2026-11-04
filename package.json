@@ -5,7 +5,7 @@
   },
   "name": "mesai",
   "private": true,
-  "version": "3.2.4",
+  "version": "3.2.5",
   "scripts": {
     "build": "node source/mesai/build.js && cp source/mesai/dist/mesai.min.js mesai.js && python3 build.py",
     "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js",

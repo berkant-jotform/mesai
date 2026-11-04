@@ -1,8 +1,8 @@
 // Mesai widget: one instance per tab; a second bookmark click reopens/refreshes it.
 (function () {
-  if (window.__mesai) { if (window.__mesai.version === '3.2.4') { window.__mesai.poke(); return; } window.__mesai.close(); }
+  if (window.__mesai) { if (window.__mesai.version === '3.2.5') { window.__mesai.poke(); return; } window.__mesai.close(); }
   var C = MesaiCore, A = MesaiAdapter(C, document), Q = MesaiAsk, SC = MesaiScen, HOL = MesaiHolidays, TH = MesaiThemes, TX = MesaiText;
-  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.4';
+  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.5';
   var KEY = 'mesai.v3';
 
   // ---------------- persistence (local to this browser and portal) ----------------
@@ -729,10 +729,13 @@
     return '<div class="hist"><div class="lg"><b style="font-size:13px;color:var(--ink)">' + t.history + '</b><span class="sp"></span><button class="btn" data-a="thisweek">' + t.thisWeek + '</button></div>' + (rows || '<div class="empty">' + t.noData + '</div>') + '</div>';
   }
   function panelHead(title,kind){return '<div class="panel-head"><b>'+esc(title)+'</b><button class="panel-close" data-a="dismiss" data-panel="'+kind+'" aria-label="'+esc(title+' · '+L().close)+'" title="'+L().close+'">'+ic('x',18)+'</button></div>';}
-  function themePanel(){return '<section class="theme-panel" aria-label="'+(S.ui.lang==='en'?'Themes':'Temalar')+'">'+panelHead(S.ui.lang==='en'?'Themes':'Temalar','themes')+'<div class="theme-choices">'+TH.ORDER.map(function(k){return '<button class="theme-choice'+(S.ui.theme===k?' on':'')+'" data-a="theme" data-v="'+k+'" aria-pressed="'+(S.ui.theme===k)+'"><span class="theme-sample" style="--sample:'+TH.T[k].swatch+'">'+(k==='knight'?art('fleuron','theme-mini'):k==='clock'?art('clock','theme-mini'):'<i></i><i></i><i></i>')+'</span><b>'+esc(L().themes[k])+'</b></button>';}).join('')+'</div></section>';}
+  function themePanel(){
+    var en=S.ui.lang==='en';
+    return '<section class="theme-panel" aria-label="'+(en?'Themes':'Temalar')+'">'+panelHead(en?'Themes':'Temalar','themes')+'<div class="theme-choices">'+TH.ORDER.map(function(k){var selected=S.ui.theme===k;return '<button class="theme-choice'+(selected?' on':'')+'" data-a="theme" data-v="'+k+'" aria-pressed="'+selected+'"><span class="theme-preview">'+art('preview_'+k+'_'+(isDark()?'dark':'light'),'theme-preview-art')+'</span><span class="theme-choice-title"><b>'+esc(L().themes[k])+'</b><span class="theme-selected">'+(selected?(en?'Selected':'Seçili'):'')+'</span></span></button>';}).join('')+'</div></section>';
+  }
   function dismissPanel(kind){
     var trigger=kind==='themes'?'themes':kind==='settings'?'set':kind==='history'?'hist':kind==='question'?'askOpen':'rev';
-    if(kind==='themes')st.themes=false;
+    if(kind==='themes'){st.themes=false;if(st.themeReturn){st.set=true;st.themeReturn=false;trigger='set';}}
     if(kind==='settings')st.set=false;
     if(kind==='history')st.view='week';
     if(kind==='question'){S.ui.ask=false;st.ask=null;st.askText='';save();}
@@ -742,10 +745,10 @@
   function closeActivePanel(){var kind=st.themes?'themes':st.set?'settings':st.rev?'reverse':S.ui.ask?'question':st.view==='history'?'history':null;if(kind){dismissPanel(kind);return true;}return false;}
   function settings() {
     var t = L(), c = S.cfg;
-    var tcards = TH.ORDER.map(function (k) { var x = TH.T[k], tok = isDark() ? x.dark : x.light; return '<button class="tcard' + (S.ui.theme === k ? ' on' : '') + '" data-a="theme" data-v="' + k + '"><span style="background:' + tok.card + ';border:1px solid ' + tok.frame + ';box-shadow:inset 0 -8px 0 ' + x.swatch + '"></span>' + esc(t.themes[k]) + '</button>'; }).join('');
+
     var looks = [['auto', t.autoLook], ['light', t.light], ['dark', t.dark]].map(function (x) { return '<button data-a="look" data-v="' + x[0] + '" class="' + (S.ui.look === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('');
     var cores = [['10:00', '16:00'], ['10:00', '15:00'], ['09:00', '16:00']].map(function (x) { var on = c.coreS === x[0] && c.coreE === x[1]; return '<button class="wchip" data-a="core" data-s="' + x[0] + '" data-e="' + x[1] + '" style="' + (on ? 'background:var(--acc);color:var(--card)' : '') + '">' + (+x[0].slice(0, 2)) + '–' + (+x[1].slice(0, 2)) + '</button>'; }).join('');
-    return '<div class="set">' + panelHead(t.settings,'settings') + '<div class="tcards">' + tcards + '</div>' +
+    return '<div class="set">' + panelHead(t.settings,'settings') + '<div class="settings-theme-row"><span><small>'+(S.ui.lang==='en'?'Theme':'Tema')+'</small><b>'+esc(t.themes[S.ui.theme])+'</b></span><button class="btn" data-a="themes">'+(S.ui.lang==='en'?'Change':'Değiştir')+'</button></div>' +
       '<label class="fl">' + t.weekly + ' (' + t.h + ')<input data-c="W" type="number" min="1" max="100" step="0.5" value="' + c.W + '"></label>' +
       '<label class="fl">' + t.daily + ' (' + t.h + ')<input data-c="D" type="number" min="0.5" max="16" step="0.25" value="' + c.D + '"></label>' +
       '<label class="fl">' + t.defStart + '<input data-c="start" value="' + esc(c.start) + '" maxlength="5"></label>' +
@@ -1084,7 +1087,7 @@
     if (a === 'dark') { S.ui.look = isDark() ? 'light' : 'dark'; save(); render(now, true); return; }
     if (a === 'look') { S.ui.look = v; save(); render(now, true); return; }
     if (a === 'dismiss') {dismissPanel(b.dataset.panel);return;}
-    if (a === 'themes') {var open=!st.themes;st.set=false;st.view='week';S.ui.ask=false;st.rev=null;st.themes=open;render(now,true);if(open){var choice=root.querySelector('.theme-panel .theme-choice.on');if(choice)choice.focus();}return;}
+    if (a === 'themes') {var open=!st.themes;st.themeReturn=st.set;st.set=false;st.view='week';S.ui.ask=false;st.rev=null;st.themes=open;render(now,true);if(open){var choice=root.querySelector('.theme-panel .theme-choice.on');if(choice)choice.focus();}return;}
     if (a === 'set') {st.themes=false;S.ui.ask=false;st.view='week';st.rev=null;st.set = !st.set; render(now, true);if(st.set){var closer=root.querySelector('.set .panel-close');if(closer)closer.focus();}return; }
     if (a === 'prev') { st.off--; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
     if (a === 'next') { if (st.off < 0) st.off++; st.view = 'week'; st.sel = null; tick(true); return; }
