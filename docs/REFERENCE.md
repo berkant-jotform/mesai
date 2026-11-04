@@ -66,3 +66,15 @@ python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
 Kurulum sayfasını `http://127.0.0.1:8080` adresinde aç. `demo.html` ve `preview.html` örnek veriyle arayüz kontrolü içindir; gerçek personel kayıtlarını doğrulamaz. Yer işaretini gerçek portalda kullanırken görünen hesapları portalın resmi kayıtlarıyla karşılaştır.
+
+## 3.2.0
+
+- Six layouts in this order: Timeline, Knight, Columns, Ask-first, Ticket, Celestial clock. Knight and clock each have light/dark artwork and their own composition.
+- All layouts use the same calculation, scenario and question engines. Full, compact and pocket modes preserve the active theme; full view contains the day editor, reverse calculator and settings.
+- Bottom-right resize grip supports drag, arrow keys (10px), Shift+arrow (50px), and double-click reset.
+- The version link opens the install page. A public version.json check, with no credentials or attendance data, runs at most once every six hours; blocked requests fail silently. Updates require replacing the bookmark. No remote JavaScript is executed.
+- Fonts and artwork are embedded in the bookmark. The public page uses local fonts. Its ruler/cursor trail honours reduced motion and has an off switch.
+
+### Build
+
+Run `npm ci`, then `npm run build` at the repository root. The build reads modules from `source/mesai/src`, art and fonts from `assets`, and rebuilds `mesai.js` and the install bookmark in `index.html`. `npm test` runs core, scenario and question tests. Keep `version.json`, the VERSION constant in ui.js, and page version labels aligned.

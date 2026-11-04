@@ -2,7 +2,7 @@
   'use strict';
   const frame = document.querySelector('#preview');
   const bookmark = document.querySelector('#bookmark');
-  const themes = ['cizelge', 'sutunlar', 'sor', 'bilet'];
+  const themes = ['cizelge', 'knight', 'sutunlar', 'sor', 'bilet', 'clock'];
   const state = {lang:'tr', look:'light', theme:'cizelge', size:'full'};
   const questions = {
     tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
@@ -13,10 +13,13 @@
     if (['tr','en'].includes(saved.lang)) state.lang = saved.lang;
     if (['light','dark'].includes(saved.look)) state.look = saved.look;
   } catch (_) {}
+  const installed=new URLSearchParams(location.search).get('from');
   function paint() {
+    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.2.0'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
     document.documentElement.lang = state.lang;
     document.documentElement.dataset.look = state.look;
-    frame.style.height = {full:720,compact:440,pocket:180}[state.size] + 'px';
+    document.documentElement.dataset.theme = state.theme;
+    frame.style.height = {full:['knight','clock'].includes(state.theme)?950:800,compact:440,pocket:180}[state.size] + 'px';
     for (const key of ['lang','look','theme','size']) {
       document.querySelectorAll(`[data-${key}]`).forEach(button => {
         if (button.tagName === 'BUTTON') button.setAttribute('aria-pressed', String(button.dataset[key] === state[key]));
@@ -48,7 +51,7 @@
   document.querySelector('#reset').addEventListener('click', () => {
     state.size = 'full'; paint();
     document.querySelectorAll('[data-question]').forEach(button => { button.disabled = true; });
-    frame.src = 'preview.html?v=310-page2&reset=' + Date.now();
+    frame.src = 'preview.html?v=320&reset=' + Date.now();
   });
   document.querySelectorAll('[data-question]').forEach(button => {
     button.addEventListener('click', () => {

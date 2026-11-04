@@ -2,7 +2,7 @@
 
 ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work hours and plan your week in ARGE Portal.
 
-**Status:** 3.1.0 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
+**Status:** 3.2.0 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
 ![Three-step workflow overview](docs/images/workflow.svg)
 

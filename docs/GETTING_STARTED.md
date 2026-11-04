@@ -1,6 +1,6 @@
 # Mesai'yi kullanmaya başla / Getting started
 
-3.1.0 · Kurulum yok, sadece bir yer işareti. / No install, just a bookmark.
+3.2.0 · Kurulum yok, sadece bir yer işareti. / No install, just a bookmark.
 
 ## 1. Yer işaretini ekle / Add the bookmark
 

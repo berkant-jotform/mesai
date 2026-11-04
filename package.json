@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "terser": "^5.51.2",
+    "wawoff2": "^2.0.1"
+  },
+  "name": "mesai",
+  "private": true,
+  "version": "3.2.0",
+  "scripts": {
+    "build": "node source/mesai/build.js && cp source/mesai/dist/mesai.min.js mesai.js && python3 build.py",
+    "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js",
+    "dev": "python3 -m http.server 17869 --bind 127.0.0.1"
+  }
+}

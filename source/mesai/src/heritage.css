@@ -1,0 +1,107 @@
+/* Illustrated themes share the production calculator and controls. */
+.H .main{position:relative}.H .hd{height:66px;padding:0 18px;background:var(--card);border-bottom:1px solid var(--frame);gap:5px}.H .brand{font-family:'Mesai Blackletter',Georgia,serif;font-size:37px;font-weight:400;gap:0;letter-spacing:0}.H .brand .dot{display:none}.H .who{display:none}.H .hd .sws{display:none}.H .wk{font-family:'Mesai Manuscript',Georgia,serif;font-size:18px}.H .hd .vr{background:var(--frame)}.H .seg,.H .btn,.H .fi,.H .oo,.H .stp,.H .ib,.H .askb{border-radius:4px}.H .askb{background:none;border:1px solid var(--frame)}.H .k{font-family:'Mesai Manuscript',Georgia,serif;font-size:17px;color:var(--mut);font-weight:600}.H .big{font-weight:600;letter-spacing:-.025em}.H .hd .celestial{width:66px;height:32px;border:1px solid var(--frame);border-radius:20px;position:relative;margin:0 5px;padding:0;overflow:hidden;background:var(--side)}.celestial img{width:100%;height:100%;object-fit:contain}.celestial:after{content:'';position:absolute;bottom:1px;left:8px;width:19px;border-bottom:2px solid var(--acc)}.H[data-dark='true'] .celestial:after{left:37px}.H .herald-body{position:relative;display:grid;grid-template-columns:205px minmax(0,1fr);padding:18px 22px 0 12px;gap:10px}.H .knight-margin{display:flex;align-items:flex-end;justify-content:center;min-width:0;pointer-events:none}.knight-margin img{display:block;width:100%;max-height:480px;object-fit:contain;object-position:bottom}.H .manuscript-main{min-width:0}.H .side{display:grid;grid-template-columns:1fr 1fr 1.18fr;gap:20px;padding:3px 0 20px;background:none;border:0;border-bottom:1px solid var(--frame)}.H .side .sec{border:0;padding:0}.H .side .big{font-size:36px!important;margin-top:5px!important;line-height:1.03}.H .side>div:first-child .big{font-size:52px!important}.H .side .pill{padding:0;background:none;border-radius:0;font-size:12px}.H .side .bar{height:4px}.H .side .k{font-size:16px}.H .side>div:first-child>div:last-child{max-width:190px}.H .tl{padding:18px 0 8px}.H .lg{padding:0 0 10px}.H .ax,.H .tr{grid-template-columns:82px minmax(0,1fr) 70px;gap:6px}.H .tr{height:48px;border-radius:0;border-bottom:1px solid var(--line)}.H .tr.sel{box-shadow:inset 3px 0 0 var(--acc);background:var(--accSoft)}.H .tr.td{background:var(--core)}.H .dn{padding-left:8px}.H .dn b{font-family:var(--num);font-size:19px;font-weight:600}.H .dn small{font-size:10px}.H .vv{font-size:22px;font-weight:600;padding-right:2px}.H .vv small{font:10px var(--font)}.H .sg,.H .sp2,.H .gh,.H .cr,.H .oz{height:10px;top:19px;border-radius:3px}.H .gl,.H .cb{top:0;bottom:0;border-radius:0}.H .el{font-size:10px;top:4px;padding-left:3px}.H .lv{top:12px;width:7px;height:7px;margin-left:-3px;animation:none;background:var(--gold)}.H .nl{background:var(--goldInk);width:1px;top:10px;bottom:5px}.H .ed{margin:0 22px 0 227px;padding:15px 0;border-color:var(--frame)}.H .edh>b{font-family:'Mesai Manuscript',Georgia,serif;font-size:21px;color:var(--goldInk);font-weight:600}.H .edh>.k{display:none}.H .ed .tag{display:none}.H .ed .fi{font-size:21px;width:72px;height:34px}.H .ed .stp{padding:0 6px;height:34px;font-size:11px}.H .ed .oo,.H .ed .oo button{height:34px}.H .ed .note{font-size:11px}.H .strip{margin:0 22px;padding:12px 0;border-color:var(--frame);background:none;font-size:11px;gap:6px}.H .strip .btn{font-size:11px;height:29px;padding:0 7px}.H .strip .wchip{background:none;font-size:11px;padding:3px 4px}.H .strip .vr{margin:0 2px}.H .notes{background:var(--side);font-size:11px}.H .fl{font-size:11px}.H .flourish{position:absolute;right:14px;top:62px;width:115px;height:40px;object-fit:contain;pointer-events:none;opacity:.8;z-index:4}.H .herald-body .flourish{top:auto;bottom:-30px;right:0;width:95px}.release-row{display:flex;justify-content:flex-end;padding:5px 17px 9px;font-size:10px;color:var(--mut);gap:8px}.release-row a,.release-link{color:inherit;text-decoration:none;border-bottom:1px dotted var(--faint);cursor:pointer}.release-row a:hover,.release-link:hover{color:var(--accInk)}.release-row .update-available{color:var(--goldInk);font-weight:700}.H .release-row{margin:0 6px}.H .set{background:var(--side)}.tcards{grid-template-columns:repeat(3,minmax(0,1fr))}.H .tcard{border-radius:4px}.H .tcard span{border-radius:2px}.H .revp{border-radius:5px}.H .askf{border-radius:4px;box-shadow:none}.H .ans .bb{font-weight:600}.H .chips button{border-radius:4px}.H .pill{border-radius:4px}.H .c1{border-radius:3px}.H.T-compact .brand{font-size:25px}.H.T-compact .release-row{padding-bottom:6px}.H.T-pocket .release-row{display:none}.H.T-compact .flourish,.H.T-pocket .flourish{display:none}
+/* Celestial dial: real 24-hour time, labelled milestone, live data in the centre. */
+.H.L-clock{border:1px solid var(--gold);border-radius:20px}.H.L-clock .hd{height:66px}.H.L-clock .brand{color:var(--goldInk)}.H .clock-body{display:grid;grid-template-columns:390px minmax(0,1fr);gap:12px;align-items:center;padding:0 30px 10px 14px}.H .dial{width:390px;height:390px;position:relative;margin-top:-8px;isolation:isolate}.dial-art{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}.dial-number{position:absolute;transform:translate(-50%,-50%);font:600 20px/1 'Mesai Manuscript',Georgia,serif;color:#25251f;z-index:2;pointer-events:none}.dial-number.night{color:#f2dfad}.dial-copy{position:absolute;left:23%;top:32%;width:53%;height:42%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:5px;z-index:3}.dial-copy .dial-now{font:12px var(--font);color:var(--mut)}.dial-copy .k{font-size:19px}.dial-copy .big{font-size:53px;line-height:1}.dial-copy .dial-remaining{font:600 20px var(--num);color:var(--goldInk)}.dial-copy .dial-today{font:11px var(--font);color:var(--mut);margin-top:5px}.dial-pin{position:absolute;transform:translate(-50%,-50%);z-index:4;color:var(--card);background:var(--accInk);border:1px solid var(--card);border-radius:20px;padding:2px 6px;font:700 10px var(--font);white-space:nowrap;box-shadow:0 1px 4px #0003}.dial-pin.goal{background:var(--goldInk);color:var(--card)}.dial-caption{position:absolute;bottom:0;left:10%;right:10%;text-align:center;font:11px var(--font);color:var(--mut)}.clock-forecast{position:relative;min-width:0;padding:24px 0 105px}.clock-forecast .big{font-size:43px;margin:5px 0 8px;line-height:1.05}.clock-forecast .forecast-block{padding-bottom:17px;border-bottom:1px solid var(--frame);margin-bottom:17px}.clock-forecast .weekly-amount{font-size:32px}.clock-forecast .k{font-size:19px}.clock-forecast .sub{font:11px/1.5 var(--font);color:var(--mut)}.clock-forecast .bar{height:5px;margin:12px 0}.clock-town{position:absolute;width:100%;height:100px;object-fit:contain;object-position:bottom;bottom:0;pointer-events:none}.H.L-clock .wstrip{margin:0 25px;background:none;border-top:1px solid var(--frame);border-bottom:1px solid var(--frame)}.H.L-clock .wstrip button{padding:12px 10px;border:0;border-right:1px solid var(--line)}.H.L-clock .wstrip button:last-child{border:0}.H.L-clock .wstrip button>div:first-child{display:block!important;font-size:17px!important;font-family:var(--num)}.H.L-clock .wstrip button>div:first-child span{display:block;font:10px var(--font);margin:2px 0}.H.L-clock .wstrip button>div:last-child{font-size:17px!important;font-weight:600!important}.H.L-clock .ed{margin:0 25px;border-top:0}.H.L-clock .strip{margin:0 25px}.H.narrow .hd{gap:2px;padding:0 8px}.H.narrow .brand{font-size:30px}.H.narrow .wk{font-size:16px;min-width:75px}.H.narrow .hd .ib{width:25px}.H.narrow .herald-body{grid-template-columns:120px minmax(0,1fr);padding:16px 12px 0 3px;gap:5px}.H.narrow .side{gap:9px;grid-template-columns:1fr 1fr}.H.narrow .side>div:last-child{grid-column:1/-1;display:block;padding-top:9px;border-top:1px solid var(--frame)}.H.narrow .side .big{font-size:27px!important}.H.narrow .side>div:first-child .big{font-size:37px!important}.H.narrow .ed{margin:0 12px 0 128px}.H.narrow .tr{grid-template-columns:63px minmax(0,1fr) 56px}.H.narrow .dn b{font-size:16px}.H.narrow .clock-body{grid-template-columns:1fr;padding:0 20px}.H.narrow .dial{width:350px;height:350px;margin:0 auto}.H.narrow .clock-forecast{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:0 0 15px}.H.narrow .clock-forecast .forecast-block{border:0;padding:0;margin:0}.H.narrow .clock-forecast .big{font-size:30px}.H.narrow .clock-town{display:none}.H.narrow.L-clock .ed{margin:0 20px}.H.narrow .celestial{width:50px!important}.H.narrow .flourish{display:none}.H .bar{background:var(--sunk)}.H .askp{background:var(--card)}.H .askp .ans{padding:18px}.H .askp .ans .dd{font-size:13px}.H .toast{border-radius:5px}
+@media(prefers-reduced-motion:reduce){.H *{animation:none!important;transition:none!important}}
+
+/* Keep the utility surfaces as considered as the illustrated full view. */
+.H .askb.on{background:var(--acc);color:var(--card)}
+.H .big,.H .bb,.H .vv,.H .fi,.H .pkv b,.H .cst b{font-variant-numeric:lining-nums tabular-nums}
+.H .rz-br{opacity:.6;background:linear-gradient(135deg,transparent 52%,var(--gold) 52% 58%,transparent 58% 68%,var(--gold) 68% 74%,transparent 74% 84%,var(--gold) 84% 90%,transparent 90%)}
+.rz-br:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;opacity:1}
+.H.T-compact .hd{height:44px}.H.T-compact .cpt{position:relative}.H.T-compact .cpt>.k,.H.T-compact .cpt>.bb{position:relative;z-index:1}
+.H.T-compact .illustrated-compact>.k,.H.T-compact .illustrated-compact>.bb,.H.T-compact .illustrated-compact>div:nth-of-type(3){max-width:205px}
+.compact-art{position:absolute;pointer-events:none;object-fit:contain;right:12px;top:8px;width:74px;height:116px}
+.compact-clock{width:110px;height:110px;right:6px;top:14px}
+.H.T-compact .cst{border-top:1px solid var(--frame);padding-top:14px;margin-top:20px}.H.T-compact .cst b{font-size:20px;font-weight:600}
+.H.T-compact .cask{border:1px solid var(--frame);border-radius:4px}.H.T-compact .bb{font-weight:600;color:var(--goldInk)}
+.H.T-pocket{border-radius:5px!important}.H.T-pocket .pkv b{font-family:var(--num);font-size:24px;font-weight:600}.H.T-pocket .pk{min-height:64px}
+.H .release-row{font-size:11px}.H .sug{border-radius:4px}.H .sug i{border-radius:3px}
+
+.H.L-knight .herald-body{grid-template-columns:230px minmax(0,1fr);padding-left:8px;min-height:490px}
+.H.L-knight .knight-margin{position:relative;isolation:isolate}
+.H.L-knight .knight-art{position:relative;width:236px;max-width:none;max-height:390px;z-index:1;margin-bottom:4px}
+.H.L-knight .canopy-art{position:absolute;inset:0 auto -8px;left:22px;width:184px;height:calc(100% + 18px);max-height:none;object-fit:fill;z-index:0}
+.H.L-knight .ed{margin-left:252px}.H.L-knight .brand{font-size:43px}.H.L-knight .flourish{width:140px;height:47px;bottom:-26px}
+.H.L-clock.T-wide:not(.narrow) .hd{margin-left:410px;height:100px;padding:10px 20px 8px 0;flex-wrap:wrap;justify-content:flex-end;gap:3px;border-bottom:0;position:relative;z-index:5}
+.H.L-clock.T-wide:not(.narrow) .hd .brand{margin-right:auto;font-size:41px}
+.H.L-clock.T-wide:not(.narrow) .hd .sp{flex-basis:100%;height:0}
+.H.L-clock.T-wide:not(.narrow) .clock-body{margin-top:-90px;align-items:start}
+.H.L-clock.T-wide:not(.narrow) .dial{margin-top:7px}
+.H.L-clock.T-wide:not(.narrow) .clock-forecast{padding-top:103px;padding-bottom:105px}
+.H.L-clock.T-wide:not(.narrow) .clock-body{padding-bottom:12px}
+.H.L-knight.narrow .herald-body{grid-template-columns:120px minmax(0,1fr);min-height:0;padding-left:3px}
+.H.L-knight.narrow .knight-art{width:125px}.H.L-knight.narrow .canopy-art{display:none}.H.L-knight.narrow .ed{margin-left:128px}
+
+.compact-clock-wrap{position:absolute;right:8px;top:10px;width:110px;height:118px;display:grid;place-items:center}.compact-clock-wrap .compact-clock{inset:0}.compact-clock-wrap span{position:relative;font:600 23px var(--num);color:var(--goldInk);margin-top:7px}.H.T-compact .cst>div{background:none;border-radius:0;border-right:1px solid var(--line);padding:4px 7px}.H.T-compact .cst>div:last-child{border:0}.H.T-compact .cwk i{border-radius:2px}
+
+/* The manuscript is a shaped surface; its illuminated margin stands beyond it. */
+.H.L-knight.T-wide{background:transparent;border:0;box-shadow:none;border-radius:0}
+.H.L-knight.T-wide .main{isolation:isolate;padding-top:10px}
+.H.L-knight.T-wide .surface-stack:before{content:'';position:absolute;left:235px;right:0;top:10px;bottom:0;background:var(--card);border:1px solid var(--frame);border-radius:18px 24px 6px 6px;z-index:-1;box-shadow:var(--shadow)}
+.H.L-knight.T-wide .hd{margin-left:235px;padding-left:16px;background:transparent;position:relative;border-bottom:1px solid var(--frame)}
+.H.L-knight.T-wide .herald-body{padding-top:18px}.H.L-knight.T-wide .canopy-art{top:-68px;height:calc(100% + 88px)}
+.H.L-knight.T-wide .knight-art{max-height:430px;width:260px;margin-left:-8px;filter:drop-shadow(0 5px 3px #0002)}
+.H.L-knight.T-wide .set,.H.L-knight.T-wide .notes,.H.L-knight.T-wide .askrow,.H.L-knight.T-wide .askp,.H.L-knight.T-wide .strip,.H.L-knight.T-wide .revp{margin-left:252px}
+.H.L-knight.T-wide .strip{margin-right:22px}.H.L-knight.T-wide .askp{grid-template-columns:1fr}.H.L-knight.T-wide .askp .sugs{display:none}
+
+.surface-stack{position:relative;isolation:isolate}
+
+/* The astronomical clock has an overlapping dial, shaped backing and separate rails. */
+.H.L-clock.T-wide{background:transparent;border:0;border-radius:0;box-shadow:none}
+.H.L-clock.T-wide .main{padding:8px 6px 4px;isolation:isolate}
+.clock-composition{position:relative;isolation:isolate}
+.clock-panel-art{position:absolute;left:11%;top:25px;width:89%;height:calc(100% - 25px);object-fit:fill;z-index:-1;pointer-events:none;filter:drop-shadow(0 6px 5px #0003)}
+.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{margin-left:47%;height:114px;padding:35px 32px 0 0;background:none;gap:4px;position:relative;z-index:3}
+.H.L-clock.T-wide:not(.narrow) .clock-composition .hd .brand{font-size:42px}
+.H.L-clock.T-wide:not(.narrow) .clock-body{grid-template-columns:46% minmax(0,1fr);gap:12px;padding:0 37px 10px 0;margin-top:-109px;align-items:center}
+.H.L-clock.T-wide:not(.narrow) .dial{width:100%;height:auto;aspect-ratio:1;margin:0;filter:drop-shadow(0 4px 3px #0003)}
+.H.L-clock.T-wide .dial:before{content:'';position:absolute;left:21.4%;top:25.6%;width:56%;aspect-ratio:1;border-radius:50%;background:var(--card);z-index:0}
+.H.L-clock.T-wide:not(.narrow) .clock-forecast{padding:116px 0 116px;min-height:455px}
+.H.L-clock.T-wide .clock-forecast .big{font-size:43px}.H.L-clock.T-wide .clock-forecast .weekly-amount{font-size:32px}
+.H.L-clock.T-wide .clock-town{height:112px;bottom:10px}
+.H.L-clock.T-wide .dial-caption{bottom:3%;left:30%;right:30%;border-radius:20px;background:var(--side);padding:3px 7px;color:var(--ink);border:1px solid var(--gold);white-space:nowrap}
+.H.L-clock.T-wide .clock-framed-rail{position:relative;isolation:isolate;background:none;border:0;overflow:visible;margin:2px 8px 0;padding:14px 55px;min-height:100px}
+.clock-rail-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;object-fit:fill;filter:drop-shadow(0 4px 3px #0002)}
+.H.L-clock.T-wide .wstrip button{padding:8px 9px;min-width:0;background:none;border-right:1px solid var(--frame)}
+.H.L-clock.T-wide .wstrip button.sel{background:var(--accSoft);border-radius:4px}
+.H.L-clock.T-wide .ed.clock-framed-rail{margin:8px 26px 0;padding:17px 60px;min-height:110px}
+.H.L-clock.T-wide .ed .edh{margin-bottom:8px}.H.L-clock.T-wide .ed .note{padding-top:5px}
+.H.L-clock.T-wide .strip{margin:8px 50px 0;border:1px solid var(--frame);border-radius:18px;background:var(--card);padding:9px 14px}
+.H.L-clock.T-wide .release-row a{background:var(--card);border:1px solid var(--frame);padding:2px 9px;border-radius:12px}
+.H.L-clock.T-wide .set,.H.L-clock.T-wide .askrow,.H.L-clock.T-wide .askp,.H.L-clock.T-wide .notes,.H.L-clock.T-wide .revp{background:var(--card);margin:8px 26px;border:1px solid var(--frame);border-radius:10px}
+.H.L-clock.T-wide .release-row{padding-right:36px}
+
+.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{padding-right:67px}.H.L-clock.T-wide .clock-framed-rail{padding-left:80px;padding-right:80px}.H.L-clock.T-wide .ed.clock-framed-rail{padding-left:90px;padding-right:90px}.H.L-clock.T-wide .dial-caption{z-index:5;bottom:-1%}.H.L-clock.T-wide .dial-number{font-size:23px;font-variant-numeric:lining-nums}.H.L-clock.T-wide .hd .wk{font-size:17px}
+
+.H .ed{animation:none}
+
+.H .dial-number.night:nth-of-type(23){color:#192534;background:#eadab3;border-radius:50%;padding:1px 3px}
+
+.H.L-clock.T-wide .dial-copy .big{font-size:66px}.H.L-clock.T-wide .clock-forecast .big{font-size:49px}.H.L-clock.T-wide .clock-forecast .weekly-amount{font-size:38px}
+
+/* One continuous manuscript miniature, with the painting meeting the writing surface. */
+.H.L-knight.T-wide .knight-margin .knight-manuscript{position:absolute;top:-92px;right:-21px;left:auto;width:276px;height:calc(100% + 128px);max-height:none;object-fit:contain;object-position:right bottom;margin:0;filter:drop-shadow(0 4px 3px #0002)}
+.H.L-knight.T-wide .herald-body{min-height:520px}
+.H.L-knight.T-wide .brand{font-size:56px;line-height:1}
+.H.L-knight.T-wide .hd{height:88px;gap:5px}.H.L-knight.T-wide .wk{font-size:21px}
+.H.L-knight .side .k{font-size:20px}.H.L-knight .side>div:first-child .big{font-size:64px!important}.H.L-knight .side .big{font-size:43px!important}.H.L-knight .side>div:last-child .big{font-size:40px!important}
+.H.L-knight .side .sub{font:12px/1.5 var(--font)}.H.L-knight .dn b{font-size:23px}.H.L-knight .vv{font-size:24px}.H.L-knight .ax{font-size:13px}.H.L-knight .lg>b{font-family:'Mesai Blackletter',Georgia,serif;font-size:24px;font-weight:400;color:var(--goldInk)}
+.H .oo b{font-size:20px;font-weight:600;font-variant-numeric:lining-nums tabular-nums}.H .askb{font-family:var(--num);font-size:17px;font-weight:600}.H .seg{font-size:12px}
+.H.L-knight.narrow .knight-margin .knight-manuscript{width:125px;max-height:340px;margin-bottom:0;object-fit:contain}
+.H.L-knight.narrow .side .big{font-size:29px!important}.H.L-knight.narrow .side>div:first-child .big{font-size:40px!important}.H.L-knight.narrow .side .k{font-size:17px}.H.L-knight.narrow .dn b{font-size:18px}
+
+.H.L-knight .side>.sec>.k:last-child{font-family:var(--font);font-size:12px;line-height:1.5}.H.L-knight .side>div:first-child>.k:last-child{font-size:15px}
+
+.H.L-knight .brand{overflow:visible;position:relative}.H .manuscript-initial{width:121px;height:75px;object-fit:contain;flex:none;margin-left:-20px}.H .brand-rest{margin-left:-29px;margin-top:6px}
+.H.L-knight.narrow .manuscript-initial{height:46px;width:74px;margin-left:-8px}.H.L-knight.narrow .brand-rest{margin-left:-18px;margin-top:3px}
+.H.L-knight.T-wide .hd .brand{margin-right:9px}
+
+.H.L-knight .lg>b{font-size:24px!important}
+
+.H.L-knight.T-wide .knight-margin .knight-manuscript{left:0;right:auto;width:300px;height:calc(100% + 240px);object-position:left top}
+
+.H.L-knight.T-wide.mid .hd{padding-left:10px;gap:3px}.H.L-knight.T-wide.mid .brand{font-size:42px;margin-right:1px}.H.L-knight.T-wide.mid .manuscript-initial{width:94px;height:59px;margin-left:-12px}.H.L-knight.T-wide.mid .brand-rest{margin-left:-23px}.H.L-knight.T-wide.mid .wk{font-size:18px}.H.L-knight.T-wide.mid .hd .ib{width:24px}.H.L-knight.T-wide.mid .hd .celestial{width:51px}.H.L-knight.T-wide.mid .askb{padding:0 7px;font-size:15px}.H.L-knight.T-wide.mid .side .big{font-size:34px!important}.H.L-knight.T-wide.mid .side>div:first-child .big{font-size:52px!important}.H.L-knight.T-wide.mid .side .k{font-size:17px}
+.H.L-clock.T-wide.mid .clock-forecast .big{font-size:37px}.H.L-clock.T-wide.mid .clock-forecast .weekly-amount{font-size:31px}.H.L-clock.T-wide.mid .dial-copy .big{font-size:52px}.H.L-clock.T-wide.mid .hd .wk{font-size:16px}
+
+.H.L-knight.T-wide .knight-margin .knight-manuscript{width:285px}

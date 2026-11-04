@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   let root;
-  const allowed = {theme:['cizelge','sutunlar','sor','bilet'],lang:['tr','en'],look:['light','dark']};
+  const allowed = {theme:['cizelge','knight','sutunlar','sor','bilet','clock'],lang:['tr','en'],look:['light','dark']};
   function size() {
     const panel = root.querySelector('.w');
     return panel.classList.contains('T-pocket') ? 'pocket' : panel.classList.contains('T-compact') ? 'compact' : 'full';
@@ -12,7 +12,7 @@
     parent.postMessage({type:'mesai-preview-state',ready,theme:ui.theme,lang:ui.lang,look:ui.look,size:size()},location.origin);
     document.documentElement.lang = ui.lang;
     document.documentElement.style.colorScheme = ui.look;
-    document.documentElement.style.background = ui.look === 'dark' ? '#131613' : '#eceee8';
+    document.documentElement.style.background = ui.look === 'dark' ? '#0c1520' : '#e9e8e2';
     root.host.dataset.demoLook = ui.look;
     const grip = root.querySelector('.rz-br');
     grip.title = ui.lang === 'en' ? 'Drag to resize; double-click to reset' : 'Boyutlandırmak için sürükle; sıfırlamak için çift tıkla';
@@ -23,7 +23,7 @@
     if (!root || !window.__mesai || window.__mesai.state().st.code !== 'ready') return;
     clearInterval(boot);
     const style = document.createElement('style');
-    style.textContent = ':host{display:block!important}:host([data-demo-look="dark"]){color-scheme:dark}:host([data-demo-look="light"]){color-scheme:light}.w{box-shadow:none!important}.hd [data-a="close"],.hd [data-a="min"]{display:none!important}.rz-br{opacity:.65!important}';
+    style.textContent = ':host{display:block!important}:host([data-demo-look="dark"]){color-scheme:dark}:host([data-demo-look="light"]){color-scheme:light}.hd [data-a="close"],.hd [data-a="min"]{display:none!important}.rz-br{opacity:.65!important}';
     root.appendChild(style);
     new ResizeObserver(() => report()).observe(root.querySelector('.w'));
     root.addEventListener('click', () => setTimeout(() => report(),0));
