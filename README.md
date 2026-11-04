@@ -2,7 +2,7 @@
 
 ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work hours and plan your week in ARGE Portal.
 
-**Status:** 3.2.0 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
+**Status:** 3.2.1 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
 ![Three-step workflow overview](docs/images/workflow.svg)
 
@@ -27,3 +27,6 @@ Kurulum sayfasını aç, **Mesai** düğmesini yer işaretleri çubuğuna sürü
 - [Download and build guide](docs/DOWNLOADS.md) — source files versus packaged apps.
 - [Developer reference](docs/REFERENCE.md) — workflow details and relevant limits.
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Usage and licensing](USAGE.md).
+
+### 3.2.1
+Şövalye görünümü el yazması düzeniyle yeniden işlendi: çiçekli kenarlar, kale detayı, gömülü Gotik ve kaligrafik yazı tipleri. Göksel saatin iç kadranı ve rakamları yenilendi. Hesap kuralları değişmedi.

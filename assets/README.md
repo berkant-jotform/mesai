@@ -16,3 +16,7 @@ Built-in ImageGen, followed by transparent-padding trimming and WebP delivery co
 - Other ornament: slender painted flowering vines, small medieval town silhouette and sun/moon toggle, matching the same palette and brush treatment.
 
 The application overlays live digits, labels and controls. The compact layouts use the same production art.
+
+## 3.2.1 manuscript refinement
+New ImageGen transparent raster assets: knight-tall.webp (natural figure with taller canopy), manuscript-rule.webp, manuscript-town.webp, fleuron.webp, time-marker.webp and clock-face.webp. Embedded in the bookmark with no art fetches.
+Grenze Gotisch (gothic.woff2) by Renata Polastri/Omnibus-Type and Almendra (almendra.woff2) by Ana Sanfelippo, downloaded from the official google/fonts repository, OFL licenses included. Gothic supplies Turkish labels; Almendra supplies calligraphic numerals and supporting copy.

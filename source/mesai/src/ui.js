@@ -1,8 +1,8 @@
 // Mesai widget: one instance per tab; a second bookmark click reopens/refreshes it.
 (function () {
-  if (window.__mesai) { if (window.__mesai.version === '3.2.0') { window.__mesai.poke(); return; } window.__mesai.close(); }
+  if (window.__mesai) { if (window.__mesai.version === '3.2.1') { window.__mesai.poke(); return; } window.__mesai.close(); }
   var C = MesaiCore, A = MesaiAdapter(C, document), Q = MesaiAsk, SC = MesaiScen, HOL = MesaiHolidays, TH = MesaiThemes, TX = MesaiText;
-  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.0';
+  var MIN = C.MIN, DAY = C.DAY, H = 60 * MIN, VERSION = '3.2.1';
   var KEY = 'mesai.v3';
 
   // ---------------- persistence (local to this browser and portal) ----------------
@@ -564,6 +564,7 @@
     }
     if (v.thisWeek) {
       var f = forecastText(v);
+      if(S.ui.theme==='knight') f.sub=v.absorber&&v.absorber.held?t.earliest+' '+clk(v.absorber.end)+' · '+t.core.toLowerCase():v.bank>0?'+'+hm(v.bank)+' '+t.bank.toLowerCase():'';
       out += '<div class="sec"><div class="k">' + fill(t.forecast, { W: hrs(v.W) }) + '</div><div class="big" style="font-size:28px;color:' + (v.shortfall ? 'var(--bad)' : 'var(--goldInk)') + '">' + esc(f.big) + '</div><div class="k" style="margin-top:2px">' + esc(f.sub) + '</div></div>';
     }
     var pct = v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 100, ppct = v.W ? Math.max(0, Math.min(100 - pct, Math.round((v.total - v.done) / v.W * 100))) : 0;
@@ -831,7 +832,7 @@
 
   function art(name, cls) { return '<img class="' + cls + '" src="' + MesaiArt[name] + '" alt="" aria-hidden="true" draggable="false">'; }
   function heritage(v, pv, lay) {
-    if (lay === 'knight') return '<div class="herald-body"><aside class="knight-margin">' + art('knight','knight-art knight-manuscript') + '</aside><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + art('flourish','flourish') + '</div>' + editor(v);
+    if (lay === 'knight') return '<div class="herald-body"><aside class="knight-margin">' + art('knight','knight-art knight-manuscript') + '</aside><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + '</div>' + editor(v);
     var t=L(), td=v.today, daily=v.thisWeek&&td&&td.office&&v.milestone, f=forecastText(v), pct=v.W?Math.min(100,Math.floor(v.done/v.W*100)):100;
     var nums='';
     function position(hour, radius) { var a=(hour-14)/24*Math.PI*2;return 'left:'+(49.4+Math.sin(a)*radius)+'%;top:'+(53.6-Math.cos(a)*radius)+'%'; }
@@ -842,7 +843,7 @@
     var label=daily?fill(t.milestone,{D:hrs(v.cfg.D*MIN)}):v.thisWeek?t.today:t.week;
     var value=daily?clk(v.milestone):td&&td.credit?t.types[td.type]:v.thisWeek?'—':hm(v.done);
     var rem=daily?(v.milestone>v.now?dur(v.milestone-v.now,true)+' '+t.left:t.done):'';
-    return '<div class="clock-body"><div class="dial">'+art('clock','dial-art')+nums+pins+'<div class="dial-copy"><span class="dial-now">'+(v.thisWeek?(S.ui.lang==='en'?'Now ':'Şimdi ')+rec(v.now):esc(fill(t.weekOf,{a:dl(v.ws),b:dl(v.ws+4*DAY)})))+'</span><div class="k">'+esc(label)+'</div><div class="big">'+esc(value)+'</div><div class="dial-remaining">'+esc(rem)+'</div><span class="dial-today">'+esc(t.today+' '+(td?hm(td.actual||td.credit||0):'—')+' / '+hrs(v.cfg.D*MIN)+' '+t.h)+'</span></div><div class="dial-caption">'+(td&&td.first?esc(t.in+' '+rec(td.first)):'')+'</div></div><div class="clock-forecast"><div class="forecast-block"><div class="k">'+esc(fill(t.forecast,{W:hrs(v.W)}))+'</div><div class="big" style="color:var(--goldInk)">'+esc(f.big)+'</div><div class="sub">'+esc(f.sub)+'</div>'+earliestLine(v)+'</div><div><div class="k">'+t.remaining+'</div><div class="big weekly-amount">'+dur(v.remaining,true)+'</div><div class="bar" role="progressbar" aria-label="'+esc(t.week)+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%;background:var(--acc)"></i></div><div class="sub">'+dur(v.done)+' / '+hrs(v.W)+' '+t.h+' · '+pct+'%</div></div>'+art('town','clock-town')+'</div></div>'+weekStrip(v,pv)+editor(v);
+    return '<div class="clock-body"><div class="dial">'+art('face','dial-face')+art('clock','dial-art')+nums+pins+'<div class="dial-copy"><span class="dial-now">'+(v.thisWeek?(S.ui.lang==='en'?'Now ':'Şimdi ')+rec(v.now):esc(fill(t.weekOf,{a:dl(v.ws),b:dl(v.ws+4*DAY)})))+'</span><div class="k">'+esc(label)+'</div><div class="big">'+esc(value)+'</div><div class="dial-remaining">'+esc(rem)+'</div><span class="dial-today">'+esc(t.today+' '+(td?hm(td.actual||td.credit||0):'—')+' / '+hrs(v.cfg.D*MIN)+' '+t.h)+'</span></div><div class="dial-caption">'+(td&&td.first?esc(t.in+' '+rec(td.first)):'')+'</div></div><div class="clock-forecast"><div class="forecast-block"><div class="k">'+esc(fill(t.forecast,{W:hrs(v.W)}))+'</div><div class="big" style="color:var(--goldInk)">'+esc(f.big)+'</div><div class="sub">'+esc(f.sub)+'</div>'+earliestLine(v)+'</div><div><div class="k">'+t.remaining+'</div><div class="big weekly-amount">'+dur(v.remaining,true)+'</div><div class="bar" role="progressbar" aria-label="'+esc(t.week)+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%;background:var(--acc)"></i></div><div class="sub">'+dur(v.done)+' / '+hrs(v.W)+' '+t.h+' · '+pct+'%</div></div>'+art('town','clock-town')+'</div></div>'+weekStrip(v,pv)+editor(v);
   }
   var UPDATE_URL='https://berkant-jotform.github.io/mesai/';
   var latestVersion=null, updateController=null, updateTimer=null, closed=false;
@@ -889,7 +890,16 @@
     }
     if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo">' + L().undo + '</button>' : '') + '</div>';
     html += releaseLink();
-    MAIN.innerHTML = lay==='knight'&&tier==='wide'?'<div class="surface-stack">'+html+'</div>':html;
+    MAIN.innerHTML = lay==='knight'&&(tier==='wide'||tier==='std')?'<div class="surface-stack">'+html+'</div>':html;
+    if(lay==='knight'&&tier==='compact'){var compactHead=MAIN.querySelector('.hd');if(compactHead)compactHead.insertAdjacentHTML('beforeend',art('rule','manuscript-rule compact-rule'));}
+    if(lay==='knight'&&(tier==='wide'||tier==='std')){
+      var manuscriptHead=MAIN.querySelector('.hd'), manuscriptEditor=MAIN.querySelector('.ed');
+      if(manuscriptHead)manuscriptHead.insertAdjacentHTML('beforeend',art('rule','manuscript-rule head-rule'));
+      if(manuscriptEditor)manuscriptEditor.insertAdjacentHTML('afterbegin',art('rule','manuscript-rule editor-rule'));
+      MAIN.querySelectorAll('.side>div>.k:first-child,.side>.sec>div:first-child>.k,.tr .dn').forEach(function(el){el.insertAdjacentHTML('afterbegin',art('fleuron','manuscript-fleuron'));});
+      MAIN.querySelectorAll('.tl .lv').forEach(function(el){el.innerHTML=art('timeMarker','time-marker');});
+      var manuscriptSurface=MAIN.querySelector('.surface-stack');if(manuscriptSurface&&v)manuscriptSurface.insertAdjacentHTML('beforeend','<div class="manuscript-bas-de-page">'+art('manuscriptTown','manuscript-town')+'</div>');
+    }
     if(lay==='clock'&&tier==='wide'&&v&&st.view!=='history'){
       var dialBody=MAIN.querySelector('.clock-body'), head=MAIN.querySelector('.hd');
       if(dialBody&&head){var shell=document.createElement('div');shell.className='clock-composition';shell.innerHTML=art(isDark()?'panelDark':'panelLight','clock-panel-art');MAIN.prepend(shell);shell.appendChild(head);shell.appendChild(dialBody);}
@@ -1126,6 +1136,6 @@
     state: function () { return { st: st, S: S }; }
   };
   tick(true);
-  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){if(Array.from(document.fonts).some(function(f){return f.family===name;}))return;var font=new FontFace(name,'url('+MesaiFonts[name]+')');font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
+  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){if(Array.from(document.fonts).some(function(f){return f.family===name;}))return;var font=new FontFace(name,'url('+MesaiFonts[name]+')',name==='Mesai Gothic'?{weight:'100 900'}:{});font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
   checkVersion();
 })();
