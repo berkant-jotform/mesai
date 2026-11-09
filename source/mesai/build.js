@@ -2,7 +2,7 @@
 // modules are supplied, build from the exact checked-in release artifact.
 {
  const fs = require('fs'), path = require('path');
- const artifact = path.join(__dirname, 'exports/saydam-3.3.1.js');
+ const artifact = path.join(__dirname, 'exports/saydam-3.3.2.js');
  if (fs.existsSync(artifact)) {
   const code = fs.readFileSync(artifact, 'utf8');
   const out = path.join(__dirname, 'dist');
@@ -10,7 +10,7 @@
   fs.writeFileSync(path.join(out, 'mesai.js'), code);
   fs.writeFileSync(path.join(out, 'mesai.min.js'), code);
   fs.writeFileSync(path.join(out, 'bookmarklet.txt'), 'javascript:' + encodeURIComponent(code));
-  console.log('Built from the supplied Saydam 3.3.1 release export.');
+  console.log('Built from the supplied Saydam 3.3.2 release export.');
   return;
  }
 }

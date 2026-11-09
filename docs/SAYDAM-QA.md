@@ -26,3 +26,11 @@ Browser QA used deterministic, isolated portal fixtures. These results do not cl
 - Real signed-in ARGE portal, browser-specific bookmark limits/CSP and Safari.
 - Future editable maintenance needs Claude's matching Saydam source; the release currently uses its compiled export.
 
+
+## Compact follow-up — 3.3.2
+
+Both Gün and Kum saati are available in the middle window size. The previous generic compact summary is bypassed only for Saydam; other themes and the Pocket layout retain their behavior. Both views share full Saydam planning logic. Compact Hourglass omits long SVG callouts and keeps readable summary text beside the glass, while retaining clickable day bands.
+
+Browser checks: 500px compact window, 390×640 viewport and 900×600 viewport; no toolbar horizontal overflow. Day selection, a 17:30 planned exit, OOO +30, week reset, question/answer, reverse calculator, settings/history/theme X and Escape, EN labels, compact/full view persistence, Pocket and restore were exercised. Fixed an extra theme panel and the compact Expand action during these checks. Short content areas scroll; the lower planning controls remain reachable. Popovers use readable stable surfaces and questions stack vertically in compact size.
+
+92 baseline tests and JavaScript syntax pass. Real signed-in portal and Safari acceptance remain pending.
