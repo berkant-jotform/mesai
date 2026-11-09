@@ -1,11 +1,9 @@
-# Saydam 3.3.0 release
+# Saydam release provenance
 
-The Saydam implementation was supplied in Claude's updated self-contained index.html export on 9 November 2026. Its bookmark was decoded from that export; the new-user default and theme order were then changed to put Saydam first. mesai.js and source/mesai/exports/saydam-3.3.0.js are identical copies of that artifact. The build uses this export so rebuilding does not silently replace Saydam with older editable modules.
+Claude supplied Saydam in a self-contained index.html export on 9 November 2026. Its decoded application is retained in source/mesai/exports/saydam-3.3.0.js. Saydam was made the new-user default and first theme; existing saved selections remain unchanged.
 
-The existing src modules predate this Saydam export; they are retained for reference, not claimed as its complete editable source. Before editing application behavior or returning to a module build, obtain the matching Saydam source from Claude. The current published app remains reproducible from the checked-in export.
+Version 3.3.1 applies targeted QA repairs to that compiled artifact. mesai.js and source/mesai/exports/saydam-3.3.1.js are identical. The build copies this export and regenerates the install bookmark, ensuring installation and preview run the same bytes. Saydam is light-only and includes Day and Hourglass views.
 
-Website theme selection and preview messaging now include Saydam, the install bookmark and preview use the same application bytes, and version.json identifies 3.3.0. Saydam is light-only, with Day and Hourglass views.
+The older src modules do not contain the complete Saydam implementation. Their tests check baseline calculator and question logic; they do not substitute for browser testing of the exported UI. Obtain matching editable source from Claude before resuming a modular source build. The published artifact remains reproducible.
 
-Real ARGE portal acceptance remains to be checked by a signed-in user. No Bozkır artwork from the separate design handoff was included in this release.
-
-Saydam is the default for new users and first in the theme picker. Existing saved user themes are retained.
+No Bozkır artwork was included. Signed-in ARGE acceptance and Safari remain unverified.

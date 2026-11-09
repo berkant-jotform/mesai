@@ -2,7 +2,7 @@
 
 ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work hours and plan your week in ARGE Portal.
 
-**Status:** 3.2.5 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
+**Status:** 3.3.1 · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
 ![Three-step workflow overview](docs/images/workflow.svg)
 
@@ -45,3 +45,9 @@ Kurulum sayfasını aç, **Mesai** düğmesini yer işaretleri çubuğuna sürü
 ## 3.3.0 — Saydam
 
 Saydam adds a light glass appearance with Day and Hourglass views. Try it on the install page, then replace your bookmark to update. See [release provenance and build notes](docs/SAYDAM-RELEASE.md) before changing application source.
+
+## 3.3.1 — Saydam QA fixes
+
+Short windows keep the toolbar reachable; narrow toolbars wrap. Hourglass labels fit the frame. Invalid time entries show a readable error without changing the plan, reverse-calculator fields have accessible labels, and compact OOO confirmation has a readable primary action. Forecasts that pass midnight show the correct weekday.
+
+92 baseline calculator/question tests pass. Browser checks used isolated portal fixtures, not a signed-in ARGE account; see [Saydam QA](docs/SAYDAM-QA.md).

@@ -24,7 +24,7 @@
   document.querySelectorAll('[data-install]').forEach(b=>b.addEventListener('click',()=>{installMode=b.dataset.install;installPaint();}));
   installPaint();
   function paint() {
-    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.3.0'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
+    if(installed && /^\d+\.\d+\.\d+$/.test(installed)) document.querySelector('#version-status').textContent=installed==='3.3.1'?(state.lang==='tr'?'· Sürümün güncel':'· You are up to date'):(state.lang==='tr'?'· Sende v'+installed:'· You have v'+installed);
     document.documentElement.lang = state.lang;
     document.documentElement.dataset.look = state.look;
     document.documentElement.dataset.theme = state.theme;
@@ -66,7 +66,7 @@
     resetting=true;previewClosed=false;document.querySelector('.frame-wrap').hidden=false;document.querySelector('#preview-empty').hidden=true;
     if(!keepSize)state.size='full';paint();
     document.querySelectorAll('[data-question]').forEach(button=>{button.disabled=true;});
-    frame.src='preview.html?v=330-saydam&reset='+Date.now();
+    frame.src='preview.html?v=331-saydam&reset='+Date.now();
   }
   document.querySelector('#reset').addEventListener('click',()=>resetExample());
   document.querySelector('#reopen').addEventListener('click',()=>resetExample());
