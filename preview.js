@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   let root;
-  const allowed = {theme:['cizelge','knight','sutunlar','sor','bilet','clock'],lang:['tr','en'],look:['light','dark']};
+  const allowed = {theme:['cizelge','knight','sutunlar','sor','bilet','saydam','clock'],lang:['tr','en'],look:['light','dark']};
   function size() {
     const panel = root.querySelector('.w');
     return panel.classList.contains('T-pocket') ? 'pocket' : panel.classList.contains('T-compact') ? 'compact' : 'full';
@@ -15,8 +15,8 @@
     document.documentElement.style.background = ui.look === 'dark' ? '#0c1520' : '#e9e8e2';
     root.host.dataset.demoLook = ui.look;
     const grip = root.querySelector('.rz-br');
-    grip.title = ui.lang === 'en' ? 'Drag to resize; double-click to reset' : 'Boyutlandırmak için sürükle; sıfırlamak için çift tıkla';
-    grip.setAttribute('aria-label', grip.title);
+    if (grip) grip.title = ui.lang === 'en' ? 'Drag to resize; double-click to reset' : 'Boyutlandırmak için sürükle; sıfırlamak için çift tıkla';
+    if (grip) grip.setAttribute('aria-label', grip.title);
   }
   const boot = setInterval(() => {
     root = document.querySelector('#mesai-host')?.shadowRoot;

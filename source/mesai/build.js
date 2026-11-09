@@ -1,3 +1,19 @@
+// Saydam was delivered as a self-contained bookmark export. Until its editable
+// modules are supplied, build from the exact checked-in release artifact.
+{
+ const fs = require('fs'), path = require('path');
+ const artifact = path.join(__dirname, 'exports/saydam-3.3.0.js');
+ if (fs.existsSync(artifact)) {
+  const code = fs.readFileSync(artifact, 'utf8');
+  const out = path.join(__dirname, 'dist');
+  fs.mkdirSync(out, {recursive:true});
+  fs.writeFileSync(path.join(out, 'mesai.js'), code);
+  fs.writeFileSync(path.join(out, 'mesai.min.js'), code);
+  fs.writeFileSync(path.join(out, 'bookmarklet.txt'), 'javascript:' + encodeURIComponent(code));
+  console.log('Built from the supplied Saydam 3.3.0 release export.');
+  return;
+ }
+}
 // Builds dist/mesai.js (readable bundle), dist/mesai.min.js and dist/bookmarklet.txt
 const fs = require('fs'), path = require('path');
 const src = f => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8').replace(/^if \(typeof module.*$/m, '');

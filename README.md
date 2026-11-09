@@ -40,3 +40,8 @@ Kurulum sayfasını aç, **Mesai** düğmesini yer işaretleri çubuğuna sürü
 3.2.5 adds a visible theme menu, close controls for open panels, Escape dismissal, consistent Cep/minimize behavior and themed progress marks.
 
 3.2.5 replaces symbolic theme swatches with real light/dark layout previews, adds a ruler-linked drafting cursor effect to the website, and credits Berkant with a Slack feedback invitation.
+
+
+## 3.3.0 — Saydam
+
+Saydam adds a light glass appearance with Day and Hourglass views. Try it on the install page, then replace your bookmark to update. See [release provenance and build notes](docs/SAYDAM-RELEASE.md) before changing application source.
