@@ -1138,12 +1138,11 @@
   // The week as an hourglass: the bottom fills with what is worked, the top holds what is left; planned days are bands, the rest is "Plansız".
   function syKum(v, w, r) {
     var t = L(), y = t.sy, Wt = w.W || 1, HH = 266, sc = function (ms) { return HH * Math.min(Math.max(ms, 0), Wt) / Wt; };
-    var done = w.done, left = w.remaining, botY = 596 - sc(done), topY = 320 - sc(left), bot = '', top = '', Lb = [], Rb = [], cum = 0, fut = 0, gap = 0;
+    var done = w.done, left = w.remaining, botY = 596 - sc(done), topY = 320 - sc(left), bot = '', top = '', cum = 0, fut = 0, gap = 0;
     w.rows.forEach(function (d) {
       var c = (d.past || d.today || !w.thisWeek) ? d.count : 0; if (!(c > 0)) return;
       var y0 = 596 - sc(cum); cum += c; var y1 = 596 - sc(cum), live = d.today && d.inside && w.thisWeek;
       bot += '<rect class="band' + (st.sel === d.dow ? ' sel' : d.credit ? ' off' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
-      Lb.push({ m: (y0 + y1) / 2, d: d.dow, cls: st.sel === d.dow ? 'tsel' : live ? 'tnow' : '', t: t.days[d.dow] + ' ' + hm(c) + (d.credit ? ' · ' + t.types[d.type].toLowerCase() : live ? ' · ' + t.now.toLowerCase() : '') });
     });
     if (w.thisWeek) w.rows.forEach(function (d) {
       if (d.past) return;
@@ -1152,22 +1151,13 @@
       var a0 = fut; fut = Math.min(left, fut + add);
       var y0 = 320 - sc(a0), y1 = 320 - sc(fut), fin = fut >= left - 1e-9 && !w.shortfall;
       top += '<rect class="band' + (st.sel === d.dow ? ' sel' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
-      Rb.push({ m: (y0 + y1) / 2, d: d.dow, cls: st.sel === d.dow ? 'tsel' : '', t: t.days[d.dow] + ' +' + hm(fut - a0, true) + (d.credit ? ' · ' + t.types[d.type].toLowerCase() : d.end != null ? ' → ' + clk(d.end, d.date) : '') + (fin ? ' · ' + y.lastDrop.toLowerCase() : '') });
     });
     gap = w.thisWeek ? Math.max(0, left - fut) : 0;
     var gapY = 320 - sc(left), gapH = sc(left) - sc(fut);
-    if (gap > MIN) Rb.push({ m: gapY + gapH / 2, a: 'rev', cls: 'twarn', t: y.unplanned + ' ' + hm(gap, true) });
-    if (left > 0) Rb.push({ m: topY - 14, cls: 'tnow', t: y.left + ' ' + hm(left, true) });
-    Rb.push({ m: botY, cls: 'tnow', t: 'Σ ' + hm(done) });
-    // labels never overlap: keep at least 19 units between neighbours, leads bend to their band
-    var place = function (arr) { arr.sort(function (a, b) { return a.m - b.m; }); var prev = -1e9; arr.forEach(function (l) { l.y = Math.max(l.m + 6, prev + 24); prev = l.y; }); return arr; };
-    var lab = function (l, x, anchor, lead) { return '<path d="' + lead + '" fill="none" stroke="rgba(60,60,67,.35)" stroke-width="1"/><text class="' + l.cls + '" x="' + x + '" y="' + l.y.toFixed(1) + '" text-anchor="' + anchor + '"' + (l.d != null ? ' data-a="sel" data-v="' + l.d + '"' : l.a ? ' data-a="' + l.a + '"' : '') + '>' + esc(l.t) + '</text>'; };
-    var labels = place(Lb).map(function (l) { return lab(l, -26, 'end', 'M-18 ' + (l.y - 6).toFixed(1) + ' L-6 ' + l.m.toFixed(1) + ' H100'); }).join('') +
-      place(Rb).map(function (l) { return lab(l, 382, 'start', 'M' + (l.m < 320 ? 262 : 270) + ' ' + l.m.toFixed(1) + ' H362 L374 ' + (l.y - 6).toFixed(1)); }).join('');
     var V = 'M74 46 H286 C286 150 218 258 188 318 C218 382 286 490 286 594 H74 C74 490 142 382 172 318 C142 258 74 150 74 46 Z';
     var flowing = w.thisWeek && w.today && w.today.inside && left > 0;
     var f = w.thisWeek ? forecastText(w) : null;
-    var small = tierOf() === 'compact', svg = '<svg viewBox="' + (small ? '-40 0 440 660' : '-240 0 960 660') + '" role="img" aria-label="' + esc(fill(y.kumAria, { d: hm(done), W: hrs(Wt) })) + '"><defs>' +
+    var svg = '<svg viewBox="-40 0 440 660" role="img" aria-label="' + esc(fill(y.kumAria, { d: hm(done), W: hrs(Wt) })) + '"><defs>' +
       '<clipPath id="syV"><path d="' + V + '"/></clipPath>' +
       '<linearGradient id="syLq" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ad3ff"/><stop offset=".55" stop-color="#2a8cf0"/><stop offset="1" stop-color="#0a5fd0"/></linearGradient>' +
       '<linearGradient id="syLp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fdcff" stop-opacity=".75"/><stop offset="1" stop-color="#4aa8f5" stop-opacity=".75"/></linearGradient>' +
@@ -1190,9 +1180,9 @@
       '<rect x="34" y="40" width="9" height="560" rx="4.5" fill="url(#syRd)" stroke="rgba(30,50,90,.18)" stroke-width=".8"/><rect x="317" y="40" width="9" height="560" rx="4.5" fill="url(#syRd)" stroke="rgba(30,50,90,.18)" stroke-width=".8"/>' +
       '<path d="M94 72 C96 150 130 236 162 296" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".75"/><path d="M268 80 C264 140 240 200 214 250" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".5"/><path d="M94 570 C96 500 124 420 160 352" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>' +
       '<rect x="22" y="18" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="22" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/><rect x="22" y="592" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="596" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/></g>' +
-      (small ? '' : labels) + '</svg>';
+      '</svg>';
     return '<div class="sy-kum"><div class="kt"><div class="sy-kday">' + t.daysL[r.dow] + ' ' + dl(r.date) + '</div>' + syHead(v, r) + '<div class="sy-knote">' + esc(fill(y.kumNote, { l: dur(left, true), d: hm(done) })) + (f ? ' ' + y.lastDrop + ': <b>' + esc(f.big) + '</b>.' : '') + '</div>' +
-      '<div class="sy-legend"><span><i class="l-fg"></i>' + t.legend.office + '</span><span><i class="l-pl"></i>' + t.legend.plan + '</span><span><i class="l-gap"></i>' + y.unplanned.toLowerCase() + '</span></div></div>' + svg + '</div>';
+      '<div class="sy-legend"><span><i class="l-fg"></i>' + t.legend.office + '</span><span><i class="l-pl"></i>' + t.legend.plan + '</span><span><i class="l-gap"></i>' + y.unplanned.toLowerCase() + '</span></div></div>' + '<div class="sy-kum-visual">' + svg + '<div class="sy-kum-days" role="group" aria-label="' + esc(t.week) + '">' + w.rows.slice(0,5).map(function(d,i){var value=d.past||d.today||d.credit?Math.max(d.count||0,d.credit||0):d.val||0;return '<button data-a="sel" data-v="'+i+'" aria-pressed="'+(st.sel===i)+'"><span>'+t.days[d.dow]+'</span><b>'+hm(value)+'</b></button>';}).join('') + '</div></div></div>';
   }
   function syBar(v, r) {
     var t = L(), past = r.past || !v.thisWeek, dis = r.credit ? ' disabled' : '', seg = '';
@@ -1219,7 +1209,7 @@
     var notes = (nt.notes.length ? '<div class="note ' + nt.ncls + '">' + esc(nt.notes.join(' · ')) + '</div>' : '') + nt.mrow + habitRow(v, r, i);
     var pops = (st.themes ? themePanel() : '') + (st.set ? settings() : '') + (st.view === 'history' ? history() : '') + revPanel(v) + impPanel() +
       (S.ui.ask ? '<section class="sy-askpop" aria-label="' + esc(t.ask) + '">' + panelHead(t.ask, 'question') + askRow(v, false) + '<div class="askp">' + answerPanel(v) + suggestions() + '</div></section>' : '');
-    return '<div class="sy' + (kum ? ' kum' : '') + '">' + sySide(v, w) + '<section class="sy-dt">' + tb + (tierOf() === 'compact' ? '<div class="sy-mini"><span>' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b></span><span>' + hm(v.done) + ' / ' + hrs(v.W) + ' ' + t.h + '</span><button class="ibtn" data-a="wreset" aria-label="' + esc(t.resetWeek) + '" title="' + esc(t.resetWeek) + '">' + syIc('reset') + '</button>' + releaseLink() + '</div>' : '') + title + notices(v) + (kum ? syKum(v, w, r) : syHero(v, r) + syLine(v, r)) +
+    return '<div class="sy' + (kum ? ' kum' : '') + '">' + sySide(v, w) + '<section class="sy-dt">' + tb + (tierOf() === 'compact' ? '<div class="sy-mini"><span>' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b></span><span>' + hm(v.done) + ' / ' + hrs(v.W) + ' ' + t.h + '</span><button class="ibtn" data-a="wreset" aria-label="' + esc(t.resetWeek) + '" title="' + esc(t.resetWeek) + '">' + syIc('reset') + '</button>' + releaseLink() + '</div>' : '') + '<div class="sy-content">' + title + notices(v) + (kum ? syKum(v, w, r) : syHero(v, r) + syLine(v, r)) + '</div>' +
       '<div class="sy-low">' + (notes ? '<div class="sy-notes" role="status">' + notes + '</div>' : '') + '<div class="sy-row">' + syBar(v, r) +
       '<button class="sy-ask sy-gl' + (S.ui.ask ? ' on' : '') + '" data-a="askOpen" aria-expanded="' + !!S.ui.ask + '" aria-label="' + t.ask + '" title="' + t.ask + ' (Alt+M)">' + syIc('search') + '</button></div></div>' + pops + '</section></div>';
   }
@@ -1286,6 +1276,31 @@
       ['.wstrip','.ed'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el){el.classList.add('clock-framed-rail');el.insertAdjacentHTML('afterbegin',art(isDark()?'railDark':'railLight','clock-rail-art'));}});
     }
     if(plateArt&&tier!=='pocket'){MAIN.insertAdjacentHTML('afterbegin',art(plateArt+(tier==='compact'?'Compact':'Wide'),'bz-plate'));}
+    if (plateArt && tier !== 'pocket') {
+      var workspace = document.createElement('section'), content = document.createElement('div');
+      workspace.className = 'bz-workspace'; content.className = 'bz-content';
+      var head = MAIN.querySelector('.hd');
+      if (head) {
+        var nav = document.createElement('div'), tools = document.createElement('div'), close = head.querySelector('[data-a="close"]');
+        nav.className='bz-nav'; tools.className='bz-tools';
+        Array.from(head.children).forEach(function(el){
+          if(el===close)return;
+          if(el.matches('.sp,.vr,.who')){el.remove();return;}
+          (el.matches('.bozkir-view-switch,.wk,[data-a="prev"],[data-a="next"]')?nav:tools).appendChild(el);
+        });
+        head.appendChild(nav);head.appendChild(tools);if(close)head.appendChild(close);
+        workspace.appendChild(head);
+      }
+      workspace.appendChild(content);
+      Array.from(MAIN.children).forEach(function(el){
+        if(el.classList.contains('bz-plate'))return;
+        if(el.matches('.ed,.strip,.release-row'))return;
+        if(el.matches('.theme-panel,.set,.revp,.toast,.imp'))workspace.appendChild(el);
+        else content.appendChild(el);
+      });
+      ['.ed','.strip','.release-row'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el)content.appendChild(el);});
+      MAIN.appendChild(workspace);
+    }
     if(S.ui.theme==='turkic'&&tier!=='pocket'){var tkb=turkicBands(tier);MAIN.insertAdjacentHTML('afterbegin',tkb[0]);if(tkb[1])MAIN.insertAdjacentHTML('beforeend',tkb[1]);}
     if(lay==='knight'&&tier!=='pocket'){
       var page=MAIN.querySelector('.surface-stack');

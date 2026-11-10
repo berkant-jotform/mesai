@@ -88,3 +88,7 @@ A larger main install button includes all themes. Optional smaller bookmarks sit
 ## 3.4.3 — Bozkır switch and preview-linked install
 
 Atlı / Ayakta is available directly in Bozkır at full, compact and pocket sizes, preserving plans and open questions. Both Bozkır bookmarks include both paintings. The standing compact header clears its painted border. The smaller install button is visible below the preview controls, follows the selected theme, and shows the size saving against the full package.
+
+## 3.4.5 — Responsive workspaces
+
+Bozkır places its summary above a wider timeline and keeps the information/editor inside a scrolling parchment workspace. Header navigation, actions and close control reflow as groups. Saydam separates scrolling content from its fixed editor, bounds panels to their pane, and uses native readable hourglass day labels instead of scaled SVG annotations. Compact mode reuses its existing day navigation.
