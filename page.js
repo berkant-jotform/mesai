@@ -138,6 +138,7 @@
     mainBookmark.setAttribute('aria-label', state.lang === 'tr' ? 'Mesai · tüm temalar — yer işaretleri çubuğuna sürükle' : 'Mesai · all themes — drag to bookmarks bar');
     if (installState.id !== state.theme) prepareBookmark();
     else paintInstaller();
+    paintClickHints();
   }
   function send() { frame.contentWindow.postMessage({type:'mesai-preview', ...state}, location.origin); }
   document.querySelectorAll('button[data-lang],button[data-look],button[data-theme],button[data-size]').forEach(button => {
@@ -203,19 +204,27 @@
       } else element.append(document.createTextNode(part));
     });
   }
+  function paintClickHints() {
+    for (const id of ['main-install-hint','install-hint']) {
+      const hint = document.getElementById(id);
+      if (hint.hidden) continue;
+      hint.textContent = state.lang === 'tr'
+        ? 'Bu düğmeyi yer işaretleri çubuğuna sürükle. Sonra ARGE’de aç.'
+        : 'Drag this button to your bookmarks bar, then open it on ARGE.';
+      linkArgeHint(hint);
+    }
+  }
   mainBookmark.addEventListener('click', event => {
     event.preventDefault();
     const hint = document.querySelector('#main-install-hint'); hint.hidden = false;
-    hint.textContent = state.lang === 'tr' ? 'Bu düğmeyi yer işaretleri çubuğuna sürükle. Sonra ARGE’de aç.' : 'Drag this button to your bookmarks bar, then open it on ARGE.';
-    linkArgeHint(hint);
+    paintClickHints();
   });
   bookmark.addEventListener('click', event => {
     event.preventDefault();
     if (installState.phase !== 'ready') return;
     const hint = document.querySelector('#install-hint');
     hint.hidden = false;
-    hint.textContent = state.lang === 'tr' ? 'Mesai’yi basılı tutup üstteki yer işaretleri çubuğuna sürükle. Sonra ARGE’de çubuktaki Mesai’ye tıkla.' : 'Hold Mesai and drag it to the bookmarks bar above. Then click that bookmark on ARGE.';
-    linkArgeHint(hint);
+    paintClickHints();
   });
   bookmark.addEventListener('dragstart', event => {
     if (installState.phase !== 'ready' || !installState.href || state.theme !== installState.id) event.preventDefault();

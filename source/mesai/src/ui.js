@@ -875,6 +875,7 @@
     var en=S.ui.lang==='en';
     var t=L(), looks=[['auto',t.autoLook],['light',t.light],['dark',t.dark]].map(function(x){return '<button data-a="look" data-v="'+x[0]+'" class="'+((S.ui.look||'auto')===x[0]?'on':'')+'">'+x[1]+'</button>';}).join('');
     var rows='<div class="appearance-rows"><span class="k">'+t.language+'</span><span class="seg"><button data-a="lang" data-v="tr" class="'+(S.ui.lang!=='en'?'on':'')+'">Türkçe</button><button data-a="lang" data-v="en" class="'+(S.ui.lang==='en'?'on':'')+'">English</button></span><span class="k">'+t.colorMode+'</span>'+((TH.T[S.ui.theme]||{}).lightOnly?'<span class="k">'+t.sy.lightOnly+'</span>':'<span class="seg">'+looks+'</span>')+'</div>';
+    if (tierOf() === 'compact' && S.ui.theme !== 'saydam') rows += '<button class="btn" data-a="set" style="margin-top:12px">' + ic('set',15) + ' ' + t.settings + '</button>';
     if (BUILD.theme !== 'all') return '<section class="theme-panel" aria-label="'+esc(t.look)+'">'+panelHead(t.look,'themes')+'<p><b>'+esc(t.themes[BUILD.theme])+'</b> · '+(en?'Single-theme bookmark':'Tek temalı yer işareti')+'</p>'+rows+'<p><a href="https://berkant-jotform.github.io/mesai/?from='+VERSION+'&theme='+BUILD.theme+'#kurulum" target="_blank" rel="noopener noreferrer">'+(en?'Choose another theme or get all themes':'Başka tema seç veya tüm temaları ekle')+'</a></p></section>';
     var choices = TH.ORDER.filter(function(k){return k!=='bozkira';}).map(function(k){
       var boz=k==='bozkir', key=boz&&S.ui.theme==='bozkira'?'bozkira':k, selected=S.ui.theme===key;
@@ -887,7 +888,7 @@
   function dismissPanel(kind){
     var trigger=kind==='themes'?'themes':kind==='settings'?'set':kind==='history'?'hist':kind==='question'?'askOpen':'rev';
     if(kind==='themes'){st.themes=false;if(st.themeReturn){st.set=true;st.themeReturn=false;trigger='set';}}
-    if(kind==='settings')st.set=false;
+    if(kind==='settings'){st.set=false;if(tierOf()==='compact'&&S.ui.theme!=='saydam')trigger='themes';}
     if(kind==='history')st.view='week';
     if(kind==='question'){S.ui.ask=false;st.ask=null;st.askText='';save();}
     if(kind==='reverse')st.rev=null;
@@ -1230,6 +1231,7 @@
     W.style.setProperty('--ms',String(widthFor()/1350));
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' TH-' + S.ui.theme + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
     if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
+    grip.setAttribute('aria-valuenow',tier==='pocket'?'0':tier==='compact'?'50':'100'); grip.setAttribute('aria-valuemax',fullW()<760?'50':'100');
     st.lastTier = tier;
     var syFull = lay === 'saydam' && tier !== 'pocket' && v;   // Saydam builds its own window (sidebar, toolbar, popovers)
     var html = small || syFull ? '' : header(v) + (st.themes ? themePanel() : '') + (st.set ? settings() : '') + notices(v);
@@ -1249,6 +1251,7 @@
     }
     if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo">' + L().undo + '</button>' : '') + '</div>';
     if(tier==='compact'&&!syFull&&st.themes)html+=themePanel();
+    if(tier==='compact'&&!syFull&&st.set)html+=settings();
     // The pocket's brand already links to the install page; repeat the release row there only to announce an update.
     if (!syFull && (tier !== 'pocket' || (latestVersion && versionNewer(latestVersion, VERSION)))) html += releaseLink();
     var pool = {};
@@ -1258,6 +1261,7 @@
     if ((lay === 'knight' && !plateArt) || lay === 'clock') html = html.replace(/>([^<]*)</g, function (m, txt) { return '>' + txt.replace(/\bOOO\b/g, '<span class="tri-o">OOO</span>') + '<'; });
     MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     st.artPool = pool;
+    if(tier==='compact'&&fullW()<760){var expand=MAIN.querySelector('[data-a="cmpx"]');if(expand){expand.disabled=true;expand.title=S.ui.lang==='en'?'Enlarge the browser window for the full view.':'Geniş görünüm için tarayıcı penceresini büyüt.';}}
     if (plateArt) {
       var variantAnchor = MAIN.querySelector(tier === 'pocket' ? '.pocket-heading' : '.hd');
       if (variantAnchor) {
@@ -1330,12 +1334,13 @@
   var FULLW = { cizelge: 880, sutunlar: 880, knight: 1100, clock: 1050, saydam: 1120, bozkir: 1240, bozkira: 1240 };
   function sizeOf() { return S.ui.cmp ? 'compact' : (S.ui.w && S.ui.w < 300) ? 'pocket' : 'full'; }
   function setSize(sz) { S.ui.cmp = sz === 'compact'; S.ui.w = sz === 'pocket' ? 220 : null; S.ui.h = null; S.ui.col = false; S.ui.pre = null; }
-  function fullW() { var vw = document.documentElement.clientWidth || window.innerWidth; return Math.round(Math.min(FULLW[S.ui.theme] || 880, vw - 24)); }
+  function fullW() { var vw = document.documentElement.clientWidth || window.innerWidth, limit = FULLW[S.ui.theme] || 880; if (/^bozkira?$/.test(S.ui.theme)) limit = Math.min(limit, Math.floor(Math.max(180, window.innerHeight - 24) * 1605 / 980)); return Math.round(Math.min(limit, vw - 24)); }
   function widthFor() {
     var vw = document.documentElement.clientWidth || window.innerWidth, sz = sizeOf(), full = fullW();
     if (sz === 'pocket') return 220;
     // A window too narrow for the full layout gets the compact one, never a squeezed in-between.
-    var cw = window.__MESAI_CMPW || CMPW[S.ui.theme] || 340;   // Knight's compact plate holds the knight painting, so it needs more width
+    var cw = window.__MESAI_CMPW || CMPW[S.ui.theme] || 340;
+    if (/^bozkira?$/.test(S.ui.theme)) cw = Math.min(cw, Math.floor(Math.max(180, window.innerHeight - 24) * 1079 / (S.ui.theme === 'bozkira' ? 1458 : 1457)));   // Knight's compact plate holds the knight painting, so it needs more width
     if (sz === 'compact' || full < 760) return Math.round(Math.max(200, Math.min(cw, vw - 12)));
     return full;
   }
@@ -1489,17 +1494,24 @@
     if (a === 'pick') { mut(function (p) { p.pick = p.pick || {}; if (v === 'portal') p.pick[r.key] = 'portal'; else delete p.pick[r.key]; }); return; }
     if (a === 'dreset') { mut(function (p) { delete p.plan[r.key]; delete p.ovr[r.key]; delete p.types[r.key]; delete p.ooo[r.key]; }); return; }
   });
-  function fieldError(el) {   // say why the value was refused; the plan is kept
+  var fieldErrorSerial = 0;
+  function fieldError(el) {   // Keep recovery instructions inside the panel being edited.
     el.classList.add('er'); el.setAttribute('aria-invalid', 'true');
-    var box = root.querySelector('#mesai-field-error');
-    if (!box) { box = document.createElement('div'); box.id = 'mesai-field-error'; box.className = 'field-error'; box.setAttribute('role', 'alert'); var place = root.querySelector('.sy-low') || MAIN; place.insertBefore(box, place.firstChild); }
-    box.textContent = L().sy.bad; el.setAttribute('aria-describedby', box.id);
+    var place = el.closest('.set,.revp,.sy-askpop,.ed,.sy-low,.sy-tl') || root.querySelector('.bz-content') || MAIN;
+    var box = Array.from(place.children).find(function(x){return x.classList.contains('field-error');});
+    if (!box) {
+      box = document.createElement('div'); box.id = 'mesai-field-error-' + (++fieldErrorSerial);
+      box.className = 'field-error'; box.setAttribute('role', 'alert');
+      var head = place.querySelector(':scope > .panel-head');
+      place.insertBefore(box, head ? head.nextSibling : place.firstChild);
+    }
+    box.textContent = el.type === 'number' && el.min !== '' && el.max !== '' ? (S.ui.lang === 'en' ? 'Enter a number between ' + el.min + ' and ' + el.max + '.' : el.min + '–' + el.max + ' arasında bir sayı yaz.') : L().sy.bad; el.setAttribute('aria-describedby', box.id);
   }
   root.addEventListener('change', function (e) {
     var el = e.target, k = el.dataset && el.dataset.e, c = el.dataset && el.dataset.c;
     if (c) {
       if (c === 'start' || c === 'coreS' || c === 'coreE') { var m0 = parseTime(el.value); if (m0 == null) { fieldError(el); return; } S.cfg[c] = mm(m0); }
-      else { var n0 = parseFloat(String(el.value).replace(',', '.')); if (!isFinite(n0)) { fieldError(el); return; } S.cfg[c] = n0; }
+      else { var n0 = parseFloat(String(el.value).replace(',', '.')); if (!isFinite(n0) || (el.min !== '' && n0 < +el.min) || (el.max !== '' && n0 > +el.max)) { fieldError(el); return; } S.cfg[c] = n0; }
       save(); el.blur(); render(nowFn(), true); return;
     }
     if (k === 's' || k === 'e' || k === 'm') { if (!editDay(k, el.value)) fieldError(el); return; }
@@ -1512,7 +1524,7 @@
   root.addEventListener('keydown', function (e) {
     var el = e.target, k = el.dataset && el.dataset.e;
     e.stopPropagation();
-    if(el.dataset.rz && /^Arrow/.test(e.key)){e.preventDefault();var order=['pocket','compact','full'],ix=order.indexOf(sizeOf())+(e.key==='ArrowRight'||e.key==='ArrowDown'?1:-1);setSize(order[Math.max(0,Math.min(2,ix))]);save();render(nowFn(),true);keepInView();var hb=root.querySelector('.rz-br');if(hb)hb.focus();return;}
+    if(el.dataset.rz && /^Arrow/.test(e.key)){e.preventDefault();var order=['pocket','compact','full'],current=tierOf()==='pocket'?'pocket':tierOf()==='compact'?'compact':'full',ix=order.indexOf(current)+(e.key==='ArrowRight'||e.key==='ArrowDown'?1:-1),max=fullW()<760?1:2;setSize(order[Math.max(0,Math.min(max,ix))]);save();render(nowFn(),true);keepInView();var hb=root.querySelector('.rz-br');if(hb)hb.focus();return;}
     if (e.key === 'Escape' && closeActivePanel()) {e.preventDefault();return;}
     if (el.dataset && el.dataset.a === 'syt' && /^Arrow(Left|Right)$/.test(e.key)) { e.preventDefault(); var rr = st.v && st.v.rows[st.sel]; if (rr && rr.end != null) { editDay('e', clk(rr.end + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 15 : 5) * MIN)); var tk = root.querySelector('[data-a="syt"]'); if (tk) tk.focus(); } return; }
     if (e.key === 'Escape') { if (st.rev) st.rev = null; else if (st.ask) { st.ask = null; st.askText = ''; } else if (st.set) st.set = false; else if (S.ui.ask) { S.ui.ask = false; save(); } render(nowFn(), true); return; }
@@ -1532,7 +1544,12 @@
     setTimeout(function () { if (!root.activeElement) render(nowFn(), false); }, 0);
   });
   root.addEventListener('input', function (e) {
-    if (e.target.hasAttribute('aria-invalid')) { e.target.removeAttribute('aria-invalid'); e.target.removeAttribute('aria-describedby'); var er = root.querySelector('#mesai-field-error'); if (er) er.remove(); }
+    if (e.target.hasAttribute('aria-invalid')) {
+      var id = e.target.getAttribute('aria-describedby');
+      e.target.removeAttribute('aria-invalid'); e.target.removeAttribute('aria-describedby'); e.target.classList.remove('er');
+      var er = id && root.getElementById(id);
+      if (er && !Array.from(root.querySelectorAll('[aria-invalid="true"]')).some(function(x){return x.getAttribute('aria-describedby') === id;})) er.remove();
+    }
     if (e.target.dataset && e.target.dataset.e === 'ask') st.askText = e.target.value;
   });
   function onKey(e) { if(e.key==='Escape'&&closeActivePanel()){e.preventDefault();return;} if (e.altKey && e.code === 'KeyK') { e.preventDefault(); toggleCmp(); return; } if (e.altKey && e.code === 'KeyM') { e.preventDefault(); S.ui.col = false; S.ui.ask = true; save(); render(nowFn(), true); var i = root.querySelector('[data-e="ask"]'); if (i) i.focus(); } }

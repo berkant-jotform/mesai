@@ -43,7 +43,7 @@
 .TH-saydam.T-wide .sy-sb{min-height:0;overflow:auto}
 .TH-saydam.T-wide .sy-dt{min-height:0;overflow:hidden}
 .TH-saydam.T-wide .sy-low{position:relative;z-index:4;flex-shrink:0}
-.field-error{padding:8px 12px;margin:0 0 8px;border-radius:12px;background:#fff0e8;color:#842b18;font:500 13px/1.4 var(--font)}
+.field-error{grid-column:1/-1;flex:none;padding:8px 12px;margin:0 0 8px;border-radius:12px;background:#fff0e8;color:#842b18;font:500 13px/1.4 var(--font)}
 @media(prefers-reduced-motion:reduce){.TH-saydam *,.TH-saydam *:before,.TH-saydam *:after{animation:none!important;transition:none!important}}
 /* 3.3.2 (Codex): Gün and Kum saati in the compact size */
 .TH-saydam.T-compact{height:min(680px,calc(100vh - 16px));min-height:0}.TH-saydam.T-compact .main{height:100%;overflow:hidden}.TH-saydam.T-compact .sy{height:100%;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);overflow:hidden}.TH-saydam.T-compact .sy-sb{margin:8px 8px 0;padding:8px 10px;overflow:visible}.TH-saydam.T-compact .sy-top{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:14px;align-items:center}.TH-saydam.T-compact .lights{margin:0}.TH-saydam.T-compact .wnav{margin:0}.TH-saydam.T-compact .wnav h2{font-size:15px}.TH-saydam.T-compact .wsub{grid-column:1/-1;margin:5px 0;font-size:11px}.TH-saydam.T-compact .sy-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;overflow:visible}.TH-saydam.T-compact .sy-day{padding:6px;gap:3px;grid-template-columns:1fr;text-align:center;min-width:0}.TH-saydam.T-compact .sy-day b{font-size:12px;white-space:nowrap}.TH-saydam.T-compact .sy-day small{display:none}.TH-saydam.T-compact .sy-day span{font-size:12px;grid-column:1;grid-row:2}.TH-saydam.T-compact .sy-day i{margin:0}.TH-saydam.T-compact .sy-foot{display:none}.TH-saydam.T-compact .sy-dt{overflow:hidden;min-height:0;padding:8px 12px 10px}.TH-saydam.T-compact .sy-tb{min-height:34px;gap:5px;flex-wrap:wrap}.TH-saydam.T-compact .lt{font-size:22px;margin:10px 0 4px}.TH-saydam.T-compact .lt small{font-size:11px}.TH-saydam.T-compact .sy-hero{margin-top:6px;padding:12px;gap:16px;border-radius:20px}.TH-saydam.T-compact .sy .ring,.TH-saydam.T-compact .sy .ring svg{width:112px;height:112px}.TH-saydam.T-compact .sy .ring .rc b{font-size:22px}.TH-saydam.T-compact .sy-big{font-size:44px;margin-bottom:7px}.TH-saydam.T-compact .sy .chip{height:auto;min-height:26px;font-size:11px;padding:5px 9px;white-space:normal}.TH-saydam.T-compact .sy-chips{gap:5px}.TH-saydam.T-compact .sy-tl{margin-top:10px;padding:10px 12px}.TH-saydam.T-compact .sy .tlh{flex-wrap:wrap;gap:5px}.TH-saydam.T-compact .sy .tlh>small{display:none}.TH-saydam.T-compact .leg{flex-wrap:wrap;gap:5px 10px}.TH-saydam.T-compact .sy-low{position:relative;margin-top:auto;padding-top:10px;z-index:4;flex-shrink:0}.TH-saydam.T-compact .sy-row{gap:6px;align-items:flex-end}.TH-saydam.T-compact .sy-bar{padding:6px 8px;border-radius:22px;gap:6px;row-gap:6px}.TH-saydam.T-compact .sy-bar .seg{margin-right:auto}.TH-saydam.T-compact .sy-bar .sy-sp{display:none}.TH-saydam.T-compact .sy-ask{width:44px;height:44px;flex:none}.TH-saydam.T-compact .sy-kum{grid-template-columns:minmax(0,1fr) 150px;gap:8px;align-items:start}.TH-saydam.T-compact .sy-kum svg{height:250px;overflow:hidden}.TH-saydam.T-compact .sy-kum .kt{padding-top:0}.TH-saydam.T-compact .sy-kum .sy-big{font-size:42px}.TH-saydam.T-compact .sy-knote{display:none}.TH-saydam.T-compact .sy-legend{font-size:11px;gap:4px;margin-top:10px}.TH-saydam.T-compact .sy-mini{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--mut);padding:7px 2px 0}.TH-saydam.T-compact .sy-mini b{color:var(--ink)}.TH-saydam.T-compact .sy-mini .release-row{margin-left:auto;padding:0;font-size:10px}.TH-saydam.T-compact .sy .theme-panel,.TH-saydam.T-compact .sy .set,.TH-saydam.T-compact .sy .hist,.TH-saydam.T-compact .sy .revp,.TH-saydam.T-compact .sy-askpop{background:rgba(255,255,255,.98);animation:none;position:absolute;top:48px;bottom:auto;left:8px;right:8px;width:auto;max-width:none;max-height:calc(100% - 56px);box-sizing:border-box}.TH-saydam.T-compact .sy .theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -470,3 +470,38 @@
 
 :is(.TH-bozkir,.TH-bozkira) .bz-content .el{font-size:12px}
 :is(.TH-bozkir,.TH-bozkira) .bz-content .dn small{font-size:11.5px}
+
+/* Compact artwork must fit the available height without losing its proportions. */
+@container bz (max-width:280px){
+:is(.TH-bozkir,.TH-bozkira).T-compact .bz-workspace>.hd{grid-template-columns:minmax(0,1fr) auto}
+:is(.TH-bozkir,.TH-bozkira).T-compact .bz-workspace>.hd>.bz-tools{grid-column:1/-1;grid-row:2}
+:is(.TH-bozkir,.TH-bozkira).T-compact .bz-workspace>.hd>[data-a="close"]{grid-column:2;grid-row:1}
+.bz-workspace .cst{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Keep the selected day's target readable in short compact windows. */
+@media(max-height:560px){
+.TH-saydam.T-compact .sy-sb{padding:6px 10px}
+.TH-saydam.T-compact .wsub{display:none}
+.TH-saydam.T-compact .sy-day{padding:4px;gap:2px}
+.TH-saydam.T-compact .sy-day i{height:3px;grid-column:1}
+.TH-saydam.T-compact .sy-day b em{display:none}
+.TH-saydam.T-compact .lt{font-size:20px;margin:4px 0}
+.TH-saydam.T-compact .lt small{display:none}
+.TH-saydam.T-compact .sy-hero{padding:10px;gap:12px;margin-top:4px}
+.TH-saydam.T-compact .sy .ring,.TH-saydam.T-compact .sy .ring svg{width:94px;height:94px}
+.TH-saydam.T-compact .sy-big{font-size:38px}
+}
+@media(max-height:560px){
+.TH-saydam .sy-low{max-height:50%;overflow:auto;scrollbar-gutter:stable}
+}
+
+.bz-workspace :is(.theme-panel,.set)>.panel-head{position:sticky;top:-14px;z-index:3;background:#f5eedf}
+/* Form controls reflow within the pane instead of creating sideways scrolling. */
+.set .fl,.set input{min-width:0}
+.set .days7,.set .fl>span{flex-wrap:wrap}
+.set .full .btn{max-width:100%;white-space:normal;height:auto;min-height:32px}
+[aria-invalid="true"]{outline:2px solid var(--bad);outline-offset:1px}
+@container bz (max-width:280px){
+.bz-workspace .set{grid-template-columns:minmax(0,1fr)}
+.bz-workspace .set>div.fl{grid-column:1/-1!important}
+}

@@ -92,3 +92,7 @@ Atlı / Ayakta is available directly in Bozkır at full, compact and pocket size
 ## 3.4.5 — Responsive workspaces
 
 Bozkır places its summary above a wider timeline and keeps the information/editor inside a scrolling parchment workspace. Header navigation, actions and close control reflow as groups. Saydam separates scrolling content from its fixed editor, bounds panels to their pane, and uses native readable hourglass day labels instead of scaled SVG annotations. Compact mode reuses its existing day navigation.
+
+## 3.4.6 — Edge-case recovery
+
+Validation stays inside the active panel, numeric settings respect their input bounds, and Bozkır fits available height without cropping the frame. Compact Settings remains reachable through Appearance. Turkish/light layouts were checked with short windows, warnings, missing selections and duplicate simulated PDKS cards.
