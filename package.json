@@ -5,10 +5,10 @@
   },
   "name": "mesai",
   "private": true,
-  "version": "3.4.6",
+  "version": "3.4.7",
   "scripts": {
     "build": "node source/mesai/build.js && cp source/mesai/dist/mesai.min.js mesai.js && python3 build.py",
-    "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js && node source/mesai/test/independent.test.js",
+    "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js && node source/mesai/test/independent.test.js && node source/mesai/test/history.test.js",
     "dev": "python3 -m http.server 17869 --bind 127.0.0.1",
     "audit": "node source/mesai/test/ui-audit.js",
     "e2e": "node source/mesai/test/e2e.test.js",

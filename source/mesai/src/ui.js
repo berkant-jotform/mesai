@@ -26,12 +26,30 @@
   if (BUILD.theme !== 'all') S.ui.theme = BUILD.theme;
   if (TH.ORDER.indexOf(S.ui.theme) < 0) S.ui.theme = TH.ORDER[0];   // draft or unknown theme                              // 3.3: "Bilet" removed
   S.ppl = S.ppl || {};
-  var save = function () { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
+  var save = function (record) { syncHistory(record !== false); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
   var nowFn = function () { return window.__MESAI_NOW ? window.__MESAI_NOW() : C.istanbulNow(); };
   var L = function () { return TX[S.ui.lang === 'en' ? 'en' : 'tr']; };
 
   var st = { code: 'loading', count: 0, person: S.lastPerson || null, name: '', off: 0, sel: null, view: 'week', job: null, tried: {},
     sig: '', readAt: 0, period: null, paged: false, ask: null, askText: '', rev: null, set: false, undo: null, toast: null, placed: false };
+  var historyUI=['theme','look','lang','syv','cmp','w','bozkirWidth','pos','planOpen','habits'], historyEdits=['types','plan','ooo','ovr','pick'], history, historyPerson;
+  function historyState(){var ui={},edits={},person=st&&st.person||S.lastPerson||null,p=S.ppl[person]||{};historyUI.forEach(function(k){ui[k]=S.ui[k]===undefined?null:S.ui[k];});historyEdits.forEach(function(k){edits[k]=p[k]||{};});return C.clone({person:person,cfg:S.cfg,ui:ui,edits:edits});}
+  function syncHistory(record){if(!st)return;var current=historyState();if(!history||historyPerson!==current.person){history=MesaiHistory(current,50);historyPerson=current.person;}else if(record)history.capture(current);else history.rebase(current);st.undo=history.canUndo();}
+  function travelHistory(redo){
+    if(!history)return false;var before=historyState(),next=redo?history.redo(before):history.undo(before);if(!next)return false;
+    S.cfg=next.cfg;historyUI.forEach(function(k){if(next.ui[k]===null)delete S.ui[k];else S.ui[k]=next.ui[k];});
+    var person=P();if(person)historyEdits.forEach(function(k){person[k]=next.edits[k];});
+    st.ask=null;st.rev=null;st.toast=null;
+    if(JSON.stringify(before.ui.pos)!==JSON.stringify(next.ui.pos)){st.placed=false;}
+    save(false);render(nowFn(),true);return true;
+  }
+  function historyKey(e){
+    if(!(e.metaKey||e.ctrlKey)||e.altKey||e.isComposing)return false;
+    var key=e.key.toLowerCase(),redo=key==='y'||(key==='z'&&e.shiftKey);if(key!=='z'&&key!=='y')return false;
+    var target=e.composedPath?e.composedPath()[0]:e.target;
+    if(target&&target.closest&&target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"])'))return false;
+    if(!travelHistory(redo))return false;e.preventDefault();e.stopPropagation();return true;
+  }
   var P = function () {
     var id = st.person; if (!id) return null;
     var p = S.ppl[id] = S.ppl[id] || {};
@@ -53,7 +71,7 @@
     var cut = C.dkey(now - 400 * DAY);
     ['days', 'events', 'types', 'plan', 'ovr', 'ooo', 'pick'].forEach(function (k) { Object.keys(p[k] || {}).forEach(function (d) { if (d < cut) delete p[k][d]; }); });
     var today = C.dkey(now); Object.keys(p.plan).forEach(function (d) { if (d < today) delete p.plan[d]; });
-    save();
+    save(false);
   }
 
   // ---------------- formatting ----------------
@@ -619,7 +637,7 @@
     out.push('<span class="vr"></span><button class="wchip" data-a="set" title="' + t.settings + '">' + t.core + ' ' + mm(cfg.coreS) + '–' + mm(cfg.coreE) + '</button>');
     // 3.3: no saved-week chips in the footer; the history button lists saved weeks.
     out.push('<span class="sp"></span>');
-    if (st.undo) out.push('<button class="btn" data-a="undo">' + ic('undo', 14) + t.undo + '</button>');
+    if (st.undo) out.push('<button class="btn" data-a="undo" aria-keyshortcuts="Meta+Z Control+Z">' + ic('undo', 14) + t.undo + '</button>');
     if (v.thisWeek) out.push('<button class="btn' + (st.rev ? ' pri' : '') + '" data-a="rev">' + ic('rev', 14) + t.reverse + '</button>');
     if (v.thisWeek) out.push('<button class="btn" data-a="wreset" title="' + t.resetWeek + '">' + ic('undo', 14) + t.resetWeek + '</button>');
     return '<div class="strip">' + out.join('') + '</div>';
@@ -854,7 +872,7 @@
     list.push(t.fu.ooo);
     return '<div class="chips fup"><span class="got">' + esc(t.fu.label) + '</span>' + list.map(function (q) { return '<button data-a="fup" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>';
   }
-  function history() {
+  function savedHistoryPanel() {
     var t = L(), list = savedWeeks(12);
     var rows = list.map(function (h) {
       var pct = Math.min(100, Math.round(h.done / h.W * 100)), diff = h.done - h.W;
@@ -892,7 +910,7 @@
     if(kind==='history')st.view='week';
     if(kind==='question'){S.ui.ask=false;st.ask=null;st.askText='';save();}
     if(kind==='reverse')st.rev=null;
-    render(nowFn(),true);var btn=root.querySelector('.hd [data-a="'+trigger+'"],.strip [data-a="'+trigger+'"],.sy [data-a="'+trigger+'"]');if(btn)btn.focus();
+    render(nowFn(),true);var btn=(kind==='settings'&&st.settingsTrigger&&st.settingsTrigger==='core'?root.querySelector('.sy-foot [data-a="set"]'):null)||root.querySelector('.sy-tb [data-a="'+trigger+'"]')||root.querySelector('.hd [data-a="'+trigger+'"],.strip [data-a="'+trigger+'"],.sy [data-a="'+trigger+'"]');if(btn)btn.focus({preventScroll:true});
   }
   function closeActivePanel(){var kind=st.themes?'themes':st.set?'settings':st.rev?'reverse':S.ui.ask?'question':st.view==='history'?'history':null;if(kind){dismissPanel(kind);return true;}return false;}
   function settings() {
@@ -993,12 +1011,24 @@
     if (!artPending[name]) artPending[name] = createImageBitmap(new Blob([bytes = embeddedBytes(MesaiArt[name])], {type: bytes[8] === 97 && bytes[9] === 118 ? 'image/avif' : 'image/webp'})).then(function(b) { if(closed){b.close();return null;} artCache[name]=b;return b; });
     return artPending[name];
   }
+  function prepareControlArt(){
+    if(S.ui.theme!=='knight'&&S.ui.theme!=='clock')return;
+    MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i,.pkbar,.cwk i:not(.pl):not(.cr)').forEach(function(el) {
+      if(el.classList.contains('sg') && el.parentElement.querySelector('.sp2'))return;
+      el.insertAdjacentHTML('afterbegin',art('bar','progress-paint'));
+    });
+    MAIN.querySelectorAll('.ed .fi,.ed .oo').forEach(function(el) {
+      var shell=el;
+      if(el.classList.contains('fi')){shell=document.createElement('span');shell.className='control-shell';el.parentNode.insertBefore(shell,el);shell.appendChild(el);}
+      shell.insertAdjacentHTML('beforeend',art(isDark()?'controlDark':'controlLight','control-paint'));
+    });
+  }
   function paintArt() {
     if (!window.createImageBitmap) return;
     var pool = st.artPool || {}; st.artPool = null;
     var reuse = function (canvas) { var list = pool[canvas.dataset.art + '|' + canvas.className]; var old = list && list.shift(); if (!old) return false; canvas.replaceWith(old); return true; };
     MAIN.querySelectorAll('canvas[data-art]').forEach(function(canvas) {
-      if (reuse(canvas)) return;
+      if (canvas.dataset.painted || reuse(canvas)) return;
       bitmap(canvas.dataset.art).then(function(b) {
         if (!b || !canvas.isConnected) return;
         canvas.width=b.width;canvas.height=b.height;
@@ -1006,16 +1036,6 @@
       }).catch(function() { /* Opaque surfaces and ordinary control borders remain usable. */ });
     });
     if (S.ui.theme !== 'knight' && S.ui.theme !== 'clock') return;
-    MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i,.pkbar,.cwk i:not(.pl):not(.cr)').forEach(function(el) {
-      if(el.classList.contains('sg') && el.parentElement.querySelector('.sp2'))return;
-      el.insertAdjacentHTML('afterbegin',art('bar','progress-paint'));
-      reuse(el.firstElementChild);
-    });
-    MAIN.querySelectorAll('.ed .fi,.ed .oo').forEach(function(el) {
-      var shell=el;
-      if(el.classList.contains('fi')){shell=document.createElement('span');shell.className='control-shell';el.parentNode.insertBefore(shell,el);shell.appendChild(el);}
-      shell.insertAdjacentHTML('beforeend',art(isDark()?'controlDark':'controlLight','control-paint'));
-    });
     MAIN.querySelectorAll('canvas.progress-paint:not([data-painted]),canvas.control-paint').forEach(function(canvas) {
       bitmap(canvas.dataset.art).then(function(b) {
         if(!b || !canvas.isConnected)return;
@@ -1075,7 +1095,7 @@
     var pct = v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 100, ppct = v.thisWeek && v.W ? Math.max(0, Math.min(100 - pct, Math.round((v.total - v.done) / v.W * 100))) : 0, f = v.thisWeek ? forecastText(v) : null;
     var foot = '<div class="sy-foot"><div class="ft">' + (v.thisWeek ? t.thisWeek : t.week) + '</div><div class="fn">' + hm(v.done) + ' <small>/ ' + hrs(v.W) + ' ' + t.h + '</small></div>' +
       '<div class="sy-meter" role="progressbar" aria-label="' + esc(t.week) + '" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><u style="width:' + pct + '%"></u><u class="g" style="left:' + pct + '%;width:' + ppct + '%"></u></div>' +
-      '<div class="fe">' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b>' + (f ? '<br>' + fcLbl(v) + ' <b' + (v.shortfall ? ' class="warnc"' : '') + '>' + esc(f.big) + '</b>' + (f.sub ? '<br><span class="fsub">' + esc(f.sub) + '</span>' : '') : '') + '</div>' +
+      '<div class="fe">' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b>' + (f ? '<br>' + fcLbl(v) + ' <b' + (v.shortfall ? ' class="warnc"' : '') + '>' + esc(f.big) + '</b>' + (v.bank>0 ? '<br><span class="fsub">+' + hm(v.bank) + ' ' + esc(t.bank.toLowerCase()) + '</span>' : '') : '') + '</div>' +
       '<div class="fe">' + t.target + ' ' + hrs(v.cfg.W * MIN) + (v.ooo ? ' + OOO ' + hm(v.ooo) + ' = ' + hrs(v.W) : '') + ' ' + t.h + ' · <button class="lnk" data-a="set">' + t.core + ' ' + mm(v.cfg.coreS) + '–' + mm(v.cfg.coreE) + '</button></div>' + (v.thisWeek ? '<div class="fe"><button class="lnk" data-a="wreset">' + syIc('reset') + t.resetWeek + '</button></div>' : '') + releaseLink() + '</div>';
     var wk = fill(t.weekOf, { a: dl(v.ws), b: dl(v.ws + 4 * DAY) }), lt = y.lights, cmp = tierOf() === 'compact';
     return '<aside class="sy-sb"><div class="sy-top" data-drag><div class="lights"><button class="lc" data-a="close" aria-label="' + esc(t.closeMesai) + '" title="' + esc(lt.close) + '"></button><button class="lm" data-a="min" aria-label="' + esc(lt.min) + '" title="' + esc(lt.min) + '"></button><button class="lx" data-a="' + (cmp ? 'cmpx' : 'cmp') + '" aria-label="' + esc(cmp ? t.expand : lt.cmp) + '" title="' + esc(cmp ? t.expand : lt.cmp) + ' (Alt+K)"></button></div>' +
@@ -1139,11 +1159,12 @@
   // The week as an hourglass: the bottom fills with what is worked, the top holds what is left; planned days are bands, the rest is "Plansız".
   function syKum(v, w, r) {
     var t = L(), y = t.sy, Wt = w.W || 1, HH = 266, sc = function (ms) { return HH * Math.min(Math.max(ms, 0), Wt) / Wt; };
-    var done = w.done, left = w.remaining, botY = 596 - sc(done), topY = 320 - sc(left), bot = '', top = '', cum = 0, fut = 0, gap = 0;
+    var done = w.done, left = w.remaining, botY = 596 - sc(done), topY = 320 - sc(left), bot = '', top = '', Lb = [], Rb = [], cum = 0, fut = 0, gap = 0;
     w.rows.forEach(function (d) {
       var c = (d.past || d.today || !w.thisWeek) ? d.count : 0; if (!(c > 0)) return;
       var y0 = 596 - sc(cum); cum += c; var y1 = 596 - sc(cum), live = d.today && d.inside && w.thisWeek;
-      bot += '<rect class="band' + (st.sel === d.dow ? ' sel' : d.credit ? ' off' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
+      bot += '<rect data-key="done-' + d.dow + '" class="band' + (st.sel === d.dow ? ' sel' : d.credit ? ' off' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
+      Lb.push({ key:'done-'+d.dow, m: (y0 + y1) / 2, d: d.dow, cls: st.sel === d.dow ? 'tsel' : live ? 'tnow' : '', t: t.days[d.dow] + ' ' + hm(c) });
     });
     if (w.thisWeek) w.rows.forEach(function (d) {
       if (d.past) return;
@@ -1151,14 +1172,24 @@
       if (add <= 0 || fut >= left - 1e-9) return;
       var a0 = fut; fut = Math.min(left, fut + add);
       var y0 = 320 - sc(a0), y1 = 320 - sc(fut), fin = fut >= left - 1e-9 && !w.shortfall;
-      top += '<rect class="band' + (st.sel === d.dow ? ' sel' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
+      top += '<rect data-key="plan-' + d.dow + '" class="band' + (d.credit ? ' off' : '') + (st.sel === d.dow ? ' sel' : d.dow % 2 ? '' : ' alt') + '" data-a="sel" data-v="' + d.dow + '" x="0" y="' + y1.toFixed(1) + '" width="360" height="' + Math.max(0, y0 - y1).toFixed(1) + '"/>';
+      Rb.push({ key:'plan-'+d.dow, m: (y0 + y1) / 2, d: d.dow, cls: st.sel === d.dow ? 'tsel' : '', t: t.days[d.dow] + ' +' + hm(fut - a0, true) });
     });
     gap = w.thisWeek ? Math.max(0, left - fut) : 0;
     var gapY = 320 - sc(left), gapH = sc(left) - sc(fut);
+    if (gap > MIN) Rb.push({ m: gapY + gapH / 2, a: 'rev', cls: 'twarn', t: y.unplanned + ' ' + hm(gap, true) });
+    if (left > 0) Rb.push({ key:'remaining', m: topY - 14, cls: 'tnow', t: y.left + ' ' + hm(left, true) });
+    Rb.push({ key:'total', m: botY, cls: 'tnow', t: 'Σ ' + hm(done) });
+    // labels never overlap: keep at least 19 units between neighbours, leads bend to their band
+    var place = function (arr) { arr.sort(function (a, b) { return a.m - b.m; }); var prev = -1e9; arr.forEach(function (l) { l.y = Math.max(l.m + 6, prev + 30); prev = l.y; }); return arr; };
+    var lab = function (l, x, anchor, lead) { return '<g data-key="label-' + (l.key || l.d || l.a || l.cls) + '"><path d="' + lead + '" fill="none" stroke="rgba(60,60,67,.35)" stroke-width="1"/><text class="' + l.cls + '" x="' + x + '" y="' + l.y.toFixed(1) + '" text-anchor="' + anchor + '"' + (l.d != null ? ' data-a="sel" data-v="' + l.d + '"' : l.a ? ' data-a="' + l.a + '"' : '') + '>' + esc(l.t) + '</text></g>'; };
+    var placedLabels=place(Lb.concat(Rb));
+    var shortLabels='<div class="kum-short-labels">'+placedLabels.map(function(l){return '<span'+(l.d!=null?' data-a="sel" data-v="'+l.d+'"':'')+' class="'+l.cls+'">'+esc(l.t)+'</span>';}).join('')+'</div>';
+    var labels = placedLabels.map(function (l) { return lab(l, 368, 'start', 'M270 ' + l.m.toFixed(1) + ' H344 L358 ' + (l.y - 6).toFixed(1)); }).join('');
     var V = 'M74 46 H286 C286 150 218 258 188 318 C218 382 286 490 286 594 H74 C74 490 142 382 172 318 C142 258 74 150 74 46 Z';
     var flowing = w.thisWeek && w.today && w.today.inside && left > 0;
     var f = w.thisWeek ? forecastText(w) : null;
-    var svg = '<svg viewBox="-40 0 440 660" role="img" aria-label="' + esc(fill(y.kumAria, { d: hm(done), W: hrs(Wt) })) + '"><defs>' +
+    var small = tierOf() === 'compact', svg = '<svg viewBox="' + (small ? '-40 0 440 660' : '0 0 650 660') + '" role="img" aria-label="' + esc(fill(y.kumAria, { d: hm(done), W: hrs(Wt) })) + '"><defs>' +
       '<clipPath id="syV"><path d="' + V + '"/></clipPath>' +
       '<linearGradient id="syLq" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ad3ff"/><stop offset=".55" stop-color="#2a8cf0"/><stop offset="1" stop-color="#0a5fd0"/></linearGradient>' +
       '<linearGradient id="syLp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fdcff" stop-opacity=".75"/><stop offset="1" stop-color="#4aa8f5" stop-opacity=".75"/></linearGradient>' +
@@ -1172,8 +1203,8 @@
       '<ellipse cx="180" cy="320" rx="230" ry="300" fill="url(#syHa)"/><ellipse cx="180" cy="636" rx="176" ry="15" fill="url(#syCa)"/><ellipse cx="180" cy="626" rx="120" ry="5" fill="rgba(15,25,50,.18)"/>' +
       '<path d="' + V + '" fill="rgba(255,255,255,.22)"/><g clip-path="url(#syV)">' +
       (gap > MIN ? '<rect x="0" y="' + gapY.toFixed(1) + '" width="360" height="' + Math.max(0, gapH).toFixed(1) + '" fill="url(#syHt)"/>' : '') +
-      (left > 0 ? '<rect x="0" y="' + (320 - sc(fut)).toFixed(1) + '" width="360" height="' + (sc(fut) + 2).toFixed(1) + '" fill="url(#syLp)"/>' + top + '<ellipse cx="180" cy="' + (320 - sc(fut)).toFixed(1) + '" rx="140" ry="4" fill="#d6f0ff" opacity=".9"/>' : '') +
-      (done > 0 ? '<rect x="0" y="' + botY.toFixed(1) + '" width="360" height="' + (600 - botY).toFixed(1) + '" fill="url(#syLq)"/>' + bot + '<ellipse cx="180" cy="' + botY.toFixed(1) + '" rx="140" ry="6" fill="#bfe7ff" opacity=".95"/>' : '') +
+      (left > 0 ? '<rect x="0" y="' + (320 - sc(fut)).toFixed(1) + '" width="360" height="' + (sc(fut) + 2).toFixed(1) + '" fill="url(#syLp)"/>' + top + '<ellipse class="waterline" data-key="top-surface" cx="180" cy="' + (320 - sc(fut)).toFixed(1) + '" rx="140" ry="4" fill="#d6f0ff" opacity=".9"/>' : '') +
+      (done > 0 ? '<rect x="0" y="' + botY.toFixed(1) + '" width="360" height="' + (600 - botY).toFixed(1) + '" fill="url(#syLq)"/>' + bot + '<ellipse class="waterline" data-key="bottom-surface" cx="180" cy="' + botY.toFixed(1) + '" rx="140" ry="6" fill="#bfe7ff" opacity=".95"/>' : '') +
       '<rect x="0" y="0" width="360" height="600" fill="url(#sySh)" pointer-events="none"/>' +
       (done > 0 ? '<circle class="bub" cx="146" cy="580" r="3" fill="#fff" opacity=".6"/><circle class="bub b2" cx="214" cy="566" r="2" fill="#fff" opacity=".6"/><circle class="bub b3" cx="190" cy="586" r="2.5" fill="#fff" opacity=".55"/>' : '') + '</g>' +
       (flowing ? '<path d="M180 318 V' + (botY - 2).toFixed(1) + '" stroke="#2a8cf0" stroke-width="2.5" stroke-linecap="round" opacity=".8"/><circle class="drop" cx="180" cy="326" r="3.5" fill="#5ac8fa" style="--fall:' + Math.max(0, botY - 332).toFixed(0) + 'px"/><circle class="drop d2" cx="180" cy="326" r="3" fill="#5ac8fa" style="--fall:' + Math.max(0, botY - 332).toFixed(0) + 'px"/>' : '') +
@@ -1181,9 +1212,9 @@
       '<rect x="34" y="40" width="9" height="560" rx="4.5" fill="url(#syRd)" stroke="rgba(30,50,90,.18)" stroke-width=".8"/><rect x="317" y="40" width="9" height="560" rx="4.5" fill="url(#syRd)" stroke="rgba(30,50,90,.18)" stroke-width=".8"/>' +
       '<path d="M94 72 C96 150 130 236 162 296" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".75"/><path d="M268 80 C264 140 240 200 214 250" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".5"/><path d="M94 570 C96 500 124 420 160 352" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>' +
       '<rect x="22" y="18" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="22" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/><rect x="22" y="592" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="596" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/></g>' +
-      '</svg>';
+      (small ? '' : labels) + '</svg>';
     return '<div class="sy-kum"><div class="kt"><div class="sy-kday">' + t.daysL[r.dow] + ' ' + dl(r.date) + '</div>' + syHead(v, r) + '<div class="sy-knote">' + esc(fill(y.kumNote, { l: dur(left, true), d: hm(done) })) + (f ? ' ' + y.lastDrop + ': <b>' + esc(f.big) + '</b>.' : '') + '</div>' +
-      '<div class="sy-legend"><span><i class="l-fg"></i>' + t.legend.office + '</span><span><i class="l-pl"></i>' + t.legend.plan + '</span><span><i class="l-gap"></i>' + y.unplanned.toLowerCase() + '</span></div></div>' + '<div class="sy-kum-visual">' + svg + '<div class="sy-kum-days" role="group" aria-label="' + esc(t.week) + '">' + w.rows.slice(0,5).map(function(d,i){var value=d.past||d.today||d.credit?Math.max(d.count||0,d.credit||0):d.val||0;return '<button data-a="sel" data-v="'+i+'" aria-pressed="'+(st.sel===i)+'"><span>'+t.days[d.dow]+'</span><b>'+hm(value)+'</b></button>';}).join('') + '</div></div></div>';
+      '<div class="sy-legend"><span><i class="l-fg"></i>' + t.legend.office + '</span><span><i class="l-pl"></i>' + t.legend.plan + '</span><span><i class="l-off"></i>' + t.legend.credit + '</span><span><i class="l-gap"></i>' + y.unplanned.toLowerCase() + '</span></div></div>' + '<div class="sy-kum-visual">' + svg + shortLabels + '<div class="kum-caption">'+esc(t.days[r.dow])+' · '+hm(syVal(r,v)[0])+'</div></div></div>';
   }
   function syBar(v, r) {
     var t = L(), past = r.past || !v.thisWeek, dis = r.credit ? ' disabled' : '', seg = '';
@@ -1194,7 +1225,7 @@
     var inp = function (k, val, lbl) { return '<input class="tin" data-e="' + k + '" value="' + val + '"' + dis + ' inputmode="numeric" maxlength="5" aria-label="' + lbl + '">'; };
     return '<div class="sy-bar sy-gl"><div class="seg" role="group" aria-label="' + t.type + '">' + seg + '</div>' +
       stp(t.in, 'nuds', 15, inp('s', inV, t.in) + argeHint(r, t), dis) + stp(t.out, 'nud', 15, inp('e', outV, t.out), dis) + stp('OOO', 'ooo', 30, '<b>' + (r.ooo ? hm(r.ooo.m * MIN) : '0:00') + '</b>', '') +
-      '<span class="sy-sp"></span>' + (st.undo ? '<button class="ibtn" data-a="undo" aria-label="' + t.undo + '" title="' + t.undo + '">' + syIc('undo') + '</button>' : '') +
+      '<span class="sy-sp"></span>' + (st.undo ? '<button class="ibtn" data-a="undo" aria-keyshortcuts="Meta+Z Control+Z" aria-label="' + t.undo + '" title="' + t.undo + '">' + syIc('undo') + '</button>' : '') +
       (v.thisWeek ? '<button class="txt' + (st.rev ? ' on' : '') + '" data-a="rev" aria-label="' + esc(t.reverse) + '" title="' + esc(t.reverse) + '" aria-expanded="' + !!st.rev + '">' + syIc('rev') + t.reverse + '</button>' : '') + '</div>';
   }
   function syView(v, pv) {
@@ -1208,30 +1239,63 @@
     var nt = edNotes(v, r, i), cn = fill(t.credit9, { D: hrs(v.cfg.D * MIN) });
     nt.notes = nt.notes.filter(function (x) { return x !== cn; });   // the headline already says it
     var notes = (nt.notes.length ? '<div class="note ' + nt.ncls + '">' + esc(nt.notes.join(' · ')) + '</div>' : '') + nt.mrow + habitRow(v, r, i);
-    var pops = (st.themes ? themePanel() : '') + (st.set ? settings() : '') + (st.view === 'history' ? history() : '') + revPanel(v) + impPanel() +
+    var pops = (st.themes ? themePanel() : '') + (st.set ? settings() : '') + (st.view === 'history' ? savedHistoryPanel() : '') + revPanel(v) + impPanel() +
       (S.ui.ask ? '<section class="sy-askpop" aria-label="' + esc(t.ask) + '">' + panelHead(t.ask, 'question') + askRow(v, false) + '<div class="askp">' + answerPanel(v) + suggestions() + '</div></section>' : '');
     return '<div class="sy' + (kum ? ' kum' : '') + '">' + sySide(v, w) + '<section class="sy-dt">' + tb + (tierOf() === 'compact' ? '<div class="sy-mini"><span>' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b></span><span>' + hm(v.done) + ' / ' + hrs(v.W) + ' ' + t.h + '</span><button class="ibtn" data-a="wreset" aria-label="' + esc(t.resetWeek) + '" title="' + esc(t.resetWeek) + '">' + syIc('reset') + '</button>' + releaseLink() + '</div>' : '') + '<div class="sy-content">' + title + notices(v) + (kum ? syKum(v, w, r) : syHero(v, r) + syLine(v, r)) + '</div>' +
       '<div class="sy-low">' + (notes ? '<div class="sy-notes" role="status">' + notes + '</div>' : '') + '<div class="sy-row">' + syBar(v, r) +
       '<button class="sy-ask sy-gl' + (S.ui.ask ? ' on' : '') + '" data-a="askOpen" aria-expanded="' + !!S.ui.ask + '" aria-label="' + t.ask + '" title="' + t.ask + ' (Alt+M)">' + syIc('search') + '</button></div></div>' + pops + '</section></div>';
   }
   function isDark() { if (TH.T[S.ui.theme] && TH.T[S.ui.theme].lightOnly) return false; return S.ui.look === 'dark' || (S.ui.look === 'auto' && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)); }
+  // Reconcile the rendered tree without detaching unchanged controls, panels or SVGs.
+  // Their focus, native Tab order and running animations therefore survive edits.
+  function nodeKey(n) {
+    if(n.nodeType!==1)return n.nodeName;
+    var d=n.dataset||{};
+    return n.nodeName+'|'+(d.key||n.id||(d.c?'c:'+d.c:d.e?'e:'+d.e:d.a?'a:'+d.a+':'+(d.v||'')+':'+(d.s||'')+':'+(d.panel||''):d.art?'art:'+d.art:(n.getAttribute('class')||'').split(/\s/)[0]));
+  }
+  function syncForm(old, fresh) {
+    if(old.nodeType!==fresh.nodeType||old.nodeName!==fresh.nodeName){old.replaceWith(fresh);return;}
+    if(old.nodeType===3){if(old.nodeValue!==fresh.nodeValue)old.nodeValue=fresh.nodeValue;return;}
+    if(old.nodeType!==1)return;
+    if(old.classList.contains('sy-kum-visual')&&old.style.getPropertyValue('--glass-height'))fresh.style.setProperty('--glass-height',old.style.getPropertyValue('--glass-height'));
+    var formValue=fresh.value;
+    var painted=old.tagName==='CANVAS'&&old.dataset.art===fresh.dataset.art&&old.dataset.painted;
+    Array.from(old.attributes).forEach(function(a){if(!fresh.hasAttribute(a.name)&&!(painted&&/^(width|height|data-painted)$/.test(a.name)))old.removeAttribute(a.name);});
+    Array.from(fresh.attributes).forEach(function(a){if(old.getAttribute(a.name)!==a.value)old.setAttribute(a.name,a.value);});
+    if(old.tagName==='INPUT'){if(old.value!==fresh.value)old.value=fresh.value;old.checked=fresh.checked;return;}
+    var available=Array.from(old.childNodes), used=new Set();
+    Array.from(fresh.childNodes).forEach(function(child,i){
+      var key=nodeKey(child), match=available.find(function(n){return !used.has(n)&&nodeKey(n)===key;});
+      if(match){used.add(match);if(old.childNodes[i]!==match)old.insertBefore(match,old.childNodes[i]||null);syncForm(match,child);}
+      else old.insertBefore(child,old.childNodes[i]||null);
+    });
+    available.forEach(function(n){if(!used.has(n)&&n.parentNode===old)old.removeChild(n);});
+    if((old.tagName==='SELECT'||old.tagName==='TEXTAREA')&&old.value!==formValue)old.value=formValue;
+  }
   function render(now, force) {
+    // A blur can save a field between pointerdown and click. Do not remove the click target.
+    if(st.pointerDown&&st.inChange){st.pendingRender=true;return;}
     var p = P(), v = p ? compute(now) : null; st.v = v;
     var tier = tierOf(); st.narrow = widthFor() < 760;
     var sig = JSON.stringify([st.code, st.fp, Math.floor(now / 60000), st.off, st.sel, st.view, st.set, st.themes, S.ui.ask, st.ask && st.ask.q, st.rev && [st.rev.day, st.rev.t, st.rev.from, st.rev.day2, st.rev.t2], st.undo ? 1 : 0, st.toast, S.cfg, S.ui, p && [p.types, p.plan, p.ovr, p.ooo, p.pick], st.job, st.count, st.paged, isDark(), st.narrow, tier, st.imp ? st.imp.on : 0]);
     if (sig === st.sig && !force) return;
     var act = root.activeElement, fkey = act && act.dataset && (act.dataset.e || act.dataset.c), fsel = act && act.selectionStart;
+    var focusData = act && act.dataset ? Object.assign({},act.dataset) : null;
+    var scrolls = ['.set','.bz-content','.sy-content','.sy-low','.revp','.hist','.sy-askpop'].map(function(sel){var el=MAIN.querySelector(sel);return [sel,el?el.scrollTop:0];});
+    var liveMain=MAIN;
     if (fkey && !force && act.tagName === 'INPUT') return;   // never yank an input mid-edit
     st.sig = sig;
     var th = TH.T[S.ui.theme] ? S.ui.theme : 'cizelge', lay = TH.T[th].layout;
     W.setAttribute('style', TH.vars(th, isDark()) + ';' + (W.dataset.pos || '')); W.setAttribute('lang', S.ui.lang === 'en' ? 'en' : 'tr');
     var small = tier === 'pocket' || tier === 'compact';
     W.dataset.dark=String(isDark());
+    W.dataset.bozkir=String(/^bozkira?$/.test(S.ui.theme));
     var grip=root.querySelector('.rz-br');grip.title=L().resizeKeys;grip.setAttribute('aria-label',grip.title);
     W.style.setProperty('--ms',String(widthFor()/1350));
     W.className = 'w' + (lay==='knight'||lay==='clock'?' H':'') + ' L-' + lay + ' TH-' + S.ui.theme + ' T-' + tier + (widthFor()<1000?' mid':'') + (S.ui.col ? ' col' : '') + (st.narrow && !small ? ' narrow' : '') + (heightFor() ? ' fixh' : '') + (st.rs ? ' rsz' : '') + (st.anim ? ' anim' : '');
     if(lay==='knight'&&tier!=='pocket')W.classList.add('illuminated');
     grip.setAttribute('aria-valuenow',tier==='pocket'?'0':tier==='compact'?'50':'100'); grip.setAttribute('aria-valuemax',fullW()<760?'50':'100');
+    if(/^bozkira?$/.test(th)&&tier==='wide'){grip.title=S.ui.lang==='en'?'Drag to resize; arrow keys adjust width. Double-click to reset.':'Boyutlandırmak için sürükle; ok tuşlarıyla genişliği ayarla. Sıfırlamak için çift tıkla.';grip.setAttribute('aria-label',grip.title);grip.setAttribute('aria-valuenow',widthFor());grip.setAttribute('aria-valuemax','1400');}
     st.lastTier = tier;
     var syFull = lay === 'saydam' && tier !== 'pocket' && v;   // Saydam builds its own window (sidebar, toolbar, popovers)
     var html = small || syFull ? '' : header(v) + (st.themes ? themePanel() : '') + (st.set ? settings() : '') + notices(v);
@@ -1239,7 +1303,7 @@
     else if (tier === 'compact' && !syFull) html += compactView(v);
     else if (syFull) html += syView(v, st.ask && st.ask.pv && st.ask.store ? st.ask.pv : null);
     else if (!v) html += '<div class="empty">' + (st.code === 'loading' ? '<span class="spin"></span> ' : '') + '<b>' + esc(L()[st.code] || L().loading) + '</b>' + (st.code === 'nocard' ? '<span>ARGE Portal · PDKS</span>' : '') + '</div>';
-    else if (st.view === 'history') html += history() + strip(v);
+    else if (st.view === 'history') html += savedHistoryPanel() + strip(v);
     else {
       var pv = st.ask && st.ask.pv && st.ask.store ? st.ask.pv : null;
       if (S.ui.ask) html += askRow(v, false) + '<div class="askp">' + answerPanel(v) + suggestions() + '</div>';
@@ -1249,7 +1313,7 @@
       else html += '<div class="body">' + summary(v) + '<div style="min-width:0">' + timeline(v, pv) + '</div></div>' + editor(v);
       html += strip(v) + revPanel(v) + impPanel();
     }
-    if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo">' + L().undo + '</button>' : '') + '</div>';
+    if (st.toast) html += '<div class="toast">' + esc(st.toast) + (st.undo ? '<button data-a="undo" aria-keyshortcuts="Meta+Z Control+Z">' + L().undo + '</button>' : '') + '</div>';
     if(tier==='compact'&&!syFull&&st.themes)html+=themePanel();
     if(tier==='compact'&&!syFull&&st.set)html+=settings();
     // The pocket's brand already links to the install page; repeat the release row there only to announce an update.
@@ -1259,6 +1323,7 @@
     // Medieval faces draw O like 0: set the word OOO (text only, never inside attributes) in the gothic face.
     var plateArt = TH.T[th].art;   // Bozkır: painted steppe plates instead of Knight's
     if ((lay === 'knight' && !plateArt) || lay === 'clock') html = html.replace(/>([^<]*)</g, function (m, txt) { return '>' + txt.replace(/\bOOO\b/g, '<span class="tri-o">OOO</span>') + '<'; });
+    MAIN=liveMain.cloneNode(false);
     MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     st.artPool = pool;
     if(tier==='compact'&&fullW()<760){var expand=MAIN.querySelector('[data-a="cmpx"]');if(expand){expand.disabled=true;expand.title=S.ui.lang==='en'?'Enlarge the browser window for the full view.':'Geniş görünüm için tarayıcı penceresini büyüt.';}}
@@ -1279,7 +1344,7 @@
       if(dialBody&&head){var shell=document.createElement('div');shell.className='clock-composition';shell.innerHTML=art(isDark()?'panelDark':'panelLight','clock-panel-art');MAIN.prepend(shell);shell.appendChild(head);shell.appendChild(dialBody);}
       ['.wstrip','.ed'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el){el.classList.add('clock-framed-rail');el.insertAdjacentHTML('afterbegin',art(isDark()?'railDark':'railLight','clock-rail-art'));}});
     }
-    if(plateArt&&tier!=='pocket'){MAIN.insertAdjacentHTML('afterbegin',art(plateArt+(tier==='compact'?'Compact':'Wide'),'bz-plate'));}
+    if(plateArt&&tier!=='pocket'){MAIN.insertAdjacentHTML('afterbegin',art(plateArt+(tier==='compact'?'Compact':'Wide'),'bz-plate'));MAIN.setAttribute('data-drag','');MAIN.title=S.ui.lang==='en'?'Drag the painting or header to move':'Taşımak için resmi veya başlığı sürükle';}else{MAIN.removeAttribute('data-drag');MAIN.removeAttribute('title');}
     if (plateArt && tier !== 'pocket') {
       var workspace = document.createElement('section'), content = document.createElement('div');
       workspace.className = 'bz-workspace'; content.className = 'bz-content';
@@ -1304,6 +1369,8 @@
       });
       ['.ed','.strip','.release-row'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el)content.appendChild(el);});
       MAIN.appendChild(workspace);
+      var bankNote=content.querySelector('.side>.sec:nth-child(2)>.k:last-child');
+      if(bankNote&&v){bankNote.title=bankNote.textContent;bankNote.textContent=v.bank>0?'+'+hm(v.bank)+' '+L().bank.toLowerCase():'';}
     }
     if(S.ui.theme==='turkic'&&tier!=='pocket'){var tkb=turkicBands(tier);MAIN.insertAdjacentHTML('afterbegin',tkb[0]);if(tkb[1])MAIN.insertAdjacentHTML('beforeend',tkb[1]);}
     if(lay==='knight'&&tier!=='pocket'){
@@ -1321,20 +1388,33 @@
       if(composition){var cp=MAIN.querySelector('.set');if(cp){cp.classList.add('clock-settings');composition.appendChild(cp);}var cq=MAIN.querySelector('.askr'),ca=MAIN.querySelector('.askp');if(cq&&ca){var cs=document.createElement('section');cs.className='clock-question';composition.appendChild(cs);cs.appendChild(cq);cs.appendChild(ca);}}
     }
     if(lay!=='knight'){var askBox=MAIN.querySelector('.askp');if(S.ui.ask&&askBox&&!syFull)askBox.insertAdjacentHTML('afterbegin',panelHead(L().ask,'question'));var histBox=MAIN.querySelector('.hist');if(histBox)histBox.insertAdjacentHTML('afterbegin',panelHead(L().history,'history'));}
-    if (fkey) { var el = root.querySelector('[data-e="' + fkey + '"],[data-c="' + fkey + '"]'); if (el && !el.disabled) { el.focus(); try { if (fsel != null && el.setSelectionRange) el.setSelectionRange(fsel, fsel); } catch (e) { /* select */ } } }
+    prepareControlArt();
+    var stagedMain=MAIN;MAIN=liveMain;syncForm(MAIN,stagedMain);st.artPool=null;
+    if (fkey && (!act || !act.isConnected)) { var el = root.querySelector('[data-e="' + fkey + '"],[data-c="' + fkey + '"]'); if (el && !el.disabled) { el.focus({preventScroll:true}); try { if (fsel != null && el.setSelectionRange) el.setSelectionRange(fsel, fsel); } catch (e) { /* select */ } } }
+    else if(focusData&&focusData.a&&(!act||!act.isConnected)){var next=Array.from(MAIN.querySelectorAll('[data-a]')).find(function(el){return ['a','v','s','e','panel'].every(function(k){return el.dataset[k]===focusData[k];});});if(next&&!next.disabled)next.focus({preventScroll:true});}
+    scrolls.forEach(function(s){var el=MAIN.querySelector(s[0]);if(el)el.scrollTop=s[1];});
     pill(v);
     if (!st.placed) place0();
     else if(!st.rs&&!st.move){var bounds=W.getBoundingClientRect();setPos(bounds.left,bounds.top);}
     keepInView();
     paintArt();
+    fitHourglass();
   }
 
+  function fitHourglass(){
+    var content=MAIN.querySelector('.sy-content'),glass=MAIN.querySelector('.sy-kum-visual');if(!content||!glass)return;
+    var area=content.querySelector('.sy-kum'),available=(area?area.clientHeight:content.clientHeight)-6;
+    var compact=tierOf()==='compact',h=Math.max(compact?48:80,Math.min(compact?300:430,available-(compact?20:0)));
+    glass.style.setProperty('--glass-height',h+'px');
+    var short=available<320;content.classList.toggle('glass-short',short);
+    var svg=glass.querySelector('svg');if(svg)svg.setAttribute('viewBox',compact?'-40 0 440 660':short?'0 0 360 660':'0 0 650 660');
+  }
   // ---------------- placement ----------------
   var CMPW = { saydam: 500, bozkir: 510, bozkira: 480 };   // Bozkır: the parchment beside the figure must hold the compact view (tier < 520)   // Saydam keeps Gün/Kum saati in compact
-  var FULLW = { cizelge: 880, sutunlar: 880, knight: 1100, clock: 1050, saydam: 1120, bozkir: 1240, bozkira: 1240 };
+  var FULLW = { cizelge: 880, sutunlar: 880, knight: 1100, clock: 1050, saydam: 1120, bozkir: 1040, bozkira: 1040 };
   function sizeOf() { return S.ui.cmp ? 'compact' : (S.ui.w && S.ui.w < 300) ? 'pocket' : 'full'; }
   function setSize(sz) { S.ui.cmp = sz === 'compact'; S.ui.w = sz === 'pocket' ? 220 : null; S.ui.h = null; S.ui.col = false; S.ui.pre = null; }
-  function fullW() { var vw = document.documentElement.clientWidth || window.innerWidth, limit = FULLW[S.ui.theme] || 880; if (/^bozkira?$/.test(S.ui.theme)) limit = Math.min(limit, Math.floor(Math.max(180, window.innerHeight - 24) * 1605 / 980)); return Math.round(Math.min(limit, vw - 24)); }
+  function fullW() { var vw = document.documentElement.clientWidth || window.innerWidth, limit = (/^bozkira?$/.test(S.ui.theme) && S.ui.bozkirWidth) || FULLW[S.ui.theme] || 880; if (/^bozkira?$/.test(S.ui.theme)) limit = Math.min(limit, Math.floor(Math.max(180, window.innerHeight - 24) * 1605 / 980)); return Math.round(Math.min(limit, vw - 24)); }
   function widthFor() {
     var vw = document.documentElement.clientWidth || window.innerWidth, sz = sizeOf(), full = fullW();
     if (sz === 'pocket') return 220;
@@ -1350,8 +1430,8 @@
   function toggleCmp(on) {
     var rc = W.getBoundingClientRect(), tr = tierOf(), small = S.ui.cmp || tr === 'pocket' || tr === 'compact';
     if (on == null) on = !small;
-    setSize(on ? 'compact' : 'full'); save();
-    var nw = widthFor(); st.anim = true; setPos(rc.right - nw, rc.top); if (S.ui.pos) S.ui.pos = [Math.max(6, rc.right - nw), rc.top];
+    setSize(on ? 'compact' : 'full');
+    var nw = widthFor(); st.anim = true; setPos(rc.right - nw, rc.top); if (S.ui.pos) S.ui.pos = [Math.max(6, rc.right - nw), rc.top];save();
     render(nowFn(), true); setTimeout(function () { st.anim = false; W.classList.remove('anim'); keepInView(); }, 200);
   }
   function place0() {
@@ -1381,7 +1461,6 @@
   // ---------------- mutations ----------------
   function mut(fn) {
     var p = P(); if (!p) return;
-    st.undo = C.clone(storeOf(p));
     fn(p); save();
     if (st.ask && st.ask.store) st.ask = null;
     render(nowFn(), true);
@@ -1434,7 +1513,7 @@
     if (a === 'impT') { if (st.imp) st.imp.on[+v] = !st.imp.on[+v]; return; }
     if (a === 'impClear') { st.imp = null; render(now, true); return; }
     if (a === 'impApply') { var im = st.imp, cnt = 0; if (im) { mut(function (p) { im.items.forEach(function (it, i) { if (!im.on[i]) return; cnt++; if (it.kind === 'ooo') p.ooo[it.date] = { m: it.m, s: it.s }; else { p.types[it.date] = it.kind; delete p.plan[it.date]; } }); }); st.imp = null; toast(fill(t.icsApplied, { n: cnt })); render(now, true); } return; }
-    if (a === 'min') { st.themes=false;st.set=false;st.rev=null;st.view='week';var mr=W.getBoundingClientRect();setSize('pocket');save();setPos(mr.right-220,mr.top);if(S.ui.pos)S.ui.pos=[Math.max(6,mr.right-220),mr.top];render(now,true);return; }
+    if (a === 'min') { st.themes=false;st.set=false;st.rev=null;st.view='week';var mr=W.getBoundingClientRect();setSize('pocket');setPos(mr.right-220,mr.top);if(S.ui.pos)S.ui.pos=[Math.max(6,mr.right-220),mr.top];save();render(now,true);return; }
     if (a === 'bozkirView') {
       if (!/^bozkira?$/.test(S.ui.theme) || !/^bozkira?$/.test(v) || TH.ORDER.indexOf(v) < 0) return;
       S.ui.theme = v; save(); render(now, true);
@@ -1448,22 +1527,22 @@
     if (a === 'look') { S.ui.look = v; save(); render(now, true); return; }
     if (a === 'dismiss') {dismissPanel(b.dataset.panel);return;}
     if (a === 'themes') {var open=!st.themes;st.themeReturn=st.set;st.set=false;st.view='week';S.ui.ask=false;st.rev=null;st.themes=open;render(now,true);if(open){var choice=root.querySelector('.theme-panel .theme-choice.on');if(choice)choice.focus();}return;}
-    if (a === 'set') {st.themes=false;S.ui.ask=false;st.view='week';st.rev=null;st.set = !st.set; render(now, true);if(st.set){var closer=root.querySelector('.set .panel-close');if(closer)closer.focus();}return; }
+    if (a === 'set') { st.settingsTrigger=b.closest('.sy-foot')?'core':'toolbar';st.themes=false;S.ui.ask=false;st.view='week';st.rev=null;st.set = !st.set; render(now, true);if(st.set){var closer=root.querySelector('.set .panel-close');if(closer)closer.focus();}return; }
     if (a === 'prev') { st.off--; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
     if (a === 'next') { if (st.off < 0) st.off++; st.view = 'week'; st.sel = null; tick(true); return; }
     if (a === 'thisweek') { st.off = 0; st.view = 'week'; st.sel = null; tick(true); return; }
     if (a === 'goweek') { st.off = +v; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
     if (a === 'hist') {st.themes=false;st.set=false;S.ui.ask=false;st.rev=null;st.view = st.view === 'history' ? 'week' : 'history'; render(now, true); return; }
-    if (a === 'sel') { st.sel = +v; render(now, true); return; }
+    if (a === 'sel') { st.sel = +v; render(now, true);var area=MAIN.querySelector('.bz-content'),edit=area&&area.querySelector('.ed');if(edit){var er=edit.getBoundingClientRect(),ar=area.getBoundingClientRect();if(er.bottom>ar.bottom)area.scrollTop+=Math.min(er.bottom-ar.bottom,er.top-ar.top);}return; }
     if (a === 'syv') { S.ui.syv = v === 'kum' ? 'kum' : 'day'; save(); render(now, true); return; }
     if (a === 'plan') { S.ui.planOpen = !S.ui.planOpen; save(); render(now, true); return; }
     if (a === 'bell') { S.ui.bell = !S.ui.bell; save(); if (S.ui.bell && window.Notification && Notification.permission === 'default') { try { Notification.requestPermission(); } catch (x) { /* */ } } render(now, true); return; }
     if (a === 'askOpen') {st.themes=false;st.set=false;st.view='week';st.rev=null;S.ui.ask = !S.ui.ask; save(); if (!S.ui.ask) { st.ask = null; st.askText = ''; } render(now, true); var inp = root.querySelector('[data-e="ask"]'); if (inp) inp.focus(); return; }
     if (a === 'sug') { runAsk(SG()[+v]); render(now, true); return; }
-    if (a === 'askApply') { var s2 = st.ask && st.ask.store; if (s2) { var p1 = P(); st.undo = C.clone(storeOf(p1)); p1.types = s2.types; p1.plan = s2.plan; p1.ooo = s2.ooo; p1.ovr = s2.ovr; save(); st.ask = null; st.askText = ''; toast(t.applied); render(now, true); } return; }
+    if (a === 'askApply') { var s2 = st.ask && st.ask.store; if (s2) { var p1 = P(); p1.types = s2.types; p1.plan = s2.plan; p1.ooo = s2.ooo; p1.ovr = s2.ovr; save(); st.ask = null; st.askText = ''; toast(t.applied); render(now, true); } return; }
     if (a === 'oooYes') { if (st.ask && st.ask.sc) { st.ask.sc.oooOK = true; compute(now); } render(now, true); return; }
     if (a === 'askClear') { st.ask = null; st.askText = ''; render(now, true); return; }
-    if (a === 'undo') { var p0 = P(), u = st.undo; if (p0 && u) { p0.types = u.types; p0.plan = u.plan; p0.ooo = u.ooo; p0.ovr = u.ovr; p0.pick = u.pick || {}; st.undo = null; st.toast = null; save(); render(now, true); } return; }
+    if (a === 'undo') { travelHistory(false); return; }
     if (a === 'loadm') { delete st.tried[b.dataset.m]; startJob(b.dataset.m, st.period); tick(true); return; }
     if (a === 'focus') { var f = st.focusEl; if (f) { try { f.scrollIntoView({ block: 'center' }); f.focus(); if (f.showPicker) f.showPicker(); } catch (x) { /* */ } } return; }
     if (a === 'rev') {st.themes=false;st.set=false;S.ui.ask=false;
@@ -1484,7 +1563,7 @@
     if (a === 'core') { S.cfg.coreS = b.dataset.s; S.cfg.coreE = b.dataset.e; save(); render(now, true); return; }
     if (a === 'wday') { var d = +v, ds = S.cfg.days.slice(), ix = ds.indexOf(d); if (ix >= 0) { if (ds.length > 1) ds.splice(ix, 1); } else ds.push(d); S.cfg.days = ds.sort(); save(); render(now, true); return; }
     if (a === 'backup') { var blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), url = URL.createObjectURL(blob), ln = document.createElement('a'); ln.href = url; ln.download = 'mesai-yedek-' + C.dkey(now) + '.json'; document.body.appendChild(ln); ln.click(); ln.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000); return; }
-    if (a === 'restore') { var fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'application/json,.json'; fi.onchange = function () { var fl = fi.files[0]; if (!fl) return; fl.text().then(function (txt) { try { var o = JSON.parse(txt); if (o && o.ppl) { S.cfg = Object.assign(S.cfg, o.cfg || {}); S.ui = Object.assign(S.ui, o.ui || {}); S.ppl = o.ppl; save(); toast(L().applied); render(nowFn(), true); } } catch (x) { /* bad file */ } }); }; fi.click(); return; }
+    if (a === 'restore') { var fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'application/json,.json'; fi.onchange = function () { var fl = fi.files[0]; if (!fl) return; fl.text().then(function (txt) { try { var o = JSON.parse(txt); if (o && o.ppl) { S.cfg = Object.assign(S.cfg, o.cfg || {}); S.ui = Object.assign(S.ui, o.ui || {}); S.ppl = o.ppl; history=null;save(false); toast(L().applied); render(nowFn(), true); } } catch (x) { /* bad file */ } }); }; fi.click(); return; }
     var r = st.v && st.v.rows[st.sel]; if (!r) return;
     if (a === 'type') { mut(function (p) { if (v === 'ofis') { if (r.hol) p.types[r.key] = 'ofis'; else delete p.types[r.key]; } else p.types[r.key] = v; delete p.plan[r.key]; }); return; }
     if (a === 'nuds') { var cs0 = r.first != null ? minOf(r.first, r.date) : r.start != null ? minOf(r.start, r.date) : st.v.cfg.start; editDay('s', mm(Math.max(0, cs0 + (+v)))); return; }
@@ -1508,22 +1587,26 @@
     box.textContent = el.type === 'number' && el.min !== '' && el.max !== '' ? (S.ui.lang === 'en' ? 'Enter a number between ' + el.min + ' and ' + el.max + '.' : el.min + '–' + el.max + ' arasında bir sayı yaz.') : L().sy.bad; el.setAttribute('aria-describedby', box.id);
   }
   root.addEventListener('change', function (e) {
+    st.inChange=true;try {
     var el = e.target, k = el.dataset && el.dataset.e, c = el.dataset && el.dataset.c;
     if (c) {
       if (c === 'start' || c === 'coreS' || c === 'coreE') { var m0 = parseTime(el.value); if (m0 == null) { fieldError(el); return; } S.cfg[c] = mm(m0); }
       else { var n0 = parseFloat(String(el.value).replace(',', '.')); if (!isFinite(n0) || (el.min !== '' && n0 < +el.min) || (el.max !== '' && n0 > +el.max)) { fieldError(el); return; } S.cfg[c] = n0; }
-      save(); el.blur(); render(nowFn(), true); return;
+      save(); render(nowFn(), true); return;
     }
     if (k === 's' || k === 'e' || k === 'm') { if (!editDay(k, el.value)) fieldError(el); return; }
     if (k === 'os') { var r = st.v && st.v.rows[st.sel], m1 = el.value.trim() ? parseTime(el.value) : null; if (!r || (el.value.trim() && m1 == null)) { fieldError(el); return; } mut(function (p) { var o = p.ooo[r.key] || { m: 60 }; p.ooo[r.key] = { m: o.m, s: m1 }; }); return; }
     if (k === 'tsel') { var d = +el.dataset.d, row = st.v.rows[d]; st.sel = d; mut(function (p) { if (el.value === 'ofis') { if (row.hol) p.types[row.key] = 'ofis'; else delete p.types[row.key]; } else p.types[row.key] = el.value; delete p.plan[row.key]; }); return; }
     if (k === 'rd' || k === 'rf' || k === 'rd2') { st.rev[{ rd: 'day', rf: 'from', rd2: 'day2' }[k]] = +el.value; if (k === 'rd' && st.rev.from === st.rev.day) { var c2 = st.v.rows.filter(function (r) { return !r.past && r.office && r.dow !== st.rev.day; }); if (c2.length) st.rev.from = c2[c2.length - 1].dow; } render(nowFn(), true); return; }
     if ((k === 'rt' || k === 'rt2') && parseTime(el.value) == null) { fieldError(el); return; }
-    if (k === 'rt' || k === 'rt2') { st.rev[k === 'rt' ? 't' : 't2'] = el.value; el.blur(); render(nowFn(), true); return; }
+    if (k === 'rt' || k === 'rt2') { st.rev[k === 'rt' ? 't' : 't2'] = el.value; render(nowFn(), true); return; }
+    } finally { st.inChange=false; }
   });
   root.addEventListener('keydown', function (e) {
     var el = e.target, k = el.dataset && el.dataset.e;
+    if(historyKey(e))return;
     e.stopPropagation();
+    if(el.dataset.rz&&/^Arrow/.test(e.key)&&/^bozkira?$/.test(S.ui.theme)&&tierOf()==='wide'){e.preventDefault();S.ui.bozkirWidth=Math.max(760,Math.min(1400,widthFor()+((e.key==='ArrowRight'||e.key==='ArrowDown')?40:-40)));save();render(nowFn(),true);root.querySelector('.rz-br').focus({preventScroll:true});return;}
     if(el.dataset.rz && /^Arrow/.test(e.key)){e.preventDefault();var order=['pocket','compact','full'],current=tierOf()==='pocket'?'pocket':tierOf()==='compact'?'compact':'full',ix=order.indexOf(current)+(e.key==='ArrowRight'||e.key==='ArrowDown'?1:-1),max=fullW()<760?1:2;setSize(order[Math.max(0,Math.min(max,ix))]);save();render(nowFn(),true);keepInView();var hb=root.querySelector('.rz-br');if(hb)hb.focus();return;}
     if (e.key === 'Escape' && closeActivePanel()) {e.preventDefault();return;}
     if (el.dataset && el.dataset.a === 'syt' && /^Arrow(Left|Right)$/.test(e.key)) { e.preventDefault(); var rr = st.v && st.v.rows[st.sel]; if (rr && rr.end != null) { editDay('e', clk(rr.end + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 15 : 5) * MIN)); var tk = root.querySelector('[data-a="syt"]'); if (tk) tk.focus(); } return; }
@@ -1552,10 +1635,11 @@
     }
     if (e.target.dataset && e.target.dataset.e === 'ask') st.askText = e.target.value;
   });
-  function onKey(e) { if(e.key==='Escape'&&closeActivePanel()){e.preventDefault();return;} if (e.altKey && e.code === 'KeyK') { e.preventDefault(); toggleCmp(); return; } if (e.altKey && e.code === 'KeyM') { e.preventDefault(); S.ui.col = false; S.ui.ask = true; save(); render(nowFn(), true); var i = root.querySelector('[data-e="ask"]'); if (i) i.focus(); } }
+  function onKey(e) { if(historyKey(e))return; if(e.key==='Escape'&&closeActivePanel()){e.preventDefault();return;} if (e.altKey && e.code === 'KeyK') { e.preventDefault(); toggleCmp(); return; } if (e.altKey && e.code === 'KeyM') { e.preventDefault(); S.ui.col = false; S.ui.ask = true; save(); render(nowFn(), true); var i = root.querySelector('[data-e="ask"]'); if (i) i.focus(); } }
   window.addEventListener('keydown', onKey);
 
   root.addEventListener('pointerdown', function (e) {
+    st.pointerDown=true;
     var hz = e.target.closest('[data-rz]');
     if (hz) {
       e.preventDefault(); e.stopPropagation();
@@ -1564,13 +1648,20 @@
       W.classList.add('rsz'); return;
     }
     var hd = e.target.closest('[data-drag], .pl0'); if (!hd) return;
-    if (e.target.closest('button,input,select,a') && !e.target.closest('.pl0')) return;
-    var rc = W.getBoundingClientRect(); st.move = { dx: e.clientX - rc.left, dy: e.clientY - rc.top, x0: e.clientX, y0: e.clientY }; st.moved = false;
+    if (e.target.closest('button,input,select,a,textarea,[role=slider],.bz-content,.set,.theme-panel,.revp') && !e.target.closest('.pl0')) return;
+    var rc = W.getBoundingClientRect(); st.move = { dx: e.clientX - rc.left, dy: e.clientY - rc.top, x0: e.clientX, y0: e.clientY }; st.moved = false; e.preventDefault();try{W.setPointerCapture(e.pointerId);}catch(x){}
   });
   function resizeMove(e) {
     var r = st.rs, dx = e.clientX - r.x0, dy = e.clientY - r.y0, vw = document.documentElement.clientWidth || window.innerWidth, vh = window.innerHeight;
     var w = r.w, h = r.h;
     if (/r/.test(r.d)) w = r.w + dx; if (/l/.test(r.d)) w = r.w - dx; if (/b/.test(r.d)) h = r.h + dy;
+    if (/^bozkira?$/.test(S.ui.theme) && sizeOf()==='full') {
+      if(/b/.test(r.d)&&Math.abs(dy*1605/980)>Math.abs(dx))w=r.w+dy*1605/980;
+      S.ui.bozkirWidth=Math.round(Math.max(760,Math.min(1400,vw-24,Math.max(180,vh-24)*1605/980,w)));
+      w=widthFor();setPos(/l/.test(r.d)?r.l+r.w-w:r.l,r.t);
+      if(tierOf()!==st.lastTier)render(nowFn(),true);
+      var sizeLabel=root.querySelector('.rzl');sizeLabel.textContent=Math.round(w)+' px';sizeLabel.classList.add('on');return;
+    }
     var full = fullW(), sz = w < 280 ? 'pocket' : (w < (340 + full) / 2 || full < 760) ? 'compact' : 'full';
     if (sz !== sizeOf()) setSize(sz);
     w = widthFor();
@@ -1581,12 +1672,14 @@
   }
   function onMove(e) { if (st.rs) { resizeMove(e); return; } if (!st.move) return; if (Math.abs(e.clientX - st.move.x0) + Math.abs(e.clientY - st.move.y0) > 3) st.moved = true; if (st.moved) setPos(e.clientX - st.move.dx, e.clientY - st.move.dy); }
   function onUp() {
+    st.pointerDown=false;
+    if(st.pendingRender){st.pendingRender=false;setTimeout(function(){if(!closed)render(nowFn(),false);},0);}
     if (st.rs) { st.rs = null; W.classList.remove('rsz'); root.querySelector('.rzl').classList.remove('on'); var rr = W.getBoundingClientRect(); S.ui.pos = [rr.left, rr.top]; save(); render(nowFn(), true); return; }
-    if (st.move) { if (st.moved) { var rc = W.getBoundingClientRect(); S.ui.pos = [rc.left, rc.top]; save(); } st.move = null; setTimeout(function () { st.moved = false; }, 0); } }
-  window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp);
+    if (st.move) { if (st.moved) { var rc = W.getBoundingClientRect(); S.ui.pos = [rc.left, rc.top]; save(); } st.move = null;keepInView(); setTimeout(function () { st.moved = false; }, 0); } }
+  window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
   root.addEventListener('dblclick', function (e) {
-    if (e.target.closest('[data-rz]')) { setSize('full'); save(); var rc = W.getBoundingClientRect(); setPos(rc.left, rc.top); render(nowFn(), true); keepInView(); return; }
-    if (e.target.closest('[data-drag]') && !e.target.closest('button')) toggleCmp();
+    if (e.target.closest('[data-rz]')) { S.ui.bozkirWidth=null;setSize('full'); save(); var rc = W.getBoundingClientRect(); setPos(rc.left, rc.top); render(nowFn(), true); keepInView(); return; }
+    if (e.target.closest('[data-drag]') && !e.target.closest('button,input,select,a,textarea,.bz-content,.set,.theme-panel,.revp')) toggleCmp();
   });
   function onResize() { st.narrow = widthFor() < 760; if (st.rs) return; var rc = W.getBoundingClientRect(); setPos(rc.left, rc.top); render(nowFn(), true); }
   window.addEventListener('resize', onResize);
@@ -1604,7 +1697,7 @@
     version: VERSION,
     variant: BUILD.theme,
     poke: function () { S.ui.col = false; save(); st.fp = ''; st.placed = !!S.ui.pos; tick(true); flash(); },
-    close: function () { closed=true;Object.keys(artCache).forEach(function(k){artCache[k].close();});clearTimeout(updateTimer);if(updateController)updateController.abort(); clearInterval(timer); obs.disconnect(); window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('resize', onResize); if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq); host.remove(); delete window.__mesai; },
+    close: function () { closed=true;Object.keys(artCache).forEach(function(k){artCache[k].close();});clearTimeout(updateTimer);if(updateController)updateController.abort(); clearInterval(timer); obs.disconnect(); window.removeEventListener('keydown', onKey); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel',onUp); window.removeEventListener('resize', onResize); if (mq && mq.removeEventListener) mq.removeEventListener('change', onMq); host.remove(); delete window.__mesai; },
     state: function () { return { st: st, S: S }; }
   };
   tick(true);

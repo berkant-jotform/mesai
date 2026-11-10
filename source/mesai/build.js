@@ -14,7 +14,7 @@ const themes={saydam:['Saydam','Saydam'],cizelge:['Çizelge','Timeline'],knight:
 const themeAssets={saydam:[],cizelge:[],sutunlar:[],knight:['bar','controlDark','controlLight','compactDark','compactLight','plateLight','plateDark','timeMarker','fleuron','toggle'],clock:['bar','controlDark','controlLight','face','panelDark','panelLight','railDark','railLight','clock','town','toggle'],bozkir:['bzMountedWide','bzMountedCompact','bzStandingWide','bzStandingCompact'],bozkira:['bzMountedWide','bzMountedCompact','bzStandingWide','bzStandingCompact']};
 const themeFonts={saydam:[],cizelge:[],sutunlar:[],knight:['Mesai Calligraphy','Mesai Gothic','Mesai Manuscript','Mesai Blackletter'],clock:['Mesai Calligraphy','Mesai Gothic','Mesai Manuscript'],bozkir:['Mesai Steppe','Mesai Orkhon'],bozkira:['Mesai Steppe','Mesai Orkhon']};
 const css=cssMin(['heritage.css','manuscript.css','illuminated.css','motifs.css'].map(f=>fs.readFileSync(path.join(__dirname,'src',f),'utf8')).join('\n'));
-const modules=['core.js','adapter.js','ask.js','scenario.js','holidays.js','i18n.js','themes.js','ui.js'].map(src).join('\n');
+const modules=['core.js','adapter.js','ask.js','scenario.js','holidays.js','i18n.js','themes.js','history.js','ui.js'].map(src).join('\n');
 fs.mkdirSync(path.join(__dirname,'dist'),{recursive:true});fs.mkdirSync(path.join(root,'bookmarks'),{recursive:true});
 (async()=>{
  const {minify}=require('terser'); const variants=[];

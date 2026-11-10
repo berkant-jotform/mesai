@@ -447,8 +447,8 @@
 .bz-workspace .set{grid-template-columns:repeat(3,minmax(0,1fr))}
 .bz-workspace .revp .rr{flex-wrap:wrap}
 /* Native labels remain readable instead of scaling with the glass illustration. */
-.sy-kum{grid-template-columns:minmax(160px,1fr) minmax(160px,1fr);gap:16px}
-.sy-kum-visual{min-width:0}.sy-kum-visual>svg{height:280px;overflow:hidden}
+.sy-kum{grid-template-columns:minmax(190px,.8fr) minmax(220px,1.2fr);gap:16px;align-items:center}
+.sy-kum-visual{min-width:0}.sy-kum-visual>svg{height:430px;overflow:visible;display:block}
 .sy-kum-days{display:grid;gap:3px;margin-top:8px}
 .sy-kum-days button{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;padding:5px 8px;min-height:28px;border-radius:8px;color:var(--body);background:transparent}
 .sy-kum-days button[aria-pressed=true]{background:var(--accSoft);color:var(--accInk)}
@@ -458,7 +458,7 @@
 
 
 .TH-saydam.T-compact .sy-kum-days{display:none}
-.TH-saydam.T-compact .sy-kum-visual>svg{height:220px}
+.TH-saydam.T-compact .sy-kum-visual>svg{height:300px}
 
 :is(.TH-bozkir,.TH-bozkira).T-compact .bz-workspace .set{grid-template-columns:repeat(2,minmax(0,1fr))}
 
@@ -504,4 +504,93 @@
 @container bz (max-width:280px){
 .bz-workspace .set{grid-template-columns:minmax(0,1fr)}
 .bz-workspace .set>div.fl{grid-column:1/-1!important}
+}
+
+/* The artwork is a usable drag surface; controls retain their own cursor and interaction. */
+:is(.TH-bozkir,.TH-bozkira):not(.T-pocket) .main{cursor:grab;touch-action:none}
+.bz-workspace{cursor:default;touch-action:auto}
+.bz-workspace>.hd{cursor:grab;touch-action:none}
+:is(.TH-bozkir,.TH-bozkira).rsz .main{cursor:nwse-resize}
+:is(.TH-bozkir,.TH-bozkira) .rz-br{opacity:.65;width:24px;height:24px}
+/* The larger hourglass remains the visual focus, with day selection in the existing sidebar. */
+.TH-saydam .sy-kum .sy-legend{flex-direction:row;gap:8px 12px}
+.TH-saydam.T-compact .sy-kum{grid-template-columns:minmax(0,1fr) 160px;align-items:center}
+@media(max-width:420px){.TH-saydam.T-compact .sy-kum{grid-template-columns:minmax(0,1fr) 130px}.TH-saydam.T-compact .sy-kum-visual>svg{height:260px}}
+
+.TH-saydam:not(.T-compact) .sy-kum{grid-template-columns:minmax(190px,.65fr) minmax(320px,1.35fr)}
+.TH-saydam:not(.T-compact) .sy-kum text{font-size:22px}
+/* Use the mounted plate's empty upper parchment, rather than enlarging the whole painting. */
+.TH-bozkir.T-wide .main>.bz-workspace{top:7%}
+:is(.TH-bozkir,.TH-bozkira).T-wide .bz-content .side{padding:4px 0 8px;gap:10px}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-content:start}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section>.k{grid-column:1/-1}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section>.big{font-size:32px!important}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section>div:has(>.pill){margin-top:0!important;gap:2px!important;flex-wrap:wrap;justify-content:flex-end}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section .pill{padding:3px 4px;font-size:11px;white-space:normal;background:none;border:0}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section .pill svg{display:none}
+:is(.TH-bozkir,.TH-bozkira).T-wide .milestone-section .ib{width:24px;height:24px}
+:is(.TH-bozkir,.TH-bozkira).T-wide .bz-content .tr{min-height:38px}
+@container bz (min-width:550px){:is(.TH-bozkir,.TH-bozkira).T-wide .bz-workspace>.hd{grid-template-columns:minmax(0,1fr) auto auto}.bz-workspace>.hd>.bz-tools{grid-column:auto;grid-row:auto}.bz-workspace>.hd>[data-a="close"]{grid-column:auto;grid-row:auto}}
+.TH-bozkir.T-wide{--sr:6%}
+.TH-bozkir.T-wide .bz-tools .ib,.TH-bozkir.T-wide .hd>[data-a="close"]{width:28px;min-width:28px}
+/* A short glass window must leave room to select days, not fill its sidebar with repeated totals. */
+@media(max-height:560px){
+.TH-saydam:not(.T-compact) .sy-foot{padding:10px 12px}
+.TH-saydam:not(.T-compact) .sy-foot .ft,.TH-saydam:not(.T-compact) .sy-foot .fsub,.TH-saydam:not(.T-compact) .sy-foot .fe:has([data-a="set"]){display:none}
+.TH-saydam:not(.T-compact) .sy-foot .fn{font-size:24px;margin:0}
+.TH-saydam:not(.T-compact) .sy-foot .fe{font-size:12px;margin-top:5px}
+.TH-saydam:not(.T-compact) .sy-foot .sy-meter{margin:6px 0}
+.TH-saydam:not(.T-compact) .sy-days{min-height:100px}
+}
+/* Stable SVG geometry transitions; decorative motion continues through plan edits. */
+.sy-kum rect,.sy-kum ellipse,.sy-kum text{transition:y .65s cubic-bezier(.22,.7,.25,1),height .65s cubic-bezier(.22,.7,.25,1),cy .65s cubic-bezier(.22,.7,.25,1),fill .25s,opacity .25s}
+.sy-kum .waterline{animation:sy-water 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes sy-water{0%,100%{transform:scaleX(.97);opacity:.7}50%{transform:scaleX(1.03);opacity:1}}
+.sy-kum .band{stroke:rgba(255,255,255,.4);stroke-width:1}
+.sy-kum .band.off,.sy-kum .band.off.sel{fill:rgba(245,175,68,.45)}
+.sy-kum .band.sel{stroke:rgba(0,100,210,.6);stroke-width:2;fill:rgba(255,255,255,.28)}
+.sy-kum .band:hover{fill:rgba(255,255,255,.48)}
+.TH-saydam .sy-kum-visual>svg{height:var(--glass-height,430px)}
+.TH-saydam.T-compact .sy-kum-visual>svg{height:var(--glass-height,300px)}
+/* Full mode keeps all five days visible. Secondary totals scroll, not day selection. */
+.TH-saydam:not(.T-compact) .sy-sb{overflow:hidden}
+.TH-saydam:not(.T-compact) .sy-top,.TH-saydam:not(.T-compact) .sy-days{flex:none}
+.TH-saydam:not(.T-compact) .sy-foot{min-height:0;overflow:auto;flex:0 1 auto;margin-top:12px}
+/* Fit the illustration as a whole in a short window; its text column may scroll. */
+.sy-content:has(.sy-kum){display:flex;flex-direction:column;overflow:hidden}
+.sy-content:has(.sy-kum)>.lt{flex:none}
+.sy-content:has(.sy-kum)>.sy-kum{min-height:0;flex:1}
+.sy-content.glass-short .sy-kum{align-items:center}
+.sy-content.glass-short .sy-kum>.kt{max-height:100%;overflow:auto;padding:4px 0}
+.sy-content.glass-short .sy-knote{display:none}
+.sy-content.glass-short .sy-kum .sy-big{font-size:40px}
+@media(max-height:560px){
+.TH-saydam:not(.T-compact) .sy-days{min-height:0}
+.TH-saydam:not(.T-compact) .sy-day{padding:4px 8px;grid-template-columns:1fr auto}
+.TH-saydam:not(.T-compact) .sy-day small{display:none}
+.TH-saydam:not(.T-compact) .sy-day>span{grid-row:1}
+.TH-saydam:not(.T-compact) .sy-day i{margin-top:2px;height:4px}
+.TH-saydam:not(.T-compact) .sy .lt{font-size:26px;margin-top:8px}
+.TH-saydam:not(.T-compact) .sy .lt small{font-size:12px}
+.TH-saydam:not(.T-compact) .sy-low{padding-top:6px}
+}
+@media(prefers-reduced-motion:reduce){.sy-kum *{animation:none!important;transition:none!important}}
+@media(min-height:561px) and (max-height:780px){
+.TH-saydam:not(.T-compact) .sy-day{padding:4px 10px}
+.TH-saydam:not(.T-compact) .sy-day i{margin-top:3px}
+}
+.kum-short-labels,.kum-caption{display:none}
+.sy-content.glass-short .sy-kum-visual{display:grid;grid-template-columns:minmax(60px,.8fr) minmax(105px,1fr);gap:8px;align-items:center}
+.sy-content.glass-short .sy-kum-visual svg>g[data-key^="label-"]{display:none}
+.sy-content.glass-short .kum-short-labels{display:flex;flex-direction:column;gap:4px;max-height:var(--glass-height);overflow:auto;font-size:12px;line-height:1.25}
+.kum-short-labels .tnow{color:var(--accInk);font-weight:700}.kum-short-labels .tsel{font-weight:700}.kum-short-labels .twarn{color:var(--goldInk)}
+.kum-short-labels [data-a]{cursor:pointer}.kum-short-labels [data-a]:hover{color:var(--accInk)}
+.TH-saydam.T-compact .sy-content .sy-kum-visual{display:block}
+.TH-saydam.T-compact .kum-short-labels{display:none}
+.TH-saydam.T-compact .kum-caption{display:block;text-align:center;font-size:12px;font-weight:600;color:var(--accInk);margin-top:2px}
+/* Only the short compact layout removes its repeated week heading. */
+@media(max-height:560px){
+.TH-saydam.T-compact .sy-content:has(.sy-kum)>.lt{display:none}
+.TH-saydam.T-compact .sy-content .sy-kum .sy-big{font-size:32px}
+.TH-saydam.T-compact .sy-kum .sy-kday{font-size:11px}
 }

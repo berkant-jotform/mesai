@@ -14,9 +14,6 @@
     document.documentElement.style.colorScheme = ui.look;
     document.documentElement.style.background = ui.look === 'dark' ? '#0c1520' : '#e9e8e2';
     root.host.dataset.demoLook = ui.look;
-    const grip = root.querySelector('.rz-br');
-    if (grip) grip.title = ui.lang === 'en' ? 'Drag to resize; double-click to reset' : 'Boyutlandırmak için sürükle; sıfırlamak için çift tıkla';
-    if (grip) grip.setAttribute('aria-label', grip.title);
   }
   const boot = setInterval(() => {
     root = document.querySelector('#mesai-host')?.shadowRoot;
