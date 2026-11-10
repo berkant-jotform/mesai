@@ -6,13 +6,13 @@
 
 ### Yer işaretini hazırla
 
-1. Kurulum sayfasında **Hangi temayı yükleyeceksin?** listesinden bir tema seç. İlk seçenek Saydam’dır.
-2. **Hazır** yazmasını bekle. **Mesai** düğmesini tarayıcının yer işaretleri çubuğuna sürükle. Çubuk görünmüyorsa Mac’te **⌘⇧B**, Windows’ta **Ctrl+Shift+B** kullan.
+1. Kurulum sayfasındaki büyük **Mesai** düğmesini yer işaretleri çubuğuna sürükle. Tüm temalar dahildir.
+2. Çubuk görünmüyorsa Mac’te **⌘⇧B**, Windows’ta **Ctrl+Shift+B** kullan.
 3. ARGE Portal’da **PDKS Giriş Çıkış Bilgi Kartı**’nı aç. Dönem ve personeli kontrol et; sonra çubuktaki Mesai’ye tıkla.
 
-Tek temalı yer işareti yalnızca seçtiğin görünümü taşır; daha küçüktür. Araç içinden temalar arasında geçmek istersen **Tam paket · tüm temalar** seç. Başka bir tek temaya geçmek için kurulum sayfasından o temanın yer işaretini yeniden hazırla. Dil ve desteklenen açık/koyu seçenekleri Görünüm menüsünde kalır.
+Temaları **Kurulumdan önce dene** bölümünde deneyebilirsin. Sıra: Saydam, Şövalye, Bozkır, Çizelge, Sütunlar, Göksel saat. Bozkır’daki at simgesi atlı, Kuman maskesi ayakta görünümü açar. Aynı seçimler aracın **Görünüm** menüsündedir.
 
-Kurulum sayfasındaki **örnek tema düğmeleri yalnızca önizlemeyi değiştirir**. Yükleyeceğin temayı üstteki listeden seç. Hazırlama başarısızsa düğme ve kopyalama kapalı kalır; bağlantıyı kontrol edip **Yeniden dene**’ye bas. Yerel bir HTML dosyasını açtıysan yukarıdaki kurulum sayfasını kullan.
+Daha küçük bir yer işareti istersen canlı örneğin altındaki **Yalnızca bir tema mı istiyorsun?** bölümünü aç. Bir tema seçip **Hazır** yazınca o bölümdeki düğmeyi sürükle. Bu seçim üstteki ana düğmeyi değiştirmez; ana düğme her zaman tam pakettir. Tek temalı indirme hazırlanamazsa **Yeniden dene**’yi kullan.
 
 ### Sayıları oku
 
@@ -63,7 +63,7 @@ Ayarlar’daki **Google Takvim’den al (.ics)**, dışa aktardığın dosyayı 
 
 ### Güncelle ve yardım al
 
-Yer işareti kendini güncellemez. Kurulum sayfasını yenile, kullandığın temayı seç, **Hazır** olunca yeni yer işaretini sürükle ve eskisini kaldır. ARGE sekmesini yeniledikten sonra yeni yer işaretini aç. Araçtaki sürüm bağlantısı kurulum sayfasına gider; portal izin verirse **Güncelleme var** bağlantısı da çıkar.
+Yer işareti kendini güncellemez. Kurulum sayfasını yenile, ana Mesai düğmesini yeniden sürükle ve eski yer işaretini kaldır. Tek temalı sürüm için örneğin altındaki isteğe bağlı indirmeyi kullan. ARGE sekmesini yeniledikten sonra yeni yer işaretini aç. Araçtaki sürüm bağlantısı kurulum sayfasına gider; portal izin verirse **Güncelleme var** bağlantısı da çıkar.
 
 Berkant’ın vibe coding projesi. Bir sorun veya öneri varsa Slack’ten Berkant’a yazabilirsin. Ekran görüntüsü paylaşırken kişisel kayıtları çıkar.
 
@@ -71,13 +71,13 @@ Berkant’ın vibe coding projesi. Bir sorun veya öneri varsa Slack’ten Berka
 
 ### Prepare the bookmark
 
-1. On the setup page, choose a theme under **Which theme do you want to install?** Liquid glass is selected first.
-2. Wait for **Ready**, then drag **Mesai** to your bookmarks bar. Show the bar with **⌘⇧B** on Mac or **Ctrl+Shift+B** on Windows.
-3. Open the **PDKS entry/exit card** in ARGE Portal. Check the period and person, then click Mesai in the bookmarks bar.
+1. Drag the large **Mesai** button to your bookmarks bar. It includes every theme.
+2. Show the bar with **⌘⇧B** on Mac or **Ctrl+Shift+B** on Windows if needed.
+3. Open the **PDKS entry/exit card** on ARGE, check the period/person and click your Mesai bookmark.
 
-A single-theme bookmark contains only your chosen appearance and is smaller. Choose **Full package · all themes** to switch themes inside the tool. To use a different single theme, prepare that theme’s bookmark on the setup page. Language and supported light/dark settings remain in Appearance.
+Use **Try before installing** to explore Liquid glass, Knight, Steppe, Timeline, Columns and Celestial clock, in that order. The horse selects mounted Steppe; the Cuman mask selects the standing version. The tool’s **Appearance** menu uses the same grouping.
 
-The setup page’s **sample theme buttons change only the preview**. Select your installation theme in the list above. If preparation fails, dragging/copying stays disabled; check the connection and choose **Try again**. Use the hosted setup page if a downloaded HTML file will not load the bookmark.
+For a smaller bookmark, open **Want just one theme?** below the live preview. Choose a theme, wait for **Ready**, then drag that section’s button. This does not change the main button, which always includes the full package. Choose **Try again** if the optional download fails.
 
 ### Read the numbers
 
@@ -128,7 +128,7 @@ In Settings, **Import from Google Calendar (.ics)** reads an exported file in th
 
 ### Update and get help
 
-Bookmarks do not update themselves. Refresh the setup page, select your theme, wait for **Ready**, drag the new bookmark and remove the old one. Refresh ARGE before using it. The tool’s version link returns to the setup page; an **Update available** link appears if the portal permits its version check.
+Bookmarks do not update themselves. Refresh the setup page, drag the main Mesai button again and remove the old bookmark. For a single-theme build, use the optional download below the example. Refresh ARGE before using it. The tool’s version link returns to the setup page; an **Update available** link appears if the portal permits its version check.
 
 Vibe-coded by Berkant. For bugs, ideas or feedback, message Berkant on Slack. Remove personal records from screenshots before sharing them.
 

@@ -66,11 +66,11 @@ The middle window size now keeps Saydam's Day and Hourglass views, day selection
 
 ## Theme-specific installation
 
-The setup page prepares a bookmark for one selected theme, with **Saydam / Liquid glass** as the default. It contains only that theme’s appearance assets and keeps the calculator, planning, Ask, Reverse, language and supported color settings. A smaller payload is intended to reduce loading work; timing depends on the browser and portal.
+The main setup button always installs the **full package**, with **Saydam / Liquid glass** as the initial appearance. Optional smaller bookmarks are below the live preview. It contains only that theme’s appearance assets and keeps the calculator, planning, Ask, Reverse, language and supported color settings. A smaller payload is intended to reduce loading work; timing depends on the browser and portal.
 
 Choose **Full package · all themes** if you want to switch between appearances inside the tool. A single-theme bookmark does not offer other themes; return to the setup page to choose another variant. Preview theme controls are independent from the installation selector.
 
-The installation button and Copy stay disabled until the chosen code has loaded and passed version/size checks. A failed load clears the link rather than keeping a previously selected theme. The website fetches the selected bundle and puts its full code in the bookmark; the bookmark itself does not need a remote script loader.
+The optional single-theme button and Copy stay disabled until the chosen code has loaded and passed version/size checks. A failed load clears the link rather than keeping a previously selected theme. The main button already contains the full build. The optional selector fetches the selected bundle and puts its full code in that separate bookmark; the bookmark itself does not need a remote script loader.
 
 [User guide, Turkish and English](docs/GETTING_STARTED.md) covers the daily milestone versus weekly forecast, day editing, OOO, leave/holidays, core hours, Ask, Reverse, window controls, backup and updates.
 
@@ -80,3 +80,7 @@ The installation button and Copy stay disabled until the chosen code has loaded 
 - Sor distinguishes today's daily milestone from the weekly forecast and mandatory hours. It asks for a missing arrival instead of inventing one and rejects invalid times without applying a plan.
 - English decimal hours, compact `9h30m` durations and hourly time-off questions are supported alongside Claude's duration/OOO/midnight fixes.
 - Installation help covers the controls and calculations in Turkish and English. `npm run build`, `npm test`, and `npm run test:distribution` validate source and published bundles.
+
+## 3.4.2 — Full package first
+
+A larger main install button includes all themes. Optional smaller bookmarks sit below the live preview. The picker order is Saydam, Knight, Bozkır, Timeline, Columns, Celestial clock. Bozkır has horse and Cuman-mask controls for mounted and standing artwork, grouped together on the page and in the tool.

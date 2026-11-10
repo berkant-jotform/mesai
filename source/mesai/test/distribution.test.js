@@ -103,7 +103,7 @@ check(tag,'Installation page contains the bookmark anchor');
 const attr = tag[0].match(/\bhref="([^"]*)"/);
 check(attr,'Bookmark anchor has a double-quoted href');
 const href = attr[1].replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/&amp;/g,'&');
-check([...built.values()].some(v => v.href === href),'Initial installer URL is one complete advertised distribution');
+same(href,all.href,'Primary installer always contains the full package');
 const latest = html.match(/class="latest"[\s\S]*?<b>([^<]+)<\/b>/);
 same(latest?.[1],version,'Visible latest-version label matches installed release');
 check(!/__VERSION__|__BOOKMARK_HREF__/.test(html),'No unexpanded template tokens remain');

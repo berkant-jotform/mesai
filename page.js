@@ -1,8 +1,9 @@
 (() => {
   'use strict';
   const frame = document.querySelector('#preview');
-  const bookmark = document.querySelector('#bookmark');
-  const themes = ['saydam', 'cizelge', 'knight', 'sutunlar', 'clock', 'bozkir', 'bozkira'];
+  const mainBookmark = document.querySelector('#bookmark');
+  const bookmark = document.querySelector('#variant-bookmark');
+  const themes = ['saydam', 'knight', 'bozkir', 'bozkira', 'cizelge', 'sutunlar', 'clock'];
   let resetting = false, previewClosed = false;
   const state = {lang:'tr', look:'light', theme:'saydam', size:'full'};
   const pageVersion = document.querySelector('meta[name="mesai-version"]')?.content || '';
@@ -10,12 +11,13 @@
   const installStatus = document.querySelector('#install-status');
   const retryInstall = document.querySelector('#install-retry');
   const copyButton = document.querySelector('#copy');
-  const installState = {phase:'loading', id:'saydam', variant:null, href:null};
+  const installState = {phase:'loading', id:'all', variant:null, href:null};
   let manifestPromise = null, sourceController = null, installSerial = 0;
   const sourceCache = new Map();
   const requestedVariant = new URLSearchParams(location.search).get('theme');
-  installSelect.value = [...themes, 'all'].includes(requestedVariant) ? requestedVariant : 'saydam';
+  installSelect.value = [...themes, 'all'].includes(requestedVariant) ? requestedVariant : 'all';
   installState.id = installSelect.value;
+  if (requestedVariant && installSelect.value !== 'all') document.querySelector('#theme-downloads').open = true;
 
   function installLabel() {
     const option = installSelect.selectedOptions[0];
@@ -129,6 +131,14 @@
       });
     }
     try { localStorage.setItem('mesai.page', JSON.stringify({lang:state.lang, look:state.look})); } catch (_) {}
+    const activeBozkir = ['bozkir','bozkira'].includes(state.theme);
+    const groupLabel = document.querySelector('[data-bozkir-label]');
+    groupLabel.setAttribute('aria-pressed', String(activeBozkir));
+    if (activeBozkir) groupLabel.dataset.theme = state.theme;
+    document.querySelectorAll('.variant-icon').forEach(b => {
+      b.title = b.dataset[state.lang === 'tr' ? 'labelTr' : 'labelEn']; b.setAttribute('aria-label', b.title);
+    });
+    mainBookmark.setAttribute('aria-label', state.lang === 'tr' ? 'Mesai · tüm temalar — yer işaretleri çubuğuna sürükle' : 'Mesai · all themes — drag to bookmarks bar');
     paintInstaller();
   }
   function send() { frame.contentWindow.postMessage({type:'mesai-preview', ...state}, location.origin); }
@@ -183,6 +193,11 @@
       state.size = 'full'; paint();
       frame.contentWindow.postMessage({type:'mesai-preview', ...state, openAsk:true}, location.origin);
     }
+  });
+  mainBookmark.addEventListener('click', event => {
+    event.preventDefault();
+    const hint = document.querySelector('#main-install-hint'); hint.hidden = false;
+    hint.textContent = state.lang === 'tr' ? 'Bu düğmeyi yer işaretleri çubuğuna sürükle. Sonra ARGE’de aç.' : 'Drag this button to your bookmarks bar, then open it on ARGE.';
   });
   bookmark.addEventListener('click', event => {
     event.preventDefault();

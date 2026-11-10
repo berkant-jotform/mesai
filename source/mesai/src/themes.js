@@ -34,7 +34,7 @@ var MesaiThemes = (function () {
   T.saydam = { swatch: '#007aff', layout: 'saydam', lightOnly: true, font: SYS, num: SYS, disp: SYS, radius: 28, light: syL, dark: syL };
 
   // Türk motifleri is a draft (not selectable) until its painted plate is approved.
-  var ORDER = ['saydam', 'cizelge', 'knight', 'sutunlar', 'clock', 'bozkir', 'bozkira'];   // Saydam first: the default for new users
+  var ORDER = ['saydam', 'knight', 'bozkir', 'bozkira', 'cizelge', 'sutunlar', 'clock'];   // Saydam first: the default for new users
   if (typeof MesaiBuild !== 'undefined' && MesaiBuild.theme !== 'all' && T[MesaiBuild.theme]) ORDER = [MesaiBuild.theme];
   function vars(name, dark) {
     var t = T[name] || T.cizelge, c = dark ? t.dark : t.light, out = [];
@@ -44,6 +44,7 @@ var MesaiThemes = (function () {
     if (!c.input) out.push('--input:' + c.card);
     return out.join(';');
   }
-  return { T: T, ORDER: ORDER, vars: vars };
+  function variantIcon(k) { return (k === "bozkir" ? "<svg class=\"bozkir-icon\" viewBox=\"0 0 32 32\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 28c1-5 1-8 4-12l-5 2-4-3 6-8 1-5 5 4c7 0 11 5 11 12v10H9Z\"/><path d=\"m11 7 5 3-3 6m6-8c4 3 5 7 5 12M7 13l3 1m9 7-5 7\"/><circle cx=\"13.5\" cy=\"10\" r=\".8\" fill=\"currentColor\" stroke=\"none\"/></svg>" : "<svg class=\"bozkir-icon\" viewBox=\"0 0 32 32\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 14C6 7 11 5 16 2c5 3 10 5 10 12v8c0 4-5 7-10 9-5-2-10-5-10-9V14Z\"/><path d=\"M6 14h20M16 3v11m-7 4 4 1m6 0 4-1m-7-3-1 6h2M8 22c2 3 5 2 8 0 3 2 6 3 8 0M11 26h10\"/></svg>"); }
+  return { T: T, ORDER: ORDER, vars: vars, variantIcon: variantIcon };
 })();
 if (typeof module !== 'undefined') module.exports = MesaiThemes;

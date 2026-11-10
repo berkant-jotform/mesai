@@ -4,7 +4,7 @@ import json
 from urllib.parse import quote
 
 root = Path(__file__).resolve().parent
-source = (root / 'bookmarks/saydam.js').read_text()
+source = (root / 'mesai.js').read_text()
 bookmark = 'javascript:' + quote(source, safe="~()*!.'-_")
 # Project safety budget; browser bookmark storage/sync support is checked separately.
 assert len(bookmark) <= 1_500_000, f'bookmark is {len(bookmark):,} chars, over the 1,500,000 budget'
