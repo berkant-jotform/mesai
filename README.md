@@ -66,11 +66,11 @@ The middle window size now keeps Saydam's Day and Hourglass views, day selection
 
 ## Theme-specific installation
 
-The main setup button always installs the **full package**, with **Saydam / Liquid glass** as the initial appearance. Optional smaller bookmarks are below the live preview. It contains only that theme’s appearance assets and keeps the calculator, planning, Ask, Reverse, language and supported color settings. A smaller payload is intended to reduce loading work; timing depends on the browser and portal.
+The main setup button always installs the **full package**, with **Saydam / Liquid glass** as the initial appearance. The smaller bookmark button sits directly beneath the preview theme controls and follows the theme you are trying. It contains only that theme’s appearance assets and keeps the calculator, planning, Ask, Reverse, language and supported color settings. A smaller payload is intended to reduce loading work; timing depends on the browser and portal.
 
-Choose **Full package · all themes** if you want to switch between appearances inside the tool. A single-theme bookmark does not offer other themes; return to the setup page to choose another variant. Preview theme controls are independent from the installation selector.
+Use the main **Mesai** button if you want to switch between appearances inside the tool. A single-theme bookmark does not offer other themes; return to the setup page to choose another variant. There is no separate installation selector. Bozkır includes both mounted and standing artwork, with an Atlı / Ayakta switch in every window size.
 
-The optional single-theme button and Copy stay disabled until the chosen code has loaded and passed version/size checks. A failed load clears the link rather than keeping a previously selected theme. The main button already contains the full build. The optional selector fetches the selected bundle and puts its full code in that separate bookmark; the bookmark itself does not need a remote script loader.
+The optional single-theme button and Copy stay disabled until the chosen code has loaded and passed version/size checks. A failed load clears the link rather than keeping a previously selected theme. The main button already contains the full build. Selecting a preview theme fetches its bundle and puts its full code in that separate bookmark; the bookmark itself does not need a remote script loader.
 
 [User guide, Turkish and English](docs/GETTING_STARTED.md) covers the daily milestone versus weekly forecast, day editing, OOO, leave/holidays, core hours, Ask, Reverse, window controls, backup and updates.
 
@@ -84,3 +84,7 @@ The optional single-theme button and Copy stay disabled until the chosen code ha
 ## 3.4.2 — Full package first
 
 A larger main install button includes all themes. Optional smaller bookmarks sit below the live preview. The picker order is Saydam, Knight, Bozkır, Timeline, Columns, Celestial clock. Bozkır has horse and Cuman-mask controls for mounted and standing artwork, grouped together on the page and in the tool.
+
+## 3.4.3 — Bozkır switch and preview-linked install
+
+Atlı / Ayakta is available directly in Bozkır at full, compact and pocket sizes, preserving plans and open questions. Both Bozkır bookmarks include both paintings. The standing compact header clears its painted border. The smaller install button is visible below the preview controls, follows the selected theme, and shows the size saving against the full package.

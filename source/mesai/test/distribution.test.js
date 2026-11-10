@@ -84,7 +84,7 @@ for (const variant of manifest.variants) {
     same(Object.keys(result.fonts),[],`${id}: no other theme's fonts shipped`);
   }
   if (id === 'bozkir' || id === 'bozkira') {
-    same(sorted(Object.keys(result.images)),id === 'bozkir' ? ['bzMountedCompact','bzMountedWide'] : ['bzStandingCompact','bzStandingWide'],`${id}: only its wide/compact paintings`);
+    same(sorted(Object.keys(result.images)),['bzMountedCompact','bzMountedWide','bzStandingCompact','bzStandingWide'],`${id}: both switchable views in wide/compact`);
     same(sorted(Object.keys(result.fonts)),['Mesai Orkhon','Mesai Steppe'],`${id}: only its display/signature fonts`);
   }
   if (id !== 'all') {

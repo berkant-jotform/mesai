@@ -12,7 +12,7 @@
 
 Temaları **Kurulumdan önce dene** bölümünde deneyebilirsin. Sıra: Saydam, Şövalye, Bozkır, Çizelge, Sütunlar, Göksel saat. Bozkır’daki at simgesi atlı, Kuman maskesi ayakta görünümü açar. Aynı seçimler aracın **Görünüm** menüsündedir.
 
-Daha küçük bir yer işareti istersen canlı örneğin altındaki **Yalnızca bir tema mı istiyorsun?** bölümünü aç. Bir tema seçip **Hazır** yazınca o bölümdeki düğmeyi sürükle. Bu seçim üstteki ana düğmeyi değiştirmez; ana düğme her zaman tam pakettir. Tek temalı indirme hazırlanamazsa **Yeniden dene**’yi kullan.
+Daha küçük bir yer işareti istersen **Kurulumdan önce dene** bölümünde bir tema seç. Tema düğmelerinin hemen altındaki yer işareti düğmesi seçimini takip eder; **Hazır** yazınca çubuğa sürükle. Hesaplar ve özellikler aynıdır; diğer temaların görselleri eklenmez. Bozkır’da Atlı ve Ayakta birlikte gelir. Bu seçim üstteki ana düğmeyi değiştirmez; ana düğme her zaman tam pakettir. Tek temalı indirme hazırlanamazsa **Yeniden dene**’yi kullan.
 
 ### Sayıları oku
 
@@ -63,7 +63,7 @@ Ayarlar’daki **Google Takvim’den al (.ics)**, dışa aktardığın dosyayı 
 
 ### Güncelle ve yardım al
 
-Yer işareti kendini güncellemez. Kurulum sayfasını yenile, ana Mesai düğmesini yeniden sürükle ve eski yer işaretini kaldır. Tek temalı sürüm için örneğin altındaki isteğe bağlı indirmeyi kullan. ARGE sekmesini yeniledikten sonra yeni yer işaretini aç. Araçtaki sürüm bağlantısı kurulum sayfasına gider; portal izin verirse **Güncelleme var** bağlantısı da çıkar.
+Yer işareti kendini güncellemez. Kurulum sayfasını yenile, ana Mesai düğmesini yeniden sürükle ve eski yer işaretini kaldır. Tek temalı sürüm için tema düğmelerinin hemen altındaki yer işaretini kullan. ARGE sekmesini yeniledikten sonra yeni yer işaretini aç. Araçtaki sürüm bağlantısı kurulum sayfasına gider; portal izin verirse **Güncelleme var** bağlantısı da çıkar.
 
 Berkant’ın vibe coding projesi. Bir sorun veya öneri varsa Slack’ten Berkant’a yazabilirsin. Ekran görüntüsü paylaşırken kişisel kayıtları çıkar.
 
@@ -77,7 +77,7 @@ Berkant’ın vibe coding projesi. Bir sorun veya öneri varsa Slack’ten Berka
 
 Use **Try before installing** to explore Liquid glass, Knight, Steppe, Timeline, Columns and Celestial clock, in that order. The horse selects mounted Steppe; the Cuman mask selects the standing version. The tool’s **Appearance** menu uses the same grouping.
 
-For a smaller bookmark, open **Want just one theme?** below the live preview. Choose a theme, wait for **Ready**, then drag that section’s button. This does not change the main button, which always includes the full package. Choose **Try again** if the optional download fails.
+For a smaller bookmark, choose a theme in **Try before installing**. The bookmark button directly beneath the theme controls follows your selection. Wait for **Ready**, then drag it to the bookmarks bar. Calculations and features stay the same; other themes’ artwork is omitted. Both Bozkır views are included. This does not change the main button, which always includes the full package. Choose **Try again** if the optional download fails.
 
 ### Read the numbers
 
@@ -128,7 +128,7 @@ In Settings, **Import from Google Calendar (.ics)** reads an exported file in th
 
 ### Update and get help
 
-Bookmarks do not update themselves. Refresh the setup page, drag the main Mesai button again and remove the old bookmark. For a single-theme build, use the optional download below the example. Refresh ARGE before using it. The tool’s version link returns to the setup page; an **Update available** link appears if the portal permits its version check.
+Bookmarks do not update themselves. Refresh the setup page, drag the main Mesai button again and remove the old bookmark. For a single-theme build, use the bookmark button directly below the theme controls. Refresh ARGE before using it. The tool’s version link returns to the setup page; an **Update available** link appears if the portal permits its version check.
 
 Vibe-coded by Berkant. For bugs, ideas or feedback, message Berkant on Slack. Remove personal records from screenshots before sharing them.
 

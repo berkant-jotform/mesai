@@ -1,13 +1,13 @@
 {
-  "version": "3.4.2",
+  "version": "3.4.3",
   "variants": [
     {
       "id": "all",
       "labelTr": "Tüm temalar",
       "labelEn": "All themes",
       "path": "mesai.js",
-      "bytes": 1281049,
-      "hrefBytes": 1420982,
+      "bytes": 1283365,
+      "hrefBytes": 1424128,
       "assets": [
         "preview_cizelge_light",
         "preview_cizelge_dark",
@@ -56,8 +56,8 @@
       "labelTr": "Saydam",
       "labelEn": "Saydam",
       "path": "bookmarks/saydam.js",
-      "bytes": 327040,
-      "hrefBytes": 466385,
+      "bytes": 329356,
+      "hrefBytes": 469531,
       "assets": [],
       "fonts": []
     },
@@ -66,8 +66,8 @@
       "labelTr": "Çizelge",
       "labelEn": "Timeline",
       "path": "bookmarks/cizelge.js",
-      "bytes": 327041,
-      "hrefBytes": 466386,
+      "bytes": 329357,
+      "hrefBytes": 469532,
       "assets": [],
       "fonts": []
     },
@@ -76,8 +76,8 @@
       "labelTr": "Şövalye",
       "labelEn": "Knight",
       "path": "bookmarks/knight.js",
-      "bytes": 679562,
-      "hrefBytes": 819099,
+      "bytes": 681878,
+      "hrefBytes": 822245,
       "assets": [
         "bar",
         "controlDark",
@@ -102,8 +102,8 @@
       "labelTr": "Sütunlar",
       "labelEn": "Columns",
       "path": "bookmarks/sutunlar.js",
-      "bytes": 327042,
-      "hrefBytes": 466387,
+      "bytes": 329358,
+      "hrefBytes": 469533,
       "assets": [],
       "fonts": []
     },
@@ -112,8 +112,8 @@
       "labelTr": "Göksel saat",
       "labelEn": "Celestial clock",
       "path": "bookmarks/clock.js",
-      "bytes": 659885,
-      "hrefBytes": 799416,
+      "bytes": 662201,
+      "hrefBytes": 802562,
       "assets": [
         "bar",
         "controlDark",
@@ -138,11 +138,13 @@
       "labelTr": "Bozkır · atlı",
       "labelEn": "Steppe · rider",
       "path": "bookmarks/bozkir.js",
-      "bytes": 482243,
-      "hrefBytes": 621608,
+      "bytes": 607053,
+      "hrefBytes": 747280,
       "assets": [
         "bzMountedWide",
-        "bzMountedCompact"
+        "bzMountedCompact",
+        "bzStandingWide",
+        "bzStandingCompact"
       ],
       "fonts": [
         "Mesai Steppe",
@@ -154,9 +156,11 @@
       "labelTr": "Bozkır · ayakta",
       "labelEn": "Steppe · standing",
       "path": "bookmarks/bozkira.js",
-      "bytes": 489216,
-      "hrefBytes": 628581,
+      "bytes": 607054,
+      "hrefBytes": 747281,
       "assets": [
+        "bzMountedWide",
+        "bzMountedCompact",
         "bzStandingWide",
         "bzStandingCompact"
       ],

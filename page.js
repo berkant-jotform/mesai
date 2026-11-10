@@ -7,25 +7,17 @@
   let resetting = false, previewClosed = false;
   const state = {lang:'tr', look:'light', theme:'saydam', size:'full'};
   const pageVersion = document.querySelector('meta[name="mesai-version"]')?.content || '';
-  const installSelect = document.querySelector('#install-theme');
   const installStatus = document.querySelector('#install-status');
   const retryInstall = document.querySelector('#install-retry');
   const copyButton = document.querySelector('#copy');
-  const installState = {phase:'loading', id:'all', variant:null, href:null};
+  const installState = {phase:'loading', id:null, variant:null, href:null, fullBytes:0};
   let manifestPromise = null, sourceController = null, installSerial = 0;
   const sourceCache = new Map();
   const requestedVariant = new URLSearchParams(location.search).get('theme');
-  installSelect.value = [...themes, 'all'].includes(requestedVariant) ? requestedVariant : 'all';
-  installState.id = installSelect.value;
-  if (requestedVariant && installSelect.value !== 'all') document.querySelector('#theme-downloads').open = true;
-
-  function installLabel() {
-    const option = installSelect.selectedOptions[0];
-    const variant = installState.variant;
-    return (variant && (state.lang === 'tr' ? variant.labelTr : variant.labelEn)) || option?.dataset[state.lang === 'tr' ? 'labelTr' : 'labelEn'] || 'Mesai';
-  }
+  if (themes.includes(requestedVariant)) state.theme = requestedVariant;
+  const themeLabels = {saydam:['Saydam','Liquid glass'],knight:['Şövalye','Knight'],bozkir:['Bozkır · Atlı','Steppe · Rider'],bozkira:['Bozkır · Ayakta','Steppe · Standing'],cizelge:['Çizelge','Timeline'],sutunlar:['Sütunlar','Columns'],clock:['Göksel saat','Celestial clock']};
+  function installLabel() { return themeLabels[state.theme][state.lang === 'tr' ? 0 : 1]; }
   function paintInstaller() {
-    for (const option of installSelect.options) option.textContent = option.dataset[state.lang === 'tr' ? 'labelTr' : 'labelEn'];
     const ready = installState.phase === 'ready';
     bookmark.setAttribute('aria-disabled', String(!ready));
     bookmark.draggable = ready;
@@ -33,10 +25,14 @@
     copyButton.disabled = !ready;
     retryInstall.hidden = installState.phase !== 'error';
     const label = installLabel();
-    bookmark.textContent = installSelect.value === 'all' ? 'Mesai' : 'Mesai · ' + label;
+    bookmark.textContent = 'Mesai · ' + label;
+    document.querySelector('#bozkir-install-note').hidden = !['bozkir','bozkira'].includes(state.theme);
     bookmark.title = 'Mesai · ' + label;
     bookmark.setAttribute('aria-label', state.lang === 'tr' ? 'Mesai · ' + label + ' — yer işaretleri çubuğuna sürükle' : 'Mesai · ' + label + ' — drag to bookmarks bar');
-    if (ready) installStatus.textContent = (state.lang === 'tr' ? 'Hazır · ' : 'Ready · ') + label;
+    if (ready) {
+      const saving = Math.max(0, Math.round((1 - installState.variant.hrefBytes / installState.fullBytes) * 100));
+      installStatus.textContent = (state.lang === 'tr' ? 'Hazır · Tam paketten %' + saving + ' daha küçük' : 'Ready · ' + saving + '% smaller than the full package');
+    }
     else if (installState.phase === 'error') installStatus.textContent = location.protocol === 'file:'
       ? (state.lang === 'tr' ? 'Bu dosyadan hazırlanamadı. Mesai’nin kurulum sayfasını açıp yeniden dene.' : 'Could not prepare it from this file. Open Mesai’s hosted setup page and try again.')
       : (state.lang === 'tr' ? 'Yer işareti hazırlanamadı. Bağlantını kontrol edip yeniden dene.' : 'Could not prepare the bookmark. Check your connection and try again.');
@@ -58,7 +54,7 @@
   }
   async function prepareBookmark(force = false) {
     const serial = ++installSerial;
-    const id = installSelect.value;
+    const id = state.theme;
     if (sourceController) sourceController.abort();
     sourceController = null;
     installState.phase = 'loading'; installState.id = id; installState.variant = null; installState.href = null;
@@ -70,6 +66,8 @@
     try {
       const manifest = await loadManifest();
       if (serial !== installSerial) return;
+      installState.fullBytes = manifest.variants.find(item => item.id === 'all')?.hrefBytes || 0;
+      if (!installState.fullBytes) throw new Error('Missing full package');
       const matches = manifest.variants.filter(item => item.id === id);
       const variant = matches[0];
       const expectedPath = id === 'all' ? 'mesai.js' : 'bookmarks/' + id + '.js';
@@ -84,7 +82,7 @@
           code = await response.text();
         } finally { clearTimeout(timer); }
       }
-      if (serial !== installSerial || installSelect.value !== id) return;
+      if (serial !== installSerial || state.theme !== id) return;
       if (!code.trim() || /^\s*</.test(code) || new TextEncoder().encode(code).byteLength !== variant.bytes) throw new Error('Incomplete bookmark');
       const href = 'javascript:' + encodeURIComponent(code);
       if (new TextEncoder().encode(href).byteLength !== variant.hrefBytes) throw new Error('Bookmark size mismatch');
@@ -99,7 +97,6 @@
       if (serial === installSerial) { sourceController = null; paintInstaller(); }
     }
   }
-  installSelect.addEventListener('change', () => { prepareBookmark(); });
   retryInstall.addEventListener('click', () => { prepareBookmark(true); });
   const questions = {
     tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
@@ -139,7 +136,8 @@
       b.title = b.dataset[state.lang === 'tr' ? 'labelTr' : 'labelEn']; b.setAttribute('aria-label', b.title);
     });
     mainBookmark.setAttribute('aria-label', state.lang === 'tr' ? 'Mesai · tüm temalar — yer işaretleri çubuğuna sürükle' : 'Mesai · all themes — drag to bookmarks bar');
-    paintInstaller();
+    if (installState.id !== state.theme) prepareBookmark();
+    else paintInstaller();
   }
   function send() { frame.contentWindow.postMessage({type:'mesai-preview', ...state}, location.origin); }
   document.querySelectorAll('button[data-lang],button[data-look],button[data-theme],button[data-size]').forEach(button => {
@@ -207,7 +205,7 @@
     hint.textContent = state.lang === 'tr' ? 'Mesai’yi basılı tutup üstteki yer işaretleri çubuğuna sürükle. Sonra ARGE’de çubuktaki Mesai’ye tıkla.' : 'Hold Mesai and drag it to the bookmarks bar above. Then click that bookmark on ARGE.';
   });
   bookmark.addEventListener('dragstart', event => {
-    if (installState.phase !== 'ready' || !installState.href || installSelect.value !== installState.id) event.preventDefault();
+    if (installState.phase !== 'ready' || !installState.href || state.theme !== installState.id) event.preventDefault();
   });
   copyButton.addEventListener('click', async () => {
     if (installState.phase !== 'ready' || !installState.href) return;
@@ -224,5 +222,4 @@
     }
   });
   paint();
-  prepareBookmark();
 })();

@@ -485,6 +485,14 @@
   }
 
   // ---------------- render pieces ----------------
+  // Change the painting without leaving the selected day, question or open panel.
+  function bozkirSwitch() {
+    if (!/^bozkira?$/.test(S.ui.theme)) return '';
+    var en = S.ui.lang === 'en';
+    return '<div class="bozkir-view-switch" role="group" aria-label="' + (en ? 'Bozkır view' : 'Bozkır görünümü') + '">' + ['bozkir','bozkira'].map(function (id, i) {
+      return '<button type="button" data-a="bozkirView" data-v="' + id + '" aria-pressed="' + (S.ui.theme === id) + '">' + TH.variantIcon(id) + '<span>' + (en ? ['Rider','Standing'][i] : ['Atlı','Ayakta'][i]) + '</span></button>';
+    }).join('') + '</div>';
+  }
   function header(v) {
     var t = L(), th = S.ui.theme, dark = isDark(), live = v && v.today && v.today.inside && st.code === 'ready' && !st.off;
     var sw = TH.ORDER.map(function (k) { return '<button class="sw' + (k === th ? ' on' : '') + '" data-a="theme" data-v="' + k + '" title="' + esc(t.themes[k]) + '" aria-label="' + esc(t.themes[k]) + '" style="background:' + TH.T[k].swatch + ';color:' + TH.T[k].swatch + '"></button>'; }).join('');
@@ -1258,6 +1266,14 @@
     if ((lay === 'knight' && !plateArt) || lay === 'clock') html = html.replace(/>([^<]*)</g, function (m, txt) { return '>' + txt.replace(/\bOOO\b/g, '<span class="tri-o">OOO</span>') + '<'; });
     MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     st.artPool = pool;
+    if (plateArt) {
+      var variantAnchor = MAIN.querySelector(tier === 'pocket' ? '.pocket-heading' : '.hd');
+      if (variantAnchor) {
+        var variantBrand = tier === 'wide' || tier === 'std' ? variantAnchor.querySelector('.brand') : null;
+        if (variantBrand) variantBrand.outerHTML = bozkirSwitch();
+        else variantAnchor.insertAdjacentHTML('afterend', bozkirSwitch());
+      }
+    }
     if(lay==='knight'&&!plateArt&&(tier==='wide'||tier==='std')){
       MAIN.querySelectorAll('.side>div>.k:first-child,.side>.sec>div:first-child>.k,.tr .dn').forEach(function(el){el.insertAdjacentHTML('afterbegin',art('fleuron','manuscript-fleuron'));});
       MAIN.querySelectorAll('.tl .lv').forEach(function(el){el.innerHTML=art('timeMarker','time-marker');});
@@ -1397,6 +1413,13 @@
     if (a === 'impClear') { st.imp = null; render(now, true); return; }
     if (a === 'impApply') { var im = st.imp, cnt = 0; if (im) { mut(function (p) { im.items.forEach(function (it, i) { if (!im.on[i]) return; cnt++; if (it.kind === 'ooo') p.ooo[it.date] = { m: it.m, s: it.s }; else { p.types[it.date] = it.kind; delete p.plan[it.date]; } }); }); st.imp = null; toast(fill(t.icsApplied, { n: cnt })); render(now, true); } return; }
     if (a === 'min') { st.themes=false;st.set=false;st.rev=null;st.view='week';var mr=W.getBoundingClientRect();setSize('pocket');save();setPos(mr.right-220,mr.top);if(S.ui.pos)S.ui.pos=[Math.max(6,mr.right-220),mr.top];render(now,true);return; }
+    if (a === 'bozkirView') {
+      if (!/^bozkira?$/.test(S.ui.theme) || !/^bozkira?$/.test(v) || TH.ORDER.indexOf(v) < 0) return;
+      S.ui.theme = v; save(); render(now, true);
+      var activeVariant = root.querySelector('.bozkir-view-switch [data-v="' + v + '"]');
+      if (activeVariant) activeVariant.focus({preventScroll:true});
+      return;
+    }
     if (a === 'theme') { if (TH.ORDER.indexOf(v) < 0) return; st.themes=false;st.set=false;S.ui.ask=false;st.view='week';st.rev=null;S.ui.theme = v; save(); render(now, true); return; }
     if (a === 'lang') { S.ui.lang = v; save(); render(now, true); return; }
     if (a === 'dark') { S.ui.look = isDark() ? 'light' : 'dark'; save(); render(now, true); return; }

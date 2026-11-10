@@ -35,7 +35,7 @@ var MesaiThemes = (function () {
 
   // Türk motifleri is a draft (not selectable) until its painted plate is approved.
   var ORDER = ['saydam', 'knight', 'bozkir', 'bozkira', 'cizelge', 'sutunlar', 'clock'];   // Saydam first: the default for new users
-  if (typeof MesaiBuild !== 'undefined' && MesaiBuild.theme !== 'all' && T[MesaiBuild.theme]) ORDER = [MesaiBuild.theme];
+  if (typeof MesaiBuild !== 'undefined' && MesaiBuild.theme !== 'all' && T[MesaiBuild.theme]) ORDER = /^bozkira?$/.test(MesaiBuild.theme) ? ['bozkir','bozkira'] : [MesaiBuild.theme];
   function vars(name, dark) {
     var t = T[name] || T.cizelge, c = dark ? t.dark : t.light, out = [];
     Object.keys(c).forEach(function (k) { out.push('--' + k + ':' + c[k]); });

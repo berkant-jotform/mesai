@@ -401,3 +401,24 @@
 :is(.TH-bozkir,.TH-bozkira).T-wide .hd .who{display:none}   /* no room beside the figure */
 :is(.TH-bozkir,.TH-bozkira) .btn.pri:hover{color:#fbf3e2}   /* keep cream on blue: the generic hover colour fails contrast here */
 :is(.TH-bozkir,.TH-bozkira) .cwk button.sel{box-shadow:inset 0 -2px 0 var(--rubric)}
+
+/* Always-visible Bozkır artwork choice; uses the same parchment and ink as the controls. */
+.bozkir-view-switch{display:flex;width:max-content;max-width:100%;gap:2px;padding:2px;margin:9px 0 5px;border:1px solid var(--gold);border-radius:5px;background:rgba(255,250,238,.8)}
+.bozkir-view-switch button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:32px;padding:3px 12px;border:0;border-radius:3px;background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.bozkir-view-switch button[aria-pressed=true]{background:var(--acc);color:#fbf3e2;box-shadow:0 1px 2px rgba(48,37,28,.18)}
+.bozkir-view-switch button:hover{box-shadow:inset 0 0 0 1px var(--gold)}
+.bozkir-view-switch button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.bozkir-view-switch .bozkir-icon{width:22px;height:22px;flex:none}
+.T-pocket .bozkir-view-switch{margin:7px 0;width:100%;box-sizing:border-box}
+.T-pocket .bozkir-view-switch button{flex:1;padding:3px 5px;font-size:12px}
+
+:is(.TH-bozkir,.TH-bozkira) .hd .bozkir-view-switch{margin:0;flex:none}
+:is(.TH-bozkir,.TH-bozkira) .hd .bozkir-view-switch button{padding:3px 7px;font-size:12px;gap:4px}
+
+/* Standing compact artwork has a lower title border than the mounted plate.
+   Begin the controls below it instead of crossing the painted rule. */
+.TH-bozkira.T-compact .main{padding-top:18.5%}
+:is(.TH-bozkir,.TH-bozkira).T-compact .hc{gap:6px;flex-wrap:wrap}
+:is(.TH-bozkir,.TH-bozkira).T-compact .hc .who{display:none}
+:is(.TH-bozkir,.TH-bozkira).T-compact .hc .brand{font-size:18px;flex:none}
+:is(.TH-bozkir,.TH-bozkira).T-compact .hc .theme-entry{padding:5px 9px}
