@@ -490,7 +490,8 @@
     if (!/^bozkira?$/.test(S.ui.theme)) return '';
     var en = S.ui.lang === 'en';
     return '<div class="bozkir-view-switch" role="group" aria-label="' + (en ? 'Bozkır view' : 'Bozkır görünümü') + '">' + ['bozkir','bozkira'].map(function (id, i) {
-      return '<button type="button" data-a="bozkirView" data-v="' + id + '" aria-pressed="' + (S.ui.theme === id) + '">' + TH.variantIcon(id) + '<span>' + (en ? ['Rider','Standing'][i] : ['Atlı','Ayakta'][i]) + '</span></button>';
+      var label = en ? ['Rider','Standing'][i] : ['Atlı','Ayakta'][i];
+      return '<button type="button" data-a="bozkirView" data-v="' + id + '" title="' + label + '" aria-label="' + label + '" aria-pressed="' + (S.ui.theme === id) + '">' + TH.variantIcon(id) + '</button>';
     }).join('') + '</div>';
   }
   function header(v) {
@@ -1209,6 +1210,7 @@
     var t = L(), y = t.sy, w = pv || v, i = st.sel, r = v.rows[i] || v.rows[0], kum = S.ui.syv === 'kum', s = rowStatus(r, v);
     var tb = '<div class="sy-tb" data-drag><div class="vseg sy-gl" role="group" aria-label="' + y.view + '">' + [['day', y.day], ['kum', y.kum]].map(function (b) { var on = (b[0] === 'kum') === kum; return '<button data-a="syv" data-v="' + b[0] + '" class="' + (on ? 'on' : '') + '" aria-pressed="' + on + '">' + b[1] + '</button>'; }).join('') + '</div><span class="sy-sp"></span>' +
       '<div class="grp sy-gl"><button class="' + (st.view === 'history' ? 'on' : '') + '" data-a="hist" aria-label="' + t.history + '" title="' + t.history + '">' + syIc('hist') + '</button><button class="' + (st.themes ? 'on' : '') + '" data-a="themes" aria-expanded="' + !!st.themes + '" aria-label="' + t.look + '" title="' + t.look + '">' + syIc('look') + '</button><button class="' + (st.set ? 'on' : '') + '" data-a="set" aria-label="' + t.settings + '" title="' + t.settings + '">' + syIc('set') + '</button></div>' +
+      '<div class="grp sy-gl"><button class="' + (S.ui.bell ? 'on' : '') + '" data-a="bell" aria-pressed="' + !!S.ui.bell + '" aria-label="' + esc(t.bell) + '" title="' + esc(t.bell) + '">' + ic('bell',18) + '</button></div>' +
       '<div class="grp sy-gl"><button data-a="lang" data-v="tr" class="' + (S.ui.lang !== 'en' ? 'on' : '') + '" aria-pressed="' + (S.ui.lang !== 'en') + '">TR</button><button data-a="lang" data-v="en" class="' + (S.ui.lang === 'en' ? 'on' : '') + '" aria-pressed="' + (S.ui.lang === 'en') + '">EN</button></div></div>';
     var title = kum ? '<h1 class="lt">' + (v.thisWeek ? t.thisWeek : t.week) + '<small>' + esc(fill(t.weekOf, { a: dl(v.ws), b: dl(v.ws + 4 * DAY) })) + (pv ? ' · <span class="askt">' + t.ask.toLowerCase() + '</span>' : '') + '</small></h1>'
       : '<h1 class="lt">' + t.daysL[r.dow] + ' ' + dl(r.date) + '<small style="color:' + s.c + '">' + esc(s.s) + '</small></h1>';
@@ -1269,7 +1271,7 @@
     if (plateArt) {
       var variantAnchor = MAIN.querySelector(tier === 'pocket' ? '.pocket-heading' : '.hd');
       if (variantAnchor) {
-        var variantBrand = tier === 'wide' || tier === 'std' ? variantAnchor.querySelector('.brand') : null;
+        var variantBrand = tier !== 'pocket' ? variantAnchor.querySelector('.brand') : null;
         if (variantBrand) variantBrand.outerHTML = bozkirSwitch();
         else variantAnchor.insertAdjacentHTML('afterend', bozkirSwitch());
       }

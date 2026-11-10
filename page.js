@@ -99,8 +99,8 @@
   }
   retryInstall.addEventListener('click', () => { prepareBookmark(true); });
   const questions = {
-    tr:{friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
-    en:{friday:'when do I leave Friday?',early:'leave Friday at 14:00, how many hours per day?',total:'how many hours have I worked this week?'}
+    tr:{now:'Şimdi çıksam?',friday:'cuma kaçta çıkarım?',early:'cuma 14te çıkmak için her gün kaç saat',total:'bu hafta kaç saat yaptım'},
+    en:{now:'what if I leave now?',friday:'when do I leave Friday?',early:'leave Friday at 14:00, how many hours per day?',total:'how many hours have I worked this week?'}
   };
   try {
     const saved = JSON.parse(localStorage.getItem('mesai.page') || '{}');
@@ -192,10 +192,22 @@
       frame.contentWindow.postMessage({type:'mesai-preview', ...state, openAsk:true}, location.origin);
     }
   });
+  function linkArgeHint(element) {
+    const text = element.textContent;
+    element.replaceChildren();
+    text.split(/(ARGE(?: Portal)?)/g).forEach(part => {
+      if (/^ARGE(?: Portal)?$/.test(part)) {
+        const a = document.createElement('a'); a.textContent = part;
+        a.href = 'https://argeportal.hacettepeteknokent.com.tr/'; a.target = '_blank'; a.rel = 'noopener';
+        element.append(a);
+      } else element.append(document.createTextNode(part));
+    });
+  }
   mainBookmark.addEventListener('click', event => {
     event.preventDefault();
     const hint = document.querySelector('#main-install-hint'); hint.hidden = false;
     hint.textContent = state.lang === 'tr' ? 'Bu düğmeyi yer işaretleri çubuğuna sürükle. Sonra ARGE’de aç.' : 'Drag this button to your bookmarks bar, then open it on ARGE.';
+    linkArgeHint(hint);
   });
   bookmark.addEventListener('click', event => {
     event.preventDefault();
@@ -203,6 +215,7 @@
     const hint = document.querySelector('#install-hint');
     hint.hidden = false;
     hint.textContent = state.lang === 'tr' ? 'Mesai’yi basılı tutup üstteki yer işaretleri çubuğuna sürükle. Sonra ARGE’de çubuktaki Mesai’ye tıkla.' : 'Hold Mesai and drag it to the bookmarks bar above. Then click that bookmark on ARGE.';
+    linkArgeHint(hint);
   });
   bookmark.addEventListener('dragstart', event => {
     if (installState.phase !== 'ready' || !installState.href || state.theme !== installState.id) event.preventDefault();
