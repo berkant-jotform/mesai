@@ -1,3 +1,6 @@
 node_modules/
 source/mesai/dist/
 .DS_Store
+source/mesai/shots/
+source/mesai/test/independent-results.json
+qa-local/

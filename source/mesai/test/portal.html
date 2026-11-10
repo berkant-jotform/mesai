@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>ARGE Portal (fixture)</title>
+<style>
+  /* deliberately hostile global styles, like a real legacy portal */
+  * { font-family: Tahoma, serif; } button { background: red !important; } svg { width: 200px; } div { line-height: 3; }
+  body { margin: 0; background: #e9edf2; }
+  .ui-dialog { position: absolute; background: #fff; border: 1px solid #889; width: 760px; padding: 6px; }
+  .ui-dialog.hidden { display: none; }
+  .blockUI { position: absolute; inset: 0; background: rgba(255,255,255,.6); }
+  table { border-collapse: collapse; font-size: 11px; } td, th { border: 1px solid #ccd; padding: 1px 4px; }
+  .pDiv { font-size: 11px; }
+</style></head>
+<body>
+<div id="menu">Menü · PDKS Giriş Çıkış Bilgi Kartı</div>
+<script>
+// Simulated portal: windows with duplicate ids, async reloads, loaders, hidden person-id columns.
+window.portal = (function () {
+  const MONTHS = ['OCAK','ŞUBAT','MART','NİSAN','MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK'];
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = (d, h, m, s) => `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)}.${d.getUTCFullYear()}` + (h != null ? ` ${pad(h)}:${pad(m)}:${pad(s || 0)}` : '');
+  let DB = {}, delay = 400, z = 100, nwin = 0;
+  // DB[person][YYYY-MM] = [{date:'YYYY-MM-DD', ev:[['08:23','G'],...]}]
+  function setDB(db) { DB = db; }
+  function setDelay(ms) { delay = ms; }
+  function rowsFor(person, mk) {
+    const days = (DB[person] && DB[person][mk]) || [];
+    const raw = [], off = [];
+    days.forEach(d => {
+      const dt = new Date(d.date + 'T00:00:00Z');
+      d.ev.forEach(([hm, k]) => { const [h, m, sx] = hm.split(':').map(Number); raw.push([fmt(dt, h, m, sx), person, k, 'PDKS']); });
+      if (d.official !== false && d.ev.length >= 2 && d.ev[d.ev.length - 1][1] === 'Ç' && !d.today) {
+        const [h1, m1, s1] = d.ev[0][0].split(':').map(Number), [h2, m2, s2] = (d.officialLast || d.ev[d.ev.length - 1][0]).split(':').map(Number);
+        const min = Math.round(((h2 * 3600 + m2 * 60 + (s2 || 0)) - (h1 * 3600 + m1 * 60 + (s1 || 0))) / 60);
+        off.push([fmt(dt), person, fmt(dt, h1, m1, s1), fmt(dt, h2, m2, s2), `${pad(Math.floor(min / 60))}:${pad(min % 60)}`]);
+      }
+    });
+    return { raw, off };
+  }
+  function table(rows, hiddenCol) {
+    return rows.map(r => '<tr>' + r.map((c, i) => `<td${i === hiddenCol ? ' style="display:none"' : ''}>${c}</td>`).join('') + '</tr>').join('');
+  }
+  function open(opts = {}) {
+    const id = ++nwin, w = document.createElement('div');
+    w.className = 'ui-dialog active_card'; w.id = 'window_' + id;
+    w.style.left = (40 + id * 30) + 'px'; w.style.top = (60 + id * 30) + 'px'; w.style.zIndex = ++z;
+    document.querySelectorAll('.ui-dialog').forEach(x => x.classList.remove('active_card'));
+    const persons = opts.persons || [['1001', 'Berkant Gül']];
+    const months = opts.months || ['2026-10', '2026-11', '2026-12'];
+    w.innerHTML = `<div id="form_pdks"><b>PDKS Giriş Çıkış Bilgi Kartı</b>
+      <div>Dönem <select id="Donem_Id"><option value="">Seçiniz</option>${months.map(m => `<option value="${m}">${MONTHS[+m.slice(5) - 1]} ${m.slice(0, 4)}</option>`).join('')}</select>
+      Personel <select id="Personel_Id"><option value="">Seçiniz</option></select></div>
+      <div id="grid_kesin_giris_cikis" class="flexgrid"><table><thead><tr><th>Tarih</th><th style="display:none">P</th><th>İlk Giriş</th><th>Son Çıkış</th><th>Süre</th></tr></thead><tbody></tbody></table></div>
+      <div class="flexgrid raw"><table><thead><tr><th>Tarih</th><th style="display:none">P</th><th>Durum</th><th>Kaynak</th></tr></thead></table>
+        <div class="gridContainer"><table><tbody></tbody></table></div><div class="pDiv">Sayfa 1 / 1</div></div></div>`;
+    document.body.appendChild(w);
+    const per = w.querySelector('#Donem_Id'), ps = w.querySelector('#Personel_Id');
+    const block = () => { const b = document.createElement('div'); b.className = 'blockUI'; w.appendChild(b); return b; };
+    function load() {
+      const b = block();
+      w.querySelector('#grid_kesin_giris_cikis tbody').innerHTML = '';
+      w.querySelector('.gridContainer tbody').innerHTML = '';
+      setTimeout(() => {
+        b.remove();
+        if (!per.value || !ps.value) return;
+        const { raw, off } = rowsFor(ps.value, per.value);
+        w.querySelector('#grid_kesin_giris_cikis tbody').innerHTML = table(off, 1);
+        w.querySelector('.gridContainer tbody').innerHTML = table(raw, 1);
+        if (opts.paged) w.querySelector('.pDiv').textContent = 'Sayfa 1 / 3';
+      }, delay);
+    }
+    per.addEventListener('change', () => {
+      // like the real portal: changing the period reloads the person list and clears it
+      const b = block(); ps.disabled = true; ps.innerHTML = '<option value="">Seçiniz</option>';
+      w.querySelector('#grid_kesin_giris_cikis tbody').innerHTML = ''; w.querySelector('.gridContainer tbody').innerHTML = '';
+      setTimeout(() => {
+        b.remove(); ps.disabled = false;
+        ps.innerHTML = '<option value="">Seçiniz</option>' + persons.map(([v, n]) => `<option value="${v}">${v} - ${n}</option>`).join('');
+        if (opts.keepPerson && opts._last) { ps.value = opts._last; load(); }
+      }, delay / 2);
+    });
+    ps.addEventListener('change', () => { opts._last = ps.value; load(); });
+    w.addEventListener('mousedown', () => focus(w));
+    if (opts.period) { per.value = opts.period; per.dispatchEvent(new Event('change')); if (opts.person) setTimeout(() => { ps.value = opts.person; ps.dispatchEvent(new Event('change')); }, delay / 2 + 20); }
+    return w;
+  }
+  function focus(w) { document.querySelectorAll('.ui-dialog').forEach(x => x.classList.remove('active_card')); w.classList.add('active_card'); w.style.zIndex = ++z; }
+  function close(w) { w.remove(); }
+  return { setDB, setDelay, open, focus, close };
+})();
+</script>
+</body></html>

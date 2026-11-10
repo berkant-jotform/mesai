@@ -105,5 +105,85 @@ ok('holiday credit and half day', () => {
   const w2 = C.week(data(), NOW, {}, Object.assign({ types: { '2026-11-05': 'ofis' } }, st), 0);
   assert.equal(w2.rows[3].type, 'ofis');
 });
+const fr2 = sc => JSON.stringify(sc.frames.map(f => { const o = { d: f.days }; ['s', 'e', 'len', 'type', 'delta'].forEach(k => { if (f[k] != null) o[k] = f[k]; }); return o; }));
+
+// ---------- follow-ups ----------
+const chain = (qs) => { let prev = null, tgt = null, out = []; for (const q of qs) { let sc = Sc.followUp(prev, Sc.parse(q), tgt); const r = Sc.solve(C, data(), NOW, {}, {}, sc); out.push({ sc, r }); if (r.kind) { prev = sc; tgt = r.day; } } return out; };
+ok('follow-up: "ya 9da gelirsem" replaces Friday’s arrival, keeps her gün 10 saat', () => {
+  const [a, b, c] = chain(['her gün 10 saat yapsam cuma 8 de gelsem kaçta çıkarım', 'ya 9da gelirsem', 'ya 9 saat yapsam']);
+  assert.equal(b.sc.follow, true); assert.equal(fr2(b.sc), '[{"d":["EACH"],"len":600},{"d":[4],"s":540}]'); assert.equal(b.r.kind, 'leave'); assert.equal(b.r.day, 4);
+  assert.equal(fr2(c.sc), '[{"d":["EACH"],"len":540},{"d":[4],"s":540}]'); assert.equal(clk(c.r.end), '17:12');
+});
+ok('follow-up: leave and OOO what-ifs on the day asked about', () => {
+  const [a, b, c] = chain(['cuma kaçta çıkarım', 'peki perşembe izin alırsam', 'ya 2 saat ooo alırsam']);
+  assert.equal(fr2(b.sc), '[{"d":[4]},{"d":[3],"type":"izin"}]'); assert.equal(b.r.day, 4);
+  assert.equal(c.sc.frames[0].ooo.m, 120); assert.equal(clk(c.r.end), '19:12', 'OOO raises the target by 2 h');
+});
+ok('follow-up: English, and a new arrival question keeps context', () => {
+  const [a, b] = chain(['if I take thursday off when do I leave friday', 'what if I come at 8']);
+  assert.equal(a.r.day, 4, 'the question is about Friday, not the leave day'); assert.equal(b.sc.follow, true); assert.equal(b.r.day, 4);
+  const [c, d] = chain(['perşembe 15te çıkmak için kaçta gelmeliyim', 'ya 14te çıkmak istersem']);
+  assert.equal(d.sc.frames[0].e, 840); assert.equal(d.r.day, 3);
+});
+ok('not a follow-up: a full new question starts fresh', () => {
+  const [a, b] = chain(['cuma kaçta çıkarım', 'perşembe kaçta çıkarım']);
+  assert.ok(!b.sc.follow); assert.equal(b.r.day, 3);
+});
+// ---------- 3.4.0: day-length and h:mm questions (from real users) ----------
+ok('bugün 18:20 de çıkarsam kaç saat olur → 9:15', () => { const r = S('bugün 18:20 de çıkarsam kaç saat olur'); assert.equal(r.kind, 'dayLen'); assert.equal(hm(r.len), '9:15'); });
+ok('18.20de çıksam bugün kaç saat olur', () => assert.equal(hm(S('18.20de çıksam bugün kaç saat olur').len), '9:15'));
+ok('bugün 17de çıksam kaç saat çalışmış olurum', () => { const r = S('bugün 17de çıksam kaç saat çalışmış olurum'); assert.equal(r.kind, 'dayLen'); assert.equal(hm(r.len), '7:55'); });
+ok('perşembe 17:00 de çıkarsam kaç saat olur (default 09:00)', () => { const r = S('perşembe 17:00 de çıkarsam kaç saat olur'); assert.equal(r.day, 3); assert.equal(hm(r.len), '8:00'); });
+ok('kaç saat çalıştım stays "done"', () => assert.equal(S('bugün kaç saat çalıştım').kind, 'done'));
+ok('9:30 saat / 9.30 saat / 9 saat 30 dk = 570 min', () => { ['her gün 9:30 saat', 'her gün 9.30 saat', 'her gün 9 saat 30 dk'].forEach(q => assert.equal(fr(q), '[{"d":["EACH"],"len":570}]', q)); assert.equal(fr('her gün 9,5 saat'), '[{"d":["EACH"],"len":570}]'); });
+ok('her gün 9:30 saat yaparsam cuma kaçta çıkarım', () => { const r = S('her gün 9:30 saat yaparsam cuma kaçta çıkarım'); assert.equal(r.kind, 'leave'); assert.equal(r.day, 4); });
+ok('bugün 9.30 saat çalışırsam kaçta çıkarım → 09:05 + 9:30', () => assert.equal(clk(S('bugün 9.30 saat çalışırsam kaçta çıkarım').end), '18:35'));
+ok('English: how many hours will I have / 9:30 hours every day', () => { assert.equal(hm(S('if I leave today at 18:20, how many hours will I have?').len), '9:15'); assert.equal(fr('if I work 9:30 hours every day, when do I leave Friday?').indexOf('"len":570') > 0, true); });
+ok('bugün kaçta mesai bitiyor? → read-only daily milestone', () => { const r = S('bugün kaçta mesai bitiyor?'); assert.equal(r.kind, 'dayGoal'); assert.equal(r.day, 2); assert.equal(clk(r.milestone), '18:05'); assert.equal(r.store, null); });
+
+// Read-only daily questions and practical clock/duration forms.
+ok('equivalent TR/EN daily finish wording keeps the daily target distinct', () => {
+  ['bugünkü mesaim ne zaman bitiyor?', '9 saatimi kaçta doldururum?', 'When do I finish today?', 'When do I complete 9 hours?', 'What time does my shift end today?'].forEach(q => {
+    const r = S(q); assert.equal(r.kind, 'dayGoal', q); assert.equal(r.day, 2); assert.equal(clk(r.milestone), '18:05', q); assert.equal(r.D, 9 * H); assert.equal(r.store, null);
+  });
+});
+ok('daily completion accepts an explicit duration without changing the plan', () => {
+  const r = S('bugün 9,5 saat kaçta tamamlanır'); assert.equal(r.kind, 'dayGoal'); assert.equal(r.D, 9.5 * H); assert.equal(clk(r.milestone), '18:35'); assert.equal(r.store, null);
+});
+ok('future shift question clearly uses a planned default arrival', () => {
+  const r = S('perşembe mesai kaçta bitiyor?'); assert.equal(r.kind, 'dayGoal'); assert.equal(r.day, 3); assert.equal(r.planned, true); assert.equal(clk(r.start), '09:00'); assert.equal(clk(r.end), '18:00'); assert.ok(r.chips.some(c => c.k === 'default'));
+});
+ok('daily question on leave is credit, and missing entry asks for arrival', () => {
+  const credit = S('bugün kaçta mesai bitiyor', { types: { '2026-11-04': 'izin' } }); assert.equal(credit.kind, 'credit'); assert.equal(credit.store, null);
+  const sc = P('bugün kaçta mesai bitiyor'), r = Sc.solve(C, { days: {}, events: {}, months: { '2026-11': 1 } }, NOW, {}, {}, sc);
+  assert.equal(r.kind, 'dayGoal'); assert.equal(r.needsEntry, true); assert.equal(r.milestone, null); assert.equal(r.store, null);
+});
+ok('daily tomorrow on Sunday reports next week rather than reusing Sunday', () => {
+  const r = Sc.solve(C, { days: {}, events: {}, months: { '2026-11': 1 } }, U('08.11.2026 10:00'), {}, {}, P('tomorrow what time does my shift end?'));
+  assert.equal(r.kind, 'outOfWeek');
+});
+ok('English hypothetical exit duration does not require the exact will-I-have phrase', () => {
+  const r = S('if I leave today at 5:30pm how many hours will I work?'); assert.equal(r.kind, 'dayLen'); assert.equal(hm(r.len), '8:25'); assert.equal(clk(r.end), '17:30');
+  assert.equal(S('perşembe 17de çıkmak için kaç saat çalışmam gerekir').kind, 'reqLen', 'required work stays a planning question');
+});
+ok('compact and decimal duration formats retain their actual meaning', () => {
+  ['her gün 9h30m', 'her gün 9h30', 'every day 9h 30m'].forEach(q => assert.ok(fr(q).includes('"len":570'), q));
+  assert.ok(fr('her gün 9h90m').includes('"len":630'), 'explicit90minutes normalizes to10h30, unlike invalid9:90'); assert.ok(fr('her gün 9,25 saat').includes('"len":555')); assert.ok(fr('every day 9.25 hours').includes('"len":555'), 'English decimal hours stay decimal');
+});
+ok('hourly English time off is OOO while an entire day off remains leave', () => {
+  assert.deepEqual(P('tomorrow 45 minutes off').frames[0].ooo, { m: 45, s: null });
+  assert.deepEqual(P('tomorrow half an hour off').frames[0].ooo, { m: 30, s: null });
+  assert.equal(P('Friday off').frames[0].type, 'izin');
+});
+ok('explicit invalid clock or h:mm duration never becomes a different plan', () => {
+  ['if I work 9:99 hours today when do I leave?', 'leave Friday at 13pm', 'cuma 25:00 çıkarsam yeter mi', 'cuma 24:00 çıkarsam yeter mi'].forEach(q => {
+    const r = S(q); assert.equal(r.kind, 'invalidTime', q); assert.equal(r.store, undefined);
+  });
+});
+ok('weekly and hypothetical plan questions keep their existing semantics', () => {
+  assert.equal(S('her gün 10 saat yapsam cuma kaçta çıkarım').kind, 'leave');
+  assert.equal(S('bugün 9.30 saat çalışırsam kaçta çıkarım').kind, 'leave');
+  assert.equal(S('bugün en erken kaçta çıkabilirim').kind, 'earliest');
+});
 console.log(n + ' scenario tests passed' + (fails ? ', ' + fails + ' FAILED' : ''));
 if (fails) process.exit(1);

@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   let root;
-  const allowed = {theme:['cizelge','knight','sutunlar','sor','bilet','saydam','clock'],lang:['tr','en'],look:['light','dark']};
+  const allowed = {theme:['cizelge','knight','sutunlar','saydam','clock','bozkir','bozkira'],lang:['tr','en'],look:['light','dark']};
   function size() {
     const panel = root.querySelector('.w');
     return panel.classList.contains('T-pocket') ? 'pocket' : panel.classList.contains('T-compact') ? 'compact' : 'full';

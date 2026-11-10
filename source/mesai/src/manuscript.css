@@ -1,7 +1,7 @@
 /* Manuscript composition: one writing surface, continuous with its miniature. */
-.H.L-knight{--margin:184px;font-weight:500;font-size:17px}
+.H.L-knight{font-weight:500;font-size:17px}
 .H.L-knight.T-wide .main{padding:0 0 8px;overflow-y:auto;overflow-x:hidden}
-.H.L-knight.T-wide .surface-stack{padding:0 26px 0 0;min-height:730px}
+.H.L-knight.T-wide .surface-stack{padding:0 26px 0 0}
 .H.L-knight.T-wide .surface-stack:before{left:65px;right:0;top:17px;bottom:0;border:0;border-radius:0;background:var(--card);box-shadow:12px 14px 35px #0000000c}
 .H.L-knight.T-wide .hd{margin-left:var(--margin);height:106px;padding:0 5px 13px 0;border:0;gap:7px;background:transparent}
 .H.L-knight.T-wide .hd .brand{font-size:65px;margin:0 12px 0 0;flex-shrink:0}
@@ -10,63 +10,63 @@
 .H.L-knight.T-wide .wk{font-family:var(--font);font-size:24px;font-weight:550;min-width:115px}
 .H.L-knight .hd .seg{background:none;padding:0;font:500 19px var(--font)}
 .H.L-knight .hd .seg button{padding:3px 6px;border-radius:0}
-.H.L-knight .hd .seg button.on{background:none;box-shadow:none;color:var(--goldInk);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.H.L-knight .hd .seg button.on{background:none;box-shadow:none;color:var(--rubric,var(--goldInk));text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
 .H.L-knight .hd .askb{border:0;background:none;font:600 24px var(--font);padding:0 5px;gap:5px}
 .H.L-knight .hd .askb svg{width:15px;height:15px}
-.H.L-knight .hd .askb.on{color:var(--goldInk);text-decoration:underline;text-underline-offset:5px}
+.H.L-knight .hd .askb.on{color:var(--rubric,var(--goldInk));text-decoration:underline;text-underline-offset:5px}
 .H.L-knight .hd .ib{color:var(--ink)}
 .H.L-knight .hd .celestial{border:0;background:none;width:70px;height:36px;border-radius:0}
 .H.L-knight .hd .vr{height:23px;opacity:.5}
 .H.L-knight.T-wide .herald-body{display:block;padding:9px 0 0 var(--margin);min-height:0;position:static}
-.H.L-knight.T-wide .knight-margin{position:absolute;left:-10px;top:0;width:208px;height:695px;z-index:2}
-.H.L-knight.T-wide .knight-margin .knight-manuscript{position:absolute;inset:0;width:208px;height:100%;max-height:none;object-fit:fill;object-position:center;margin:0;filter:none}
+.H.L-knight.T-wide .knight-margin{position:absolute;top:0;z-index:2}
+.H.L-knight.T-wide .knight-margin .knight-manuscript{position:absolute;inset:0;max-height:none;object-position:center;margin:0;filter:none}
 .H.L-knight.T-wide .manuscript-main{position:relative;z-index:1}
-.H.L-knight .side{grid-template-columns:1fr 1.1fr 1.08fr;gap:18px;min-height:155px;padding:0 7px 17px 10px;border-bottom:1px solid var(--frame)}
+.H.L-knight .side{grid-template-columns:1fr 1.1fr 1.08fr;gap:18px;padding:0 7px 17px 10px;border-bottom:1px solid var(--frame)}
 .H.L-knight .side .k{font-family:var(--font);font-size:23px;line-height:1.15;color:var(--ink);font-weight:500}
 .H.L-knight .side .big{font:550 46px/1.12 var(--num)!important;letter-spacing:-.025em;white-space:nowrap}
-.H.L-knight .side>div:first-child .big{font-size:61px!important;line-height:1.02!important}
+.H.L-knight .side>div:first-child .big{line-height:1.02!important}
 .H.L-knight .side>div:last-child .big{font-size:39px!important;letter-spacing:-.035em}
 .H.L-knight .side .pill{font:500 18px var(--font);color:var(--ink)}
-.H.L-knight .side>div:first-child>.k:last-child{font:450 14px var(--font);color:var(--mut);max-width:none}
-.H.L-knight .side>.sec>.k:last-child{font:450 15px/1.3 var(--font);color:var(--mut)}
+.H.L-knight .side>div:first-child>.k:last-child{color:var(--mut);max-width:none}
+.H.L-knight .side>.sec>.k:last-child{color:var(--mut)}
 .H.L-knight .side>.sec:last-child>.k:last-child{font-size:19px;color:var(--ink)}
 .H.L-knight .side>.sec>div:first-child>b{font:450 13px var(--font)!important;color:var(--mut)}
 .H.L-knight .side .bar{height:3px;margin:8px 0!important;background:var(--line);border-radius:0}
 .H.L-knight .tl{padding:8px 0 0}
-.H.L-knight .lg{padding:0 6px 0 9px;min-height:32px;align-items:center;font:400 12px var(--font);color:var(--mut)}
-.H.L-knight .lg>b{font:600 28px var(--font)!important;color:var(--goldInk)!important}
+.H.L-knight .lg{padding:0 6px 0 9px;align-items:center;color:var(--mut)}
+.H.L-knight .lg>b{font:600 28px var(--font)!important;color:var(--rubric,var(--goldInk))!important}
 .H.L-knight .lg i{width:8px;height:6px;margin-right:3px}
-.H.L-knight .ax,.H.L-knight .tr{grid-template-columns:106px minmax(0,1fr) 76px;gap:10px}
-.H.L-knight .ax{height:28px;font:500 21px var(--num);color:var(--ink)}
-.H.L-knight .tr{height:61px;border-bottom:1px solid var(--frame);background:transparent}
+.H.L-knight .ax,.H.L-knight .tr{gap:10px}
+.H.L-knight .ax{font:500 21px var(--num);color:var(--ink)}
+.H.L-knight .tr{border-bottom:1px solid var(--frame);background:transparent}
 .H.L-knight .tr:first-of-type{border-top:1px solid var(--frame)}
 .H.L-knight .tr.sel{box-shadow:none;background:var(--accSoft)}
 .H.L-knight .tr.td{background:transparent}
-.H.L-knight .tr.sel .dn{border-left:2px solid var(--goldInk)}
+.H.L-knight .tr.sel .dn{border-left:2px solid var(--rubric,var(--goldInk))}
 .H.L-knight .dn{padding:2px 0 2px 10px}
 .H.L-knight .dn b{font:550 27px/1.05 var(--font)}
-.H.L-knight .dn small{font:450 14px/1.2 var(--font);margin-top:2px;max-width:100px}
+.H.L-knight .dn small{margin-top:2px;max-width:100px}
 .H.L-knight .vv{font:550 30px var(--num);padding-right:5px}
 .H.L-knight .vv small{display:none}
-.H.L-knight .sg,.H.L-knight .sp2,.H.L-knight .gh,.H.L-knight .cr,.H.L-knight .oz{height:13px;top:24px;border-radius:6px}
+.H.L-knight .sg,.H.L-knight .sp2,.H.L-knight .gh,.H.L-knight .cr,.H.L-knight .oz{border-radius:6px}
 .H.L-knight .sp2{background:var(--acc);opacity:1}
 .H.L-knight .gh{border-width:1.5px;border-color:var(--acc);background:none}
 .H.L-knight .gh.au{border-style:solid;border-color:var(--goldInk)}
 .H.L-knight .gl{opacity:.45;background:var(--line)}
 .H.L-knight .el{top:3px;font:500 15px var(--num);color:var(--ink);background:var(--card)}
-.H.L-knight .nl{background:var(--goldInk);top:14px;bottom:7px}
-.H.L-knight .lv{top:14px;width:6px;height:6px;background:var(--goldInk)}
+.H.L-knight .nl{background:var(--rubric,var(--goldInk));top:14px;bottom:7px}
+.H.L-knight .lv{top:14px;width:6px;height:6px;background:var(--rubric,var(--goldInk))}
 .H.L-knight.T-wide .ed{position:relative;margin:18px 0 0 var(--margin);padding:17px 8px 12px;border-top:0;z-index:1}
-.H.L-knight .edh{margin-bottom:9px;gap:14px}
-.H.L-knight .edh>b{font:550 27px/1.1 var(--font);color:var(--goldInk)}
+.H.L-knight .edh{gap:14px}
+.H.L-knight .edh>b{font:550 27px/1.1 var(--font);color:var(--rubric,var(--goldInk))}
 .H.L-knight .edh .seg{background:none;border-radius:0;font:500 19px var(--font);padding:0}
 .H.L-knight .edh .seg button{padding:2px 9px;border-radius:0;background:none;box-shadow:none}
-.H.L-knight .edh .seg button.on{color:var(--goldInk);text-decoration:underline;text-underline-offset:5px}
-.H.L-knight .fl{font:450 15px var(--font);color:var(--ink);gap:2px}
-.H.L-knight .ed .fi{font:550 25px var(--num);height:35px;width:77px;border:1px solid var(--frame);background:transparent;border-radius:2px;box-shadow:none}
+.H.L-knight .edh .seg button.on{color:var(--rubric,var(--goldInk));text-decoration:underline;text-underline-offset:5px}
+.H.L-knight .fl{color:var(--ink);gap:2px}
+.H.L-knight .ed .fi{font:550 25px var(--num);width:77px;border:1px solid var(--frame);background:transparent;border-radius:2px;box-shadow:none}
 .H.L-knight .fi:disabled{background:none;opacity:.65}
-.H.L-knight .ed .stp{font:450 15px var(--font);border:0;border-bottom:1px solid var(--frame);border-radius:0;height:29px;background:none;padding:0 5px}
-.H.L-knight .ed .oo{background:none;border:1px solid var(--frame);border-radius:2px;height:35px}
+.H.L-knight .ed .stp{border:0;border-bottom:1px solid var(--frame);border-radius:0;height:29px;background:none;padding:0 5px}
+.H.L-knight .ed .oo{background:none;border:1px solid var(--frame);border-radius:2px}
 .H.L-knight .oo b{font:550 23px var(--font)}
 .H.L-knight .ed .note{font:400 14px/1.3 var(--font)}
 .H.L-knight.T-wide .strip{position:relative;margin:0 0 0 var(--margin);padding:11px 7px 10px;border-top:1px solid var(--frame);min-height:46px;z-index:1;gap:9px;font:450 15px var(--font)}
@@ -86,8 +86,6 @@
 .H.L-knight .set{background:none;border-bottom:1px solid var(--frame)}
 .H.L-knight .btn,.H.L-knight select{font-family:var(--font)}
 .H.L-knight.T-wide.mid{--margin:151px}
-.H.L-knight.T-wide.mid .knight-margin{width:175px;height:670px}
-.H.L-knight.T-wide.mid .knight-margin .knight-manuscript{width:175px}
 .H.L-knight.T-wide.mid .hd .brand{font-size:52px;margin-right:3px}
 .H.L-knight.T-wide.mid .manuscript-initial{width:111px;height:70px;margin-left:-12px}
 .H.L-knight.T-wide.mid .brand-rest{margin-left:-26px}
@@ -109,8 +107,6 @@
 
 /* Keep the miniature's anatomy at its original aspect ratio. */
 .H.L-knight{--margin:204px}
-.H.L-knight.T-wide .knight-margin{left:-14px;width:235px;height:650px}
-.H.L-knight.T-wide .knight-margin .knight-manuscript{width:235px;height:auto;object-fit:contain}
 .H.L-knight.T-wide .side .big{font-family:var(--num)!important;font-weight:400!important}
 .H.L-knight .hd .seg button{font:500 18px var(--font)}
 .H.L-knight .edh .seg button{font:500 18px var(--font)}
@@ -119,11 +115,9 @@
 .H.L-knight .ed .fi{font-weight:400}
 .H.L-knight .ax{font-weight:400}
 .H.L-knight .strip .wchip{font-size:14px}
-.H.L-knight .manuscript-bas-de-page{position:relative;height:84px;overflow:hidden;margin:0 0 0 var(--margin);pointer-events:none}
+.H.L-knight .manuscript-bas-de-page{position:relative;overflow:hidden;margin:0 0 0 var(--margin);pointer-events:none}
 .manuscript-town{width:100%;height:auto;position:absolute;bottom:0;left:0}
 .H.L-knight.T-wide .release-row{justify-content:flex-start;padding-bottom:0;margin-top:3px;margin-bottom:-25px}
-.H.L-knight.T-wide.mid .knight-margin .knight-manuscript{width:175px;height:auto}
-.H.L-knight.T-wide.mid .knight-margin{left:-6px;height:auto}
 .H.L-knight.T-wide.mid .strip{flex-wrap:wrap}
 
 /* Astronomical face: real labels sit within the painted minute and star rings. */
@@ -135,18 +129,14 @@
 .H.L-clock .dial-copy .dial-remaining{color:#e2c286;font:400 17px 'Mesai Manuscript',serif;border-top:1px solid #8d774b;padding-top:8px;width:72%}
 .H.L-clock .dial-copy .dial-today{color:#c9c2b0;font:13px 'Mesai Gothic',serif;margin-top:0}
 .H.L-clock .clock-forecast .k,.H.L-clock .wk{font-family:'Mesai Gothic',serif}
-.H.L-clock .clock-forecast .k{font-size:24px}
-.H.L-clock .clock-forecast .big{font-family:'Mesai Manuscript',serif;font-weight:400}
+.H.L-clock .clock-forecast .big{font-weight:400}
 .H.L-clock .dial-pin{font-family:'Mesai Gothic',serif;font-weight:500}
-.H.L-clock.T-wide .dial-copy .big{font-size:61px}
-.H.L-clock.T-wide.mid .dial-copy .big{font-size:49px}
 .H.L-clock .dial-number{font-family:'Mesai Manuscript',serif;font-weight:400}
 
 /* Density follows the manuscript reference; decorative margins do not add rows. */
 .H.L-knight .side{padding-bottom:13px;min-height:0}
 .H.L-knight .side>div:first-child>.k:last-child{margin-top:2px!important;font-size:13px;line-height:1.3}
 .H.L-knight .side>div:first-child>div:nth-child(3){margin-top:3px!important;height:25px}
-.H.L-knight .side .pill{font-size:16px}
 .H.L-knight .side .big{margin-top:2px!important;font-size:46px!important}
 .H.L-knight .side>div:first-child .big{font-size:70px!important}
 .H.L-knight .tr{height:52px}
@@ -195,7 +185,7 @@
 .H.L-knight.T-std .vv{font-size:23px}.H.L-knight.T-std .lg>span:not(.sp){display:none}
 .H.L-knight.T-std .hd .wk{font-size:17px}.H.L-knight.T-std .hd .seg button{font-size:14px}
 .H.L-knight.T-std .hd .askb{font-size:19px}.H.L-knight.T-std .edh>b{font-size:23px}
-.H.L-knight.T-compact .compact-art{width:65px;height:160px;top:-18px;right:6px}
+.H.L-knight.T-compact .compact-art{right:6px}
 .H.L-knight.T-compact .illustrated-compact>.k,.H.L-knight.T-compact .illustrated-compact>.bb,.H.L-knight.T-compact .illustrated-compact>div:nth-of-type(3){max-width:220px}
 .H.L-knight[data-dark='false']{--ink:#2d211e;--body:#423730;--mut:#696055}
 .H.L-knight .lg{font:400 13px var(--num)}
@@ -209,7 +199,6 @@
 .H.L-knight .ed .note,.H.L-knight .ans .dd,.H.L-knight .set .fl{font-family:var(--num);font-size:16px}
 .H.L-knight .askf input{font-family:var(--num);font-size:20px}
 .H.L-clock.T-wide:not(.narrow) .clock-body{grid-template-columns:50% minmax(0,1fr)}
-.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{margin-left:51%}
 .H.L-clock .clock-forecast .sub{font:400 14px/1.4 'Mesai Manuscript',serif}
 .H.L-clock .clock-forecast .k{font-size:22px}
 .H.L-clock .clock-forecast .k:last-child{font-size:16px}

@@ -13,7 +13,7 @@ var MesaiScen = (function () {
 
   // ---------- normalisation: words → digits, split suffixes ----------
   function norm(text) {
-    var f = fold(text).replace(/(\d)\s*([.:])\s*(\d\d)\b/g, '$1$2$3')
+    var f = fold(text).replace(/\b(\d{1,2})\s*H\s*(\d{1,2})\s*(?:M(?:IN(?:UTE)?S?)?)?\b/g, '$1 SAAT $2 DK').replace(/(\d)\s*([.:])\s*(\d\d)\b/g, '$1$2$3')
       .replace(/([?!;])/g, ' $1 ').replace(/,(?!\d)/g, ' , ').replace(/(\S)-(\S)/g, '$1 - $2');
     var w = f.split(' '), out = [];
     for (var i = 0; i < w.length; i++) {
@@ -31,7 +31,7 @@ var MesaiScen = (function () {
       out.push(w[i]);
     }
     return out.join(' ')
-      .replace(/(\d)(SAATLIK|SAAT|SA|DAKIKA|DK|HOURS?|HRS?|H|MINS?|MINUTES?|AM|PM)\b/g, '$1 $2')
+      .replace(/(\d)(SAATLIK|SAAT(?:IMI?|I)?|SA|DAKIKA|DK|HOURS?|HRS?|H|MINS?|MINUTES?|AM|PM)\b/g, '$1 $2')
       .replace(/(\d)(DEN|DAN|TEN|TAN|DE|DA|TE|TA|YE|YA|E|A|U|I|IN|AR|ER|SAR|SER)\b/g, '$1 $2')
       .replace(/\b(\d+) H (\d+)\b/g, '$1 SAAT $2 DK').replace(/\s+/g, ' ').trim();
   }
@@ -83,6 +83,7 @@ var MesaiScen = (function () {
         if (/^(ALMADAN|KULLANMADAN|OLMADAN)$/.test(at(i + 1)) || at(i - 1) === 'WITHOUT') { i++; continue; }
         it.push({ t: 'OOO' }); continue;
       }
+      if (x === 'OFF' && it.length && it[it.length - 1].t === 'DUR') { it.push({ t: 'OOO' }); continue; }
       if (/^(IZIN|IZNI|YILLIK|PTO|VACATION|OFF$)/.test(x) || (x === 'DAY' && at(i + 1) === 'OFF')) { if (x === 'DAY') i++; it.push({ t: 'TYPE', type: 'izin' }); continue; }
       if (/^(TATIL|HOLIDAY|BAYRAM)/.test(x)) { it.push({ t: 'TYPE', type: 'tatil' }); continue; }
       if (/^(OFIS|OFFICE)/.test(x) && !/^DISI/.test(at(i + 1))) { it.push({ t: 'TYPE', type: 'ofis' }); continue; }
@@ -96,7 +97,8 @@ var MesaiScen = (function () {
       if (/^(SIFIRLA|TEMIZLE|RESET|CLEAR)/.test(x)) { it.push({ t: 'MARK', m: 'reset' }); continue; }
       if (/^(GECEN|ONCEKI|LAST|PREVIOUS)$/.test(x) && /^(HAFTA|WEEK)/.test(at(i + 1))) { i++; it.push({ t: 'MARK', m: 'history' }); continue; }
       if (/^HAFTA/.test(x) || x === 'WEEK' || x === 'WEEKLY') { it.push({ t: 'MARK', m: 'week' }); continue; }
-      if (/^(OLUR|EDER|OLACAK|YAPAR)$/.test(x)) { it.push({ t: 'MARK', m: 'olur' }); continue; }
+      if (/^(OLUR|OLURUM|OLURSUN|OLURUZ|EDER|EDERIM|OLACAK|YAPAR|YAPARIM)$/.test(x)) { it.push({ t: 'MARK', m: 'olur' }); continue; }
+      if (/^(WILL|WOULD)$/.test(x) && /^(I|THAT|IT)$/.test(at(i + 1)) && /^(HAVE|BE)$/.test(at(i + 2))) { it.push({ t: 'MARK', m: 'olur' }); i += 2; continue; }   // "how many hours will I have"
       // questions
       if (/^(KACTA|KACA|KACTAN|KACDA)$/.test(x) || (x === 'NE' && /^ZAMAN/.test(at(i + 1))) || x === 'WHEN' || (x === 'WHAT' && at(i + 1) === 'TIME') || (x === 'SAAT' && /^KAC/.test(at(i + 1)))) {
         if (x === 'NE' || x === 'WHAT' || x === 'SAAT') i++;
@@ -131,8 +133,10 @@ var MesaiScen = (function () {
     var buc = /^BUCUK/.test(at(j + 1));
     if (buc) j++;
     var unit = at(j + 1);
-    if (/^(SAAT$|SAATLIK|SA$|HOURS?$|HRS?$|H$|SAATI$)/.test(unit)) {
-      var hrs = hasFrac ? parseFloat(m[1] + '.' + m[3]) : h; if (buc) hrs += 0.5;
+    if (/^(SAAT(?:IMI?|I)?$|SAATLIK|SA$|HOURS?$|HRS?$|H$)/.test(unit)) {
+      var clockDuration = hasFrac && (m[2] === ':' || (m[2] === '.' && m[3].length === 2 && !/^(HOURS?|HRS?|H)$/.test(unit)));
+      if (clockDuration && +m[3] > 59) return { i: j + 1, item: { t: 'X' } };
+      var hrs = hasFrac ? (clockDuration ? h + (+m[3]) / 60 : parseFloat(m[1] + '.' + m[3])) : h; if (buc) hrs += 0.5;   // 9:30 / 9.30 saat = 9 h 30 min; 9,5 saat = 9.5 h
       var tot = Math.round(hrs * 60); j++;
       if (/^\d{1,2}$/.test(at(j + 1)) && /^(DAKIKA|DK|MIN)/.test(at(j + 2))) { tot += +at(j + 1); j += 2; }
       if (/^(AR|ER|SAR|SER)$/.test(at(j + 1))) j++;
@@ -144,9 +148,9 @@ var MesaiScen = (function () {
     if (hasFrac && (m[2] === ',' || (m[2] === '.' && m[3].length === 1)) && !buc) { /* "9,5" without unit: a duration by context */ return { i: j, item: { t: 'NUM', m: Math.round(parseFloat(m[1] + '.' + m[3]) * 60) } }; }
     if (hasFrac) mi = +m[3] * (m[3].length === 1 ? 10 : 1);
     if (buc) mi = 30;
-    if (h > 24 || (mi != null && mi > 59)) return { i: j, item: { t: 'X' } };
+    if (h > 23 || (mi != null && mi > 59)) return { i: j, item: { t: 'X' } };
     var sfx = /^(DE|DA|TE|TA|DEN|DAN|TEN|TAN|YE|YA|E|A|U|I|IN)$/.test(at(j + 1)) ? at(++j) : '';
-    if (/^(AM|PM)$/.test(at(j + 1))) { var pm = at(++j) === 'PM'; return { i: j, item: { t: 'TIME', h: h, mi: mi || 0, pm: pm, ampm: true, sfx: sfx } }; }
+    if (/^(AM|PM)$/.test(at(j + 1))) { if (h < 1 || h > 12) return { i: j + 1, item: { t: 'X' } }; var pm = at(++j) === 'PM'; return { i: j, item: { t: 'TIME', h: h, mi: mi || 0, pm: pm, ampm: true, sfx: sfx } }; }
     var item = { t: 'TIME', h: h, mi: mi || 0, sfx: sfx, bare: mi == null && !buc, colon: m[2] === ':' };
     if (/^(DEN|DAN|TEN|TAN)$/.test(sfx)) item.from = true;
     if (!sfx && !hasFrac && !buc && h <= 16) item.maybeDur = true;
@@ -221,6 +225,16 @@ var MesaiScen = (function () {
       else if (u.h >= 13 || (u.h <= 5 && u.h > 0)) { if (fr.e == null) fr.e = clock(u, 'lv'); }
       else if (fr.s == null) fr.s = clock(u, 'arr');
     });
+    // "18:20'de çıkarsam kaç saat olur" / "how many hours will I have": one exit on one day, asking that day's length
+    var modalLength = verbs.some(function (v) { return v.tense === 'modal'; });
+    if ((kind === 'target' || kind === 'reqLen' || (q && q.q === 'much')) && !modalLength && !marks.week && frames.length === 1 && frames[0].e != null && frames[0].days.length <= 1 && !frames[0].ooo && (marks.olur || (q && q.q === 'much'))) kind = 'dayLen';
+    // Simple daily finish/completion questions are read-only. They must not move the whole weekly remainder into today.
+    var gf = frames.length === 1 ? frames[0] : null, each = frames.some(function (fr) { return fr.days.indexOf('EACH') >= 0; });
+    var dailyWords = /\b(?:MESAI(?:M|MIZ)?|SHIFT|DAILY)\b/.test(f), completeWords = /\b(?:DOL\w*|DOLDUR\w*|TAMAM\w*|COMPLETE\w*|FINISH\w*|REACH\w*)\b/.test(f);
+    var todayOnly = gf && gf.days.length === 1 && gf.days[0] === 'T';
+    if (q && q.q === 'when' && !marks.week && !marks.earliest && !each && frames.length <= 1 && (!gf || (!gf.ooo && !gf.type && gf.s == null && gf.e == null)) &&
+      ((todayOnly && (!gf || gf.len == null || completeWords)) || (dailyWords && (!gf || gf.len == null || completeWords)) || (completeWords && gf && gf.len != null))) kind = 'dayGoal';
+    if (it.some(function (x) { return x.t === 'X'; })) kind = 'invalidTime';
     var qi = q ? frames.indexOf(q.frame) : -1;
     if (qi < 0 && q && q.frame && !q.frame.days.length) qi = -1;
     return { frames: frames, query: { kind: kind, frame: qi }, each: frames.some(function (fr) { return fr.days.indexOf('EACH') >= 0; }), marks: marks, norm: f };
@@ -315,6 +329,40 @@ var MesaiScen = (function () {
   }
 
   // ---------- solver ----------
+
+  // ---------- follow-ups ----------
+  // "ya 9'da gelirsem", "peki cuma izin alırsam", "what if I stay 10 hours": reuse the previous question and
+  // replace only what the follow-up changes. A day-less change replaces the same slot where the previous question
+  // had it (her gün 10 saat → ya 9 saat), otherwise it applies to the day the previous answer was about.
+  var FOLLOW = /^(PEKI YA|PEKI|YA|AMA|O ZAMAN|BIR DE|PEKALA|WHAT IF|AND IF|HOW ABOUT|WHAT ABOUT|AND|OR|THEN)\b/;
+  var SLOTS = ['s', 'e', 'len', 'delta', 'more', 'ooo', 'type', 'before'];
+  function isFollowUp(next) { return !!next && (FOLLOW.test(next.norm || '') || !next.query.kind); }
+  function followUp(prev, next, targetDay) {
+    if (!prev || !prev.query || !prev.query.kind || !next || !isFollowUp(next)) return next;
+    if (next.query.kind && !FOLLOW.test(next.norm || '')) return next;
+    var frames = prev.frames.map(function (f) { var c = {}; Object.keys(f).forEach(function (k) { c[k] = Array.isArray(f[k]) ? f[k].slice() : f[k]; }); return c; });
+    var map = {}, same = function (a, b) { return a.length === b.length && a.every(function (d, i) { return d === b[i]; }); };
+    next.frames.forEach(function (nf, ni) {
+      var slots = SLOTS.filter(function (k) { return nf[k] != null; }), host = null;
+      if (!nf.days.length) {
+        for (var i = frames.length - 1; i >= 0 && !host; i--) if (slots.some(function (k) { return frames[i][k] != null; })) host = frames[i];
+        if (!host && targetDay != null) { host = frames.filter(function (f) { return same(f.days, [targetDay]); })[0]; if (!host) { host = { days: [targetDay] }; frames.push(host); } }
+        if (!host) { host = { days: [] }; frames.push(host); }
+      } else {
+        host = frames.filter(function (f) { return same(f.days, nf.days); })[0];
+        if (!host) { host = { days: nf.days.slice() }; frames.push(host); }
+      }
+      // a new arrival or leaving time replaces the previous time pair's conflicting half
+      if (nf.s != null && host.len != null && host.e != null) delete host.e;
+      if (nf.type && nf.type !== 'ofis') SLOTS.forEach(function (k) { if (k !== 'type') delete host[k]; });
+      if (nf.type === 'ofis') delete host.type;
+      slots.forEach(function (k) { if (!(k === 'type' && nf.type === 'ofis')) host[k] = nf[k]; });
+      map[ni] = frames.indexOf(host);
+    });
+    var query = next.query.kind ? { kind: next.query.kind, frame: next.query.frame >= 0 ? map[next.query.frame] : -1 } : { kind: prev.query.kind, frame: prev.query.frame };
+    return { frames: frames, query: query, each: frames.some(function (f) { return f.days.indexOf('EACH') >= 0; }), marks: prev.marks, norm: next.norm, follow: true };
+  }
+
   function solve(C, data, now, cfgIn, store, sc) {
     var cfg = C.config(cfgIn), MIN = C.MIN, Dm = cfg.D;
     var v0 = C.week(data, now, cfgIn, store, 0), rows = v0.rows, tdow = C.dow(now);
@@ -327,7 +375,13 @@ var MesaiScen = (function () {
     // target day
     var target = null;
     if (qf && qf.days.length && qf.days.indexOf('EACH') < 0) target = res(qf.days[qf.days.length - 1]);
+    // "if I take Thursday off, when do I leave Friday": the question is about the day without leave.
+    if (target != null && /^(leave|earliest)$/.test(kind) && qf && qf.type && qf.type !== 'ofis') {
+      var alt = frames.filter(function (f) { return f !== qf && !f.type && f.days.length && f.days[0] !== 'EACH'; }).slice(-1)[0];
+      if (alt) target = res(alt.days[alt.days.length - 1]);
+    }
     if (target == null && (kind === 'arrive' || kind === 'check' || kind === 'oooNeed')) frames.forEach(function (f) { if ((f.e != null || f.s != null || f.len != null) && f.days.length && f.days[0] !== 'EACH' && target == null) target = res(f.days[0]); });
+    if (target == null && kind === 'dayGoal') target = tdow;
     if (target == null && /^(leave|earliest|arrive|check)$/.test(kind)) {
       if (sc.each || (qf && qf.days.indexOf('EACH') >= 0)) target = lastWork;
       else if (frames.length && frames[frames.length - 1].days.length && frames[frames.length - 1].days[0] !== 'EACH' && kind !== 'check') target = res(frames[frames.length - 1].days[0]);
@@ -337,7 +391,14 @@ var MesaiScen = (function () {
     if (target != null && (target < 0 || target > 6)) return { kind: 'outOfWeek', chips: chips };
     var trow = target != null ? rows[target] : null;
     if (trow && !trow.workday) return { kind: 'weekend', day: target, chips: chips };
-    if (trow && trow.past && /^(leave|earliest|arrive)$/.test(kind)) return { kind: 'pastDay', day: target, chips: chips };
+    if (trow && trow.past && /^(leave|earliest|arrive|dayGoal)$/.test(kind)) return { kind: 'pastDay', day: target, chips: chips };
+    if (kind === 'invalidTime') return { kind: 'invalidTime', chips: [] };
+    if (kind === 'dayGoal') {
+      if (trow.credit) return { kind: 'credit', day: target, type: trow.type, chips: [], pv: v0, store: null };
+      var goal = C.dayGoal(v0, target, qf && qf.len != null ? qf.len : (frames[0] && frames[0].len != null ? frames[0].len : null));
+      if (goal.planned && goal.start != null) chips.push({ k: 'default', d: target, s: minOf(goal.start, trow) });
+      return Object.assign({ kind: 'dayGoal', day: target, pv: v0, store: null, chips: chips }, goal);
+    }
     // days covered by "her gün"
     var eachDays = rows.filter(function (r) { return !r.past && r.office && !named[r.dow] && r.dow !== target; }).map(function (r) { return r.dow; });
     var s2 = C.clone(store); ['types', 'plan', 'ooo'].forEach(function (k) { s2[k] = s2[k] || {}; });
@@ -376,13 +437,17 @@ var MesaiScen = (function () {
       if (p.e != null && p.e < ce) { m += ce - Math.max(p.e, cfg.coreS); s = Math.max(p.e, cfg.coreS); }
       if (st != null && st > cfg.coreS + 1 && r.first == null) { m += Math.min(st, ce) - cfg.coreS; s = s == null ? cfg.coreS : null; }
       if (m <= 0) return;
+      // OOO already on that day: an interval that covers the gap needs nothing; otherwise the new one replaces it (net change only)
+      var ex = s2.ooo[r.key], from = s != null ? s : cfg.coreS;
+      if (ex && ex.s != null && ex.s <= from && ex.s + ex.m >= from + m) return;
+      var prev = ex ? ex.m : 0;
       // Never take OOO on the user's behalf: ask first (sc.oooOK), except when the question is about OOO itself.
-      if (!sc.oooOK && kind !== 'oooNeed') { needOOO.push({ d: r.dow, m: m, s: s, e: p.e, st: st }); return; }
+      if (!sc.oooOK && kind !== 'oooNeed') { needOOO.push({ d: r.dow, m: m, prev: prev, s: s, e: p.e, st: st }); return; }
       s2.ooo[r.key] = { m: m, s: s }; autoOOO[r.dow] = m; chips.push({ k: 'auto', d: r.dow, ooo: m, ok: !!sc.oooOK });
     }
     frames.forEach(applyFrame);
     if (needOOO.length) {
-      var sum = needOOO.reduce(function (a, n) { return a + n.m; }, 0);
+      var sum = needOOO.reduce(function (a, n) { return a + Math.max(0, n.m - n.prev); }, 0);   // net: accepting replaces that day's OOO
       return { kind: 'confirmOOO', day: needOOO[0].d, need: needOOO, chips: chips, W0: v0.W, W1: v0.W + sum * MIN, m: sum, ask: kind,
         coreS: cfg.coreS, coreE: cfg.coreE };
     }
@@ -402,10 +467,12 @@ var MesaiScen = (function () {
       if (trow.credit && !named[target]) { out.kind = 'credit'; out.type = trow.type; return out; }
       if (trow.today && !trow.inside && trow.last != null && !(s2.plan[trow.key])) { out.kind = 'left'; out.t = trow.last; return out; }
       if (s2.types[trow.key] && s2.types[trow.key] !== 'ofis') { out.kind = 'credit'; out.type = s2.types[trow.key]; out.pv = week(s2); return out; }
-      var pl = s2.plan[trow.key]; if (pl) { delete pl.e; delete pl.m; }
+      // "bugün 9.30 saat çalışırsam kaçta çıkarım": a length named for this very day is kept; otherwise the day absorbs the week
+      var ownLen = frames.some(function (f) { return f.len != null && f.days.indexOf('EACH') < 0 && f.days.some(function (d) { return res(d) === target; }); });
+      var pl = s2.plan[trow.key]; if (pl && !ownLen) { delete pl.e; delete pl.m; }
       if (pl && pl.s == null && trow.first == null) chips.push({ k: 'default', d: target, s: cfg.start });
       else if (!pl && trow.first == null) chips.push({ k: 'default', d: target, s: cfg.start });
-      var pv = week(s2, trow.key), tr = pv.rows[target];
+      var pv = ownLen ? week(s2) : week(s2, trow.key), tr = pv.rows[target];
       Object.assign(out, { pv: pv, start: tr.start, end: tr.end, plan: tr.plan, held: !!tr.held, need: tr.need, W: pv.W, late: tr.late || tr.plan > 16 * 60 * MIN, ooo: pv.W - cfg.W * MIN });
       out.store = applyStore;
       return out;
@@ -452,7 +519,7 @@ var MesaiScen = (function () {
       var lo = 0, hi = 20 * 60, pvX = test(hi);
       if (pvX.total < pvX.W - MIN) { out.kind = 'impossible'; out.m = hi; return out; }
       if (test(0).total >= test(0).W - MIN) { out.kind = kind === 'avg' ? 'avgDone0' : 'reqZero'; out.days = F; out.pv = test(0); out.held = true; return out; }
-      while (hi - lo > 1) { var mid = (lo + hi) >> 1; var w2 = test(mid); if (w2.total >= w2.W - MIN) hi = mid; else lo = mid; }
+      while (hi - lo > 1) { var mid = (lo + hi) >> 1; var w2 = test(mid); if (w2.total >= w2.W - 1) hi = mid; else lo = mid; }   // the recommended plan must reach the target, not a minute short
       var pv4 = test(hi);
       Object.assign(out, { m: hi, days: F, pv: pv4, W: pv4.W, ooo: pv4.W - cfg.W * MIN, ends: F.map(function (d) { var r = pv4.rows[d]; return { d: d, end: r.end, held: r.held }; }) });
       F.forEach(function (d) { applyStore.plan[rows[d].key] = { m: hi }; });
@@ -476,6 +543,13 @@ var MesaiScen = (function () {
       out.bal = v0.balance; out.todayM = td && td.office ? td.actual : null; out.todayIn = td && td.inside; out.D = Dm * MIN; out.bank = v0.bank;
       return out;
     }
+    if (kind === 'dayLen') {
+      if (out.day == null) out.day = tdow;   // no day named: today
+      var pv6 = week(s2), r6 = pv6.rows[out.day];
+      if (!r6) return out;
+      Object.assign(out, { pv: pv6, len: r6.val, end: r6.end, W: pv6.W, store: applyStore });
+      return out;
+    }
     if (kind === 'remaining' || kind === 'target') {
       var pv5 = week(s2), credits = 0;
       pv5.rows.forEach(function (r) { if (!r.past && !r.today && r.credit) credits += r.credit; });
@@ -484,6 +558,6 @@ var MesaiScen = (function () {
     }
     return out;
   }
-  return { parse: parse, solve: solve, norm: norm, lex: lex };
+  return { parse: parse, solve: solve, norm: norm, lex: lex, followUp: followUp, isFollowUp: isFollowUp };
 })();
 if (typeof module !== 'undefined') module.exports = MesaiScen;

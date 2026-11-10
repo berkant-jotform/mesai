@@ -16,7 +16,9 @@ var MesaiAsk = (function () {
     return null;
   }
   function durations(f) {
+    f = f.replace(/\b(\d{1,2})\s*H\s*(\d{1,2})\s*(?:M(?:IN(?:UTE)?S?)?)?\b/g, '$1 SAAT $2 DK');
     var m = 0, any = false, r;
+    f = f.replace(/\b(\d{1,2})([:.])(\d{2})\s*(SAAT|SA|HOURS?|HRS?|H)\b/g, function (text, h, sep, mi, unit) { if (sep === '.' && /^(HOURS?|HRS?|H)$/.test(unit)) return text; if (+mi < 60) { m += +h * 60 + +mi; any = true; } return ' '; });
     if (/\bYARIM SAAT\b|\bHALF (AN )?HOUR\b/.test(f)) { m += 30; any = true; }
     var reH = /(\d+(?:[.,]\d+)?)\s*(SAAT|SA|HOURS?|H)\b/g;
     while ((r = reH.exec(f))) { m += Math.round(parseFloat(r[1].replace(',', '.')) * 60); any = true; }
@@ -25,11 +27,12 @@ var MesaiAsk = (function () {
     return any ? m : null;
   }
   function times(f) {
-    var out = [], r, re = /\b([01]?\d|2[0-3])(?:[:.]([0-5]\d))?\b(?!\s*(?:SAAT|SA|HOURS?|H|DAKIKA|DK|MIN))/g;
-    var clean = f.replace(/(\d+(?:[.,]\d+)?)\s*(SAAT|SA|HOURS?|H|DAKIKA|DK|MINUTES?|MINS?)\b/g, ' ');
+    var out = [], r, re = /\b([01]?\d|2[0-3])(?:[:.]([0-5]\d))?(?:\s*(AM|PM))?\b(?!\s*(?:SAAT|SA|HOURS?|H|DAKIKA|DK|MIN))/g;
+    var clean = f.replace(/\b(\d{1,2})\s*H\s*(\d{1,2})\s*(?:M(?:IN(?:UTE)?S?)?)?\b/g, ' ').replace(/\b\d{1,2}[:.]\d{2}\s*(?:SAAT|SA|HOURS?|HRS?|H)\b/g, ' ').replace(/(\d+(?:[.,]\d+)?)\s*(SAAT|SA|HOURS?|H|DAKIKA|DK|MINUTES?|MINS?)\b/g, ' ');
     while ((r = re.exec(clean))) {
       var h = +r[1], mi = r[2] ? +r[2] : 0;
-      if (!r[2] && h < 6) h += 12;        // "5'te çıkarım" means 17:00
+      if (r[3]) { if (h < 1 || h > 12) continue; if (r[3] === 'AM' && h === 12) h = 0; else if (r[3] === 'PM' && h < 12) h += 12; }
+      else if (!r[2] && h < 6) h += 12;        // "5'te çıkarım" means 17:00
       out.push(h * 60 + mi);
     }
     return out;
@@ -43,9 +46,9 @@ var MesaiAsk = (function () {
     if (/\b(SIFIRLA|TEMIZLE|RESET|CLEAR)\b/.test(f)) return { kind: 'reset' };
     if (/\b(GECEN|ONCEKI|LAST|PREVIOUS) (HAFTA|WEEK)\b/.test(f)) return { kind: 'history' };
     if (/\b(KALAN|NE KADAR|REMAINING|HOW MUCH)\b/.test(f) && !LEAVE.test(f)) return { kind: 'remaining' };
-    if (/\bOOO\b|SAATLIK IZIN|HOURS? OFF/.test(f)) return { kind: 'ooo', day: day != null ? day : todayDow, m: dur != null ? dur : 60, s: ts.length ? ts[0] : null };
+    if (/\bOOO\b|SAATLIK IZIN|(?:HOURS?|MINUTES?|MINS?) OFF/.test(f)) return { kind: 'ooo', day: day != null ? day : todayDow, m: dur != null ? dur : 60, s: ts.length ? ts[0] : null };
     if (/\b(SIMDI|NOW|HEMEN)\b/.test(f) && LEAVE.test(f)) return { kind: 'leaveNow', day: todayDow };
-    if (/\b(IZIN\w*|TATIL\w*|DAY OFF|HOLIDAY|VACATION)\b/.test(f)) return { kind: 'type', day: day != null ? day : todayDow, type: /TATIL|HOLIDAY/.test(f) ? 'tatil' : 'izin' };
+    if (/\b(IZIN\w*|TATIL\w*|DAY OFF|HOLIDAY|VACATION)\b/.test(f) || (day != null && /\bOFF\b/.test(f))) return { kind: 'type', day: day != null ? day : todayDow, type: /TATIL|HOLIDAY/.test(f) ? 'tatil' : 'izin' };
     if (/\b(OFIS|OFFICE)\b/.test(f) && day != null && !ts.length) return { kind: 'type', day: day, type: 'ofis' };
     if (ts.length >= 2) return { kind: 'plan', day: day != null ? day : todayDow, s: ts[0], e: ts[1] };
     if (ts.length === 1 && COME.test(f) && !LEAVE.test(f)) return { kind: 'arrive', day: day != null ? day : todayDow, s: ts[0] };

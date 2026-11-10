@@ -1,0 +1,169 @@
+{
+  "version": "3.4.1",
+  "variants": [
+    {
+      "id": "all",
+      "labelTr": "Tüm temalar",
+      "labelEn": "All themes",
+      "path": "mesai.js",
+      "bytes": 1279267,
+      "hrefBytes": 1418400,
+      "assets": [
+        "preview_cizelge_light",
+        "preview_cizelge_dark",
+        "preview_knight_light",
+        "preview_knight_dark",
+        "preview_sutunlar_light",
+        "preview_sutunlar_dark",
+        "preview_clock_light",
+        "preview_clock_dark",
+        "preview_saydam_light",
+        "preview_bozkir_light",
+        "preview_bozkira_light",
+        "bzMountedWide",
+        "bzMountedCompact",
+        "bzStandingWide",
+        "bzStandingCompact",
+        "bar",
+        "controlDark",
+        "controlLight",
+        "compactDark",
+        "compactLight",
+        "plateLight",
+        "plateDark",
+        "timeMarker",
+        "fleuron",
+        "face",
+        "panelDark",
+        "panelLight",
+        "railDark",
+        "railLight",
+        "clock",
+        "town",
+        "toggle"
+      ],
+      "fonts": [
+        "Mesai Calligraphy",
+        "Mesai Gothic",
+        "Mesai Manuscript",
+        "Mesai Blackletter",
+        "Mesai Steppe",
+        "Mesai Orkhon"
+      ]
+    },
+    {
+      "id": "saydam",
+      "labelTr": "Saydam",
+      "labelEn": "Saydam",
+      "path": "bookmarks/saydam.js",
+      "bytes": 325258,
+      "hrefBytes": 463803,
+      "assets": [],
+      "fonts": []
+    },
+    {
+      "id": "cizelge",
+      "labelTr": "Çizelge",
+      "labelEn": "Timeline",
+      "path": "bookmarks/cizelge.js",
+      "bytes": 325259,
+      "hrefBytes": 463804,
+      "assets": [],
+      "fonts": []
+    },
+    {
+      "id": "knight",
+      "labelTr": "Şövalye",
+      "labelEn": "Knight",
+      "path": "bookmarks/knight.js",
+      "bytes": 677780,
+      "hrefBytes": 816517,
+      "assets": [
+        "bar",
+        "controlDark",
+        "controlLight",
+        "compactDark",
+        "compactLight",
+        "plateLight",
+        "plateDark",
+        "timeMarker",
+        "fleuron",
+        "toggle"
+      ],
+      "fonts": [
+        "Mesai Calligraphy",
+        "Mesai Gothic",
+        "Mesai Manuscript",
+        "Mesai Blackletter"
+      ]
+    },
+    {
+      "id": "sutunlar",
+      "labelTr": "Sütunlar",
+      "labelEn": "Columns",
+      "path": "bookmarks/sutunlar.js",
+      "bytes": 325260,
+      "hrefBytes": 463805,
+      "assets": [],
+      "fonts": []
+    },
+    {
+      "id": "clock",
+      "labelTr": "Göksel saat",
+      "labelEn": "Celestial clock",
+      "path": "bookmarks/clock.js",
+      "bytes": 658103,
+      "hrefBytes": 796834,
+      "assets": [
+        "bar",
+        "controlDark",
+        "controlLight",
+        "face",
+        "panelDark",
+        "panelLight",
+        "railDark",
+        "railLight",
+        "clock",
+        "town",
+        "toggle"
+      ],
+      "fonts": [
+        "Mesai Calligraphy",
+        "Mesai Gothic",
+        "Mesai Manuscript"
+      ]
+    },
+    {
+      "id": "bozkir",
+      "labelTr": "Bozkır · atlı",
+      "labelEn": "Steppe · rider",
+      "path": "bookmarks/bozkir.js",
+      "bytes": 480461,
+      "hrefBytes": 619026,
+      "assets": [
+        "bzMountedWide",
+        "bzMountedCompact"
+      ],
+      "fonts": [
+        "Mesai Steppe",
+        "Mesai Orkhon"
+      ]
+    },
+    {
+      "id": "bozkira",
+      "labelTr": "Bozkır · ayakta",
+      "labelEn": "Steppe · standing",
+      "path": "bookmarks/bozkira.js",
+      "bytes": 487434,
+      "hrefBytes": 625999,
+      "assets": [
+        "bzStandingWide",
+        "bzStandingCompact"
+      ],
+      "fonts": [
+        "Mesai Steppe",
+        "Mesai Orkhon"
+      ]
+    }
+  ]
+}

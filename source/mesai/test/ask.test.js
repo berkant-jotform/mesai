@@ -24,4 +24,15 @@ const cases = [
   ['merhaba', null]
 ];
 cases.forEach(([q, exp]) => assert.deepEqual(P(q), exp, q));
-console.log(cases.length + ' ask tests passed');
+const extra = [
+  ['tomorrow 45 minutes off', { kind: 'ooo', day: 2, m: 45, s: null }],
+  ['Friday off', { kind: 'type', day: 4, type: 'izin' }],
+  ['tomorrow 9am to 5:30pm', { kind: 'plan', day: 2, s: 540, e: 1050 }],
+  ['Friday arrive at 12am', { kind: 'arrive', day: 4, s: 0 }],
+  ['Friday leave at 12pm', { kind: 'leaveAt', day: 4, e: 720 }],
+  ['Friday 9h30m', { kind: 'length', day: 4, m: 570 }],
+  ['Friday 9:30 hours', { kind: 'length', day: 4, m: 570 }],
+  ['Friday 9.25 hours', { kind: 'length', day: 4, m: 555 }]
+];
+extra.forEach(([q, exp]) => assert.deepEqual(P(q), exp, q));
+console.log((cases.length + extra.length) + ' ask tests passed');

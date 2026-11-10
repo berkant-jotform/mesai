@@ -13,7 +13,7 @@
 </style></head>
 <body><output id="qa-status" style="position:fixed;bottom:0;left:0;z-index:2147483647;background:white;color:black">Checking restricted asset rendering…</output><script>
 const assetViolations=[];document.addEventListener('securitypolicyviolation',e=>{if(/^(img|font)-src/.test(e.effectiveDirective))assetViolations.push(e.effectiveDirective);});
-setInterval(()=>{const root=document.querySelector('#mesai-host')?.shadowRoot;if(!root)return;const canvases=[...root.querySelectorAll('canvas[data-art]')];const fonts=[...document.fonts].filter(f=>f.family.includes('Mesai'));const ready=canvases.length>0&&canvases.every(c=>c.dataset.painted==='true'&&c.getBoundingClientRect().width>0&&c.getBoundingClientRect().height>0)&&fonts.length===4&&fonts.every(f=>f.status==='loaded');document.querySelector('#qa-status').textContent=assetViolations.length?'FAIL: '+assetViolations.join(', '):ready?'PASS: '+canvases.length+' artwork canvases, 4 fonts, zero image/font CSP violations':'Checking restricted asset rendering…';},250);
+setInterval(()=>{const root=document.querySelector('#mesai-host')?.shadowRoot;if(!root)return;const canvases=[...root.querySelectorAll('canvas[data-art]')];const fonts=[...document.fonts].filter(f=>f.family.includes('Mesai'));const ready=canvases.length>0&&canvases.every(c=>c.dataset.painted==='true'&&c.getBoundingClientRect().width>0&&c.getBoundingClientRect().height>0)&&fonts.length===6&&fonts.every(f=>f.status==='loaded');document.querySelector('#qa-status').textContent=assetViolations.length?'FAIL: '+assetViolations.join(', '):ready?'PASS: '+canvases.length+' artwork canvases, 6 fonts, zero image/font CSP violations':'Checking restricted asset rendering…';},250);
 </script>
 <div id="menu">Menü · PDKS Giriş Çıkış Bilgi Kartı</div>
 <script>
@@ -105,6 +105,6 @@ const demoStorage = {
   removeItem:key=>demoStore.delete(key)
 };
 Object.defineProperty(window,'localStorage',{value:demoStorage});
-localStorage.setItem('mesai.v3',JSON.stringify({ui:{lang:'tr',theme:(['cizelge','knight','sutunlar','sor','bilet','clock'].includes(new URLSearchParams(location.search).get('theme'))?new URLSearchParams(location.search).get('theme'):'cizelge'),look:(new URLSearchParams(location.search).get('look')==='dark'?'dark':'light'),pos:[16,16]},ppl:{'1001':{types:{'2026-11-05':'izin'},ooo:{'2026-11-03':{m:60,s:840}}}}}));
+localStorage.setItem('mesai.v3',JSON.stringify({ui:{lang:'tr',theme:(['cizelge','knight','sutunlar','saydam','clock','bozkir','bozkira'].includes(new URLSearchParams(location.search).get('theme'))?new URLSearchParams(location.search).get('theme'):'cizelge'),look:(new URLSearchParams(location.search).get('look')==='dark'?'dark':'light'),pos:[16,16]},ppl:{'1001':{types:{'2026-11-05':'izin'},ooo:{'2026-11-03':{m:60,s:840}}}}}));
 portal.open({period:'2026-11',person:'1001',persons:[['1001','Örnek kişi']]});
-</script><script src="../../../mesai.js?v=3.2.5ux1"></script><script src="../../../preview.js?v=325"></script></body></html>
+</script><script src="../../../mesai.js?v=3.4.1"></script><script src="../../../preview.js?v=341"></script></body></html>

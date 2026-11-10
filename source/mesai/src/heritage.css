@@ -14,8 +14,7 @@
 .compact-art{position:absolute;pointer-events:none;object-fit:contain;right:12px;top:8px;width:74px;height:116px}
 .compact-clock{width:110px;height:110px;right:6px;top:14px}
 .H.T-compact .cst{border-top:1px solid var(--frame);padding-top:14px;margin-top:20px}.H.T-compact .cst b{font-size:20px;font-weight:600}
-.H.T-compact .cask{border:1px solid var(--frame);border-radius:4px}.H.T-compact .bb{font-weight:600;color:var(--goldInk)}
-.H.T-pocket{border-radius:5px!important}.H.T-pocket .pkv b{font-family:var(--num);font-size:24px;font-weight:600}.H.T-pocket .pk{min-height:64px}
+.H.T-compact .cask{border:1px solid var(--frame);border-radius:4px}.H.T-compact .bb{font-weight:600;color:var(--goldInk)}.H.T-pocket .pkv b{font-family:var(--num);font-size:24px;font-weight:600}.H.T-pocket .pk{min-height:64px}
 .H .release-row{font-size:11px}.H .sug{border-radius:4px}.H .sug i{border-radius:3px}
 
 .H.L-knight .herald-body{grid-template-columns:230px minmax(0,1fr);padding-left:8px;min-height:490px}
@@ -26,9 +25,8 @@
 .H.L-clock.T-wide:not(.narrow) .hd{margin-left:410px;height:100px;padding:10px 20px 8px 0;flex-wrap:wrap;justify-content:flex-end;gap:3px;border-bottom:0;position:relative;z-index:5}
 .H.L-clock.T-wide:not(.narrow) .hd .brand{margin-right:auto;font-size:41px}
 .H.L-clock.T-wide:not(.narrow) .hd .sp{flex-basis:100%;height:0}
-.H.L-clock.T-wide:not(.narrow) .clock-body{margin-top:-90px;align-items:start}
 .H.L-clock.T-wide:not(.narrow) .dial{margin-top:7px}
-.H.L-clock.T-wide:not(.narrow) .clock-forecast{padding-top:103px;padding-bottom:105px}
+.H.L-clock.T-wide:not(.narrow) .clock-forecast{padding-bottom:105px}
 .H.L-clock.T-wide:not(.narrow) .clock-body{padding-bottom:12px}
 .H.L-knight.narrow .herald-body{grid-template-columns:120px minmax(0,1fr);min-height:0;padding-left:3px}
 .H.L-knight.narrow .knight-art{width:125px}.H.L-knight.narrow .canopy-art{display:none}.H.L-knight.narrow .ed{margin-left:128px}
@@ -38,8 +36,8 @@
 /* The manuscript is a shaped surface; its illuminated margin stands beyond it. */
 .H.L-knight.T-wide{background:transparent;border:0;box-shadow:none;border-radius:0}
 .H.L-knight.T-wide .main{isolation:isolate;padding-top:10px}
-.H.L-knight.T-wide .surface-stack:before{content:'';position:absolute;left:235px;right:0;top:10px;bottom:0;background:var(--card);border:1px solid var(--frame);border-radius:18px 24px 6px 6px;z-index:-1;box-shadow:var(--shadow)}
-.H.L-knight.T-wide .hd{margin-left:235px;padding-left:16px;background:transparent;position:relative;border-bottom:1px solid var(--frame)}
+.H.L-knight.T-wide .surface-stack:before{content:'';position:absolute;z-index:-1}
+.H.L-knight.T-wide .hd{padding-left:16px;position:relative;border-bottom:1px solid var(--frame)}
 .H.L-knight.T-wide .herald-body{padding-top:18px}.H.L-knight.T-wide .canopy-art{top:-68px;height:calc(100% + 88px)}
 .H.L-knight.T-wide .knight-art{max-height:430px;width:260px;margin-left:-8px;filter:drop-shadow(0 5px 3px #0002)}
 .H.L-knight.T-wide .set,.H.L-knight.T-wide .notes,.H.L-knight.T-wide .askrow,.H.L-knight.T-wide .askp,.H.L-knight.T-wide .strip,.H.L-knight.T-wide .revp{margin-left:252px}
@@ -52,15 +50,13 @@
 .H.L-clock.T-wide .main{padding:8px 6px 4px;isolation:isolate}
 .clock-composition{position:relative;isolation:isolate}
 .clock-panel-art{position:absolute;left:11%;top:25px;width:89%;height:calc(100% - 25px);object-fit:fill;z-index:-1;pointer-events:none;filter:drop-shadow(0 6px 5px #0003)}
-.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{margin-left:47%;height:114px;padding:35px 32px 0 0;background:none;gap:4px;position:relative;z-index:3}
-.H.L-clock.T-wide:not(.narrow) .clock-composition .hd .brand{font-size:42px}
-.H.L-clock.T-wide:not(.narrow) .clock-body{grid-template-columns:46% minmax(0,1fr);gap:12px;padding:0 37px 10px 0;margin-top:-109px;align-items:center}
+.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{padding:35px 32px 0 0;background:none;position:relative;z-index:3}
+.H.L-clock.T-wide:not(.narrow) .clock-body{gap:12px;padding:0 37px 10px 0;align-items:center}
 .H.L-clock.T-wide:not(.narrow) .dial{width:100%;height:auto;aspect-ratio:1;margin:0;filter:drop-shadow(0 4px 3px #0003)}
 .H.L-clock.T-wide .dial:before{content:'';position:absolute;left:21.4%;top:25.6%;width:56%;aspect-ratio:1;border-radius:50%;background:var(--card);z-index:0}
 .H.L-clock.T-wide:not(.narrow) .clock-forecast{padding:116px 0 116px;min-height:455px}
-.H.L-clock.T-wide .clock-forecast .big{font-size:43px}.H.L-clock.T-wide .clock-forecast .weekly-amount{font-size:32px}
 .H.L-clock.T-wide .clock-town{height:112px;bottom:10px}
-.H.L-clock.T-wide .dial-caption{bottom:3%;left:30%;right:30%;border-radius:20px;background:var(--side);padding:3px 7px;color:var(--ink);border:1px solid var(--gold);white-space:nowrap}
+.H.L-clock.T-wide .dial-caption{left:30%;right:30%;border-radius:20px;background:var(--side);padding:3px 7px;color:var(--ink);border:1px solid var(--gold);white-space:nowrap}
 .H.L-clock.T-wide .clock-framed-rail{position:relative;isolation:isolate;background:none;border:0;overflow:visible;margin:2px 8px 0;padding:14px 55px;min-height:100px}
 .clock-rail-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;object-fit:fill;filter:drop-shadow(0 4px 3px #0002)}
 .H.L-clock.T-wide .wstrip button{padding:8px 9px;min-width:0;background:none;border-right:1px solid var(--frame)}
@@ -70,28 +66,21 @@
 .H.L-clock.T-wide .strip{margin:8px 50px 0;border:1px solid var(--frame);border-radius:18px;background:var(--card);padding:9px 14px}
 .H.L-clock.T-wide .release-row a{background:var(--card);border:1px solid var(--frame);padding:2px 9px;border-radius:12px}
 .H.L-clock.T-wide .set,.H.L-clock.T-wide .askrow,.H.L-clock.T-wide .askp,.H.L-clock.T-wide .notes,.H.L-clock.T-wide .revp{background:var(--card);margin:8px 26px;border:1px solid var(--frame);border-radius:10px}
-.H.L-clock.T-wide .release-row{padding-right:36px}
-
-.H.L-clock.T-wide:not(.narrow) .clock-composition .hd{padding-right:67px}.H.L-clock.T-wide .clock-framed-rail{padding-left:80px;padding-right:80px}.H.L-clock.T-wide .ed.clock-framed-rail{padding-left:90px;padding-right:90px}.H.L-clock.T-wide .dial-caption{z-index:5;bottom:-1%}.H.L-clock.T-wide .dial-number{font-size:23px;font-variant-numeric:lining-nums}.H.L-clock.T-wide .hd .wk{font-size:17px}
+.H.L-clock.T-wide .release-row{padding-right:36px}.H.L-clock.T-wide .clock-framed-rail{padding-left:80px;padding-right:80px}.H.L-clock.T-wide .ed.clock-framed-rail{padding-left:90px;padding-right:90px}.H.L-clock.T-wide .dial-caption{z-index:5;bottom:-1%}.H.L-clock.T-wide .dial-number{font-size:23px;font-variant-numeric:lining-nums}.H.L-clock.T-wide .hd .wk{font-size:17px}
 
 .H .ed{animation:none}
 
 .H .dial-number.night:nth-of-type(23){color:#192534;background:#eadab3;border-radius:50%;padding:1px 3px}
 
-.H.L-clock.T-wide .dial-copy .big{font-size:66px}.H.L-clock.T-wide .clock-forecast .big{font-size:49px}.H.L-clock.T-wide .clock-forecast .weekly-amount{font-size:38px}
-
 /* One continuous manuscript miniature, with the painting meeting the writing surface. */
-.H.L-knight.T-wide .knight-margin .knight-manuscript{position:absolute;top:-92px;right:-21px;left:auto;width:276px;height:calc(100% + 128px);max-height:none;object-fit:contain;object-position:right bottom;margin:0;filter:drop-shadow(0 4px 3px #0002)}
-.H.L-knight.T-wide .herald-body{min-height:520px}
+.H.L-knight.T-wide .knight-margin .knight-manuscript{top:-92px}
 .H.L-knight.T-wide .brand{font-size:56px;line-height:1}
-.H.L-knight.T-wide .hd{height:88px;gap:5px}.H.L-knight.T-wide .wk{font-size:21px}
-.H.L-knight .side .k{font-size:20px}.H.L-knight .side>div:first-child .big{font-size:64px!important}.H.L-knight .side .big{font-size:43px!important}.H.L-knight .side>div:last-child .big{font-size:40px!important}
-.H.L-knight .side .sub{font:12px/1.5 var(--font)}.H.L-knight .dn b{font-size:23px}.H.L-knight .vv{font-size:24px}.H.L-knight .ax{font-size:13px}.H.L-knight .lg>b{font-family:'Mesai Blackletter',Georgia,serif;font-size:24px;font-weight:400;color:var(--goldInk)}
+.H.L-knight .side .sub{font:12px/1.5 var(--font)}.H.L-knight .ax{font-size:13px}.H.L-knight .lg>b{font-family:'Mesai Blackletter',Georgia,serif;font-weight:400}
 .H .oo b{font-size:20px;font-weight:600;font-variant-numeric:lining-nums tabular-nums}.H .askb{font-family:var(--num);font-size:17px;font-weight:600}.H .seg{font-size:12px}
 .H.L-knight.narrow .knight-margin .knight-manuscript{width:125px;max-height:340px;margin-bottom:0;object-fit:contain}
 .H.L-knight.narrow .side .big{font-size:29px!important}.H.L-knight.narrow .side>div:first-child .big{font-size:40px!important}.H.L-knight.narrow .side .k{font-size:17px}.H.L-knight.narrow .dn b{font-size:18px}
 
-.H.L-knight .side>.sec>.k:last-child{font-family:var(--font);font-size:12px;line-height:1.5}.H.L-knight .side>div:first-child>.k:last-child{font-size:15px}
+.H.L-knight .side>.sec>.k:last-child{font-family:var(--font);font-size:12px;line-height:1.5}
 
 .H.L-knight .brand{overflow:visible;position:relative}.H .manuscript-initial{width:121px;height:75px;object-fit:contain;flex:none;margin-left:-20px}.H .brand-rest{margin-left:-29px;margin-top:6px}
 .H.L-knight.narrow .manuscript-initial{height:46px;width:74px;margin-left:-8px}.H.L-knight.narrow .brand-rest{margin-left:-18px;margin-top:3px}
@@ -99,9 +88,6 @@
 
 .H.L-knight .lg>b{font-size:24px!important}
 
-.H.L-knight.T-wide .knight-margin .knight-manuscript{left:0;right:auto;width:300px;height:calc(100% + 240px);object-position:left top}
+.H.L-knight.T-wide .knight-margin .knight-manuscript{left:0;right:auto}
 
-.H.L-knight.T-wide.mid .hd{padding-left:10px;gap:3px}.H.L-knight.T-wide.mid .brand{font-size:42px;margin-right:1px}.H.L-knight.T-wide.mid .manuscript-initial{width:94px;height:59px;margin-left:-12px}.H.L-knight.T-wide.mid .brand-rest{margin-left:-23px}.H.L-knight.T-wide.mid .wk{font-size:18px}.H.L-knight.T-wide.mid .hd .ib{width:24px}.H.L-knight.T-wide.mid .hd .celestial{width:51px}.H.L-knight.T-wide.mid .askb{padding:0 7px;font-size:15px}.H.L-knight.T-wide.mid .side .big{font-size:34px!important}.H.L-knight.T-wide.mid .side>div:first-child .big{font-size:52px!important}.H.L-knight.T-wide.mid .side .k{font-size:17px}
-.H.L-clock.T-wide.mid .clock-forecast .big{font-size:37px}.H.L-clock.T-wide.mid .clock-forecast .weekly-amount{font-size:31px}.H.L-clock.T-wide.mid .dial-copy .big{font-size:52px}.H.L-clock.T-wide.mid .hd .wk{font-size:16px}
-
-.H.L-knight.T-wide .knight-margin .knight-manuscript{width:285px}
+.H.L-knight.T-wide.mid .hd{padding-left:10px;gap:3px}.H.L-knight.T-wide.mid .brand{font-size:42px;margin-right:1px}.H.L-knight.T-wide.mid .wk{font-size:18px}.H.L-knight.T-wide.mid .hd .ib{width:24px}.H.L-knight.T-wide.mid .hd .celestial{width:51px}.H.L-knight.T-wide.mid .askb{padding:0 7px;font-size:15px}.H.L-clock.T-wide.mid .hd .wk{font-size:16px}

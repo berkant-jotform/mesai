@@ -107,7 +107,7 @@ var MesaiCore = (function () {
   var TYPES = ['ofis', 'izin', 'tatil'];
 
   // store: { types: {date: 'ofis'|'izin'|'tatil'}, plan: {date: {s?, e?}} (minutes of day),
-  //          ovr: {date: {s, m}} (past corrections), ooo: {date: {m, s?}} }
+  //          ovr: {date: {s, m}} (past corrections; today: s = typed entry time), ooo: {date: {m, s?}} }
   // opts: { absorb: date key forced to absorb the remainder }
   function week(data, now, cfgIn, store, offset, opts) {
     var cfg = config(cfgIn), today = dayStart(now), ws = weekStart(now) + (offset || 0) * 7 * DAY;
@@ -145,6 +145,10 @@ var MesaiCore = (function () {
             var rf = sg.segs[0][0], rl = sg.segs[sg.segs.length - 1][1], rawMin = (rl - rf) / MIN;
             if (Math.abs(rawMin - off.min) > 5) {
               r.mismatch = { portal: off.min * MIN, raw: rl - rf, pFirst: off.first, pLast: off.last, rFirst: rf, rLast: rl, use: PK[k] === 'portal' ? 'portal' : 'raw' };
+              // Where the portal stopped: the exit it used and the re-entry after it that it ignored.
+              for (var gi = 0; gi < sg.segs.length - 1; gi++) {
+                if (Math.abs(sg.segs[gi][1] - off.last) <= MIN) { r.mismatch.gapOut = sg.segs[gi][1]; r.mismatch.gapIn = sg.segs[gi + 1][0]; break; }
+              }
               r.flags.push('mismatch');
               if (PK[k] !== 'portal') { r.first = rf; r.last = rl; r.actual = capm(rl - rf); r.src = 'raw'; }
             }
@@ -157,7 +161,18 @@ var MesaiCore = (function () {
         } else if (!r.loaded) r.flags.push('month');
         else if (r.past && r.office) r.flags.push('absent');
         var ov = OV[k];
+        // Today: an entry time the user typed wins over ARGE, or stands in until ARGE records the entry
+        // (the card was read but the portal has not shown it yet). The list after that time is kept.
+        if (r.today && ov && ov.s != null && date + ov.s * MIN <= now) {
+          var ms = date + ov.s * MIN, sg2 = segments([{ k: 'G', t: ms }].concat(evs.filter(function (e) { return e.t > ms; })), now);
+          if (r.first != null && r.first !== ms && r.flags.indexOf('noentry') < 0) r.argeFirst = r.first;
+          r.segs = sg2.segs; r.inside = sg2.inside;
+          if (sg2.segs.length) { r.first = sg2.segs[0][0]; r.last = sg2.segs[sg2.segs.length - 1][1]; r.actual = capm(r.last - r.first); }
+          r.src = 'live'; r.manual = true;
+          r.flags = r.flags.filter(function (f) { return f !== 'noentry' && f !== 'open' && f !== 'month'; });
+        }
         if (r.past && ov && (ov.m != null || ov.s != null)) {
+          if (ov.s != null && r.first != null && r.first !== date + ov.s * MIN) r.argeFirst = r.first;
           if (ov.s != null) r.first = date + ov.s * MIN; else if (r.first == null) r.first = date + cfg.start * MIN;
           r.actual = Math.max(0, Math.min(DAY, ov.m != null ? ov.m * MIN : (r.last != null ? r.last - r.first : 0)));
           r.last = r.first + r.actual; r.segs = [[r.first, r.last]]; r.src = 'manual';
@@ -172,6 +187,23 @@ var MesaiCore = (function () {
       rows.push(r);
     }
 
+    // Work past midnight (entry one day, exit early next morning) is NOT paired automatically: both days are
+    // flagged so the user fixes them by hand and, if needed, tells ARGE.
+    for (var oi = 0; oi < rows.length - 1; oi++) {
+      var ob = rows[oi + 1], evb = ((data.events && data.events[ob.key]) || []).slice().sort(function (x, y) { return x.t - y.t; })[0];
+      if (rows[oi].flags.indexOf('open') >= 0 && evb && evb.k === 'C' && evb.t - ob.date < 8 * 60 * MIN) {
+        rows[oi].flags.push('overnight'); ob.flags.push('overnight');
+        // the next day starts at its own first entry: the night's exit must not stretch it (02:00–17:00 would count 15 h)
+        if (ob.src !== 'manual') {
+          var evsB = ((data.events && data.events[ob.key]) || []).slice().sort(function (x, y) { return x.t - y.t; }).slice(1);
+          var rest = segments(evsB, ob.today ? now : null);
+          ob.segs = rest.segs; ob.inside = ob.today && rest.inside; ob.first = rest.segs.length ? rest.segs[0][0] : null; ob.last = rest.segs.length ? rest.segs[rest.segs.length - 1][1] : null;
+          ob.actual = rest.segs.length && !rest.broken ? capm(ob.last - ob.first) : 0; ob.src = 'raw';
+          ob.flags = ob.flags.filter(function (f) { return f !== 'open' && f !== 'noentry' && f !== 'mismatch'; }); delete ob.mismatch;
+          ob.count = ob.credit ? Math.max(ob.actual, ob.credit) : ob.actual + ob.half;
+        }
+      }
+    }
     // ----- projection (current week only) -----
     var absorber = null;
     if (thisWeek) {
@@ -184,9 +216,9 @@ var MesaiCore = (function () {
     }
     var startOf = function (r) {
       if (r.first != null) return r.first;
-      var p = PL[r.key], sm = p && p.s != null ? +p.s : cfg.start;
+      var p = PL[r.key], o = OV[r.key], typed = r.today && o && o.s != null, sm = typed ? +o.s : p && p.s != null ? +p.s : cfg.start;
       var s = r.date + sm * MIN;
-      return r.today ? Math.max(now, s) : s;
+      return r.today && !typed ? Math.max(now, s) : s;   // a typed later arrival today is a plan, not "now"
     };
     // Core window: a planned office day may not start after core start or end before core end,
     // unless an OOO interval covers the gap. Duration-only OOO leaves compliance unknown.
@@ -259,8 +291,15 @@ var MesaiCore = (function () {
     rows.forEach(function (r) { r.flags.forEach(function (f) { issues.push({ key: r.key, flag: f, month: mkey(r.date) }); }); });
     var td = rows.filter(function (r) { return r.today; })[0] || null;
     var milestone = td && td.first != null && td.office ? td.first + Dm - td.half : null;
+    // Today's headline: when the week's target is reached today (usually Friday), that moment matters,
+    // not the 9-hour mark. Otherwise the daily 9 hours.
+    var goal = null;
+    if (thisWeek && td && td.office) {
+      if (hit && hit.day === td && hit.t != null) goal = { t: hit.t, week: true };
+      else if (milestone != null) goal = { t: milestone, week: false };
+    }
     return { rows: rows, cfg: cfg, W: W, done: done, total: total, remaining: Math.max(0, W - done), hit: hit,
-      shortfall: shortfall, bank: bank, balance: balance, issues: issues, today: td, milestone: milestone,
+      shortfall: shortfall, bank: bank, balance: balance, issues: issues, today: td, milestone: milestone, goal: goal,
       absorber: absorber, ws: ws, thisWeek: thisWeek, now: now, ooo: W - cfg.W * MIN };
   }
 
@@ -286,9 +325,52 @@ var MesaiCore = (function () {
     return s;
   }
 
+
+  // A daily milestone is not the week's absorber or permission to leave early.
+  // Pure read-only projection; missing current entry must never be invented as "now".
+  function dayGoal(w, index, minutes) {
+    var r = w.rows[index]; if (!r) return null;
+    var D = minutes != null ? minutes * MIN : w.cfg.D * MIN - (r.half || 0);
+    var start = r.first != null ? r.first : (r.future ? r.start : null);
+    var coreEnd = null, unknown = !!(r.ooo && r.ooo.s == null);
+    if (r.office && w.cfg.coreE > w.cfg.coreS && !unknown) {
+      var end = r.half ? Math.min(w.cfg.coreE, 780) : w.cfg.coreE, o = r.ooo;
+      if (o && o.s != null && o.s < end && o.s + o.m >= end) end = Math.max(w.cfg.coreS, o.s);
+      if (end > w.cfg.coreS) coreEnd = r.date + end * MIN;
+    }
+    return { start: start, milestone: start != null ? start + D : null, end: start != null ? start + D : null,
+      D: D, planned: !!r.future, needsEntry: r.today && r.first == null,
+      coreEnd: coreEnd, coreUnknown: unknown, coreLate: r.flags.indexOf('coreLate') >= 0 || r.flags.indexOf('coreStart') >= 0,
+      weeklyEnd: w.hit && w.hit.t != null ? w.hit.t : null, W: w.W };
+  }
+
+  // ---------- habits ----------
+  // The user's usual arrival and leaving, from past office days in the last `weeks` weeks (leave, holidays and
+  // odd records left out). Minutes of the day, rounded to 5. Mesai only suggests these; it never applies them by itself.
+  function habits(data, now, cfgIn, store, weeks) {
+    var cfg = config(cfgIn), today = dayStart(now), from = today - (weeks || 8) * 7 * DAY;
+    store = store || {}; var T = store.types || {}, HO = store.hol || {};
+    var ins = [], outs = [], lens = [], by = [[], [], [], [], [], [], []];
+    for (var d = from; d < today; d += DAY) {
+      var k = dkey(d), dw = dow(d);
+      if (cfg.days.indexOf(dw) < 0 || (T[k] && T[k] !== 'ofis') || (HO[k] && T[k] !== 'ofis')) continue;
+      var first = null, last = null, evs = data.events && data.events[k], off = data.days && data.days[k];
+      if (evs && evs.length) { var sg = segments(evs, null); if (sg.segs.length) { first = sg.segs[0][0]; last = sg.segs[sg.segs.length - 1][1]; } }
+      if (first == null && off) { first = off.first; last = off.last; }
+      if (first == null) continue;
+      var a = (first - d) / MIN, b = last != null ? (last - d) / MIN : null;
+      if (a < 300 || a > 780) continue;                    // before 05:00 or after 13:00: not a usual arrival
+      ins.push(a); by[dw].push(a);
+      if (b != null && b > a + 180) { outs.push(b); lens.push(b - a); }
+    }
+    var med = function (x) { if (!x.length) return null; var y = x.slice().sort(function (p, q) { return p - q; }), m = y.length >> 1; return Math.round((y.length % 2 ? y[m] : (y[m - 1] + y[m]) / 2) / 5) * 5; };
+    return { n: ins.length, start: med(ins), end: med(outs), len: med(lens),
+      byDow: by.map(function (x) { return x.length >= 3 ? { n: x.length, start: med(x) } : null; }) };
+  }
+
   return { MIN: MIN, DAY: DAY, pad: pad, dayStart: dayStart, dkey: dkey, mkey: mkey, dow: dow, weekStart: weekStart,
     istanbulNow: istanbulNow, parseStamp: parseStamp, parseDur: parseDur, parseKind: parseKind, parsePeriod: parsePeriod,
-    parseClock: parseClock, classify: classify, segments: segments, config: config, week: week, reverse: reverse,
-    clone: clone, hm: hm, clock: clock, fold: fold, TYPES: TYPES };
+    parseClock: parseClock, classify: classify, segments: segments, config: config, week: week, reverse: reverse, habits: habits,
+    clone: clone, hm: hm, clock: clock, dayGoal: dayGoal, fold: fold, TYPES: TYPES };
 })();
 if (typeof module !== 'undefined') module.exports = MesaiCore;
