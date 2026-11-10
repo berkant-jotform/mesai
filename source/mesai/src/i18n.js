@@ -55,7 +55,7 @@ var MesaiText = {
       noDays: 'Planlanacak gün kalmadı', needLeave: 'Kaçta çıkmak istiyorsun? Örn. “cuma 15’te çıkmak için kaçta gelmeliyim”', arrivedM: 'Bugün {t|de} geldin' },
     ans: { when: '{W} saat doluyor', whenDay: '{d} çıkış', planDay: '{d}', leaveFor: '{d} {t} çıkış için', arrive: '{d} giriş {t}', izin: '{d} {type} · {D} sa kredi', ooo: 'Hedef {W} sa',
       now: 'Zorunlu saat {t|de} biter', notYet: 'Henüz değil', nowOk: 'Bugün {x} sayılır', remaining: 'Haftalık kalan', reset: 'Hafta planı sıfırlanır', hist: 'Geçmiş haftalar' },
-    themes: { knight: 'Şövalye', clock: 'Göksel saat', cizelge: 'Çizelge', sutunlar: 'Sütunlar', turkic: 'Türk motifleri', saydam: 'Saydam', bozkir: 'Bozkır · atlı', bozkira: 'Bozkır · ayakta' },
+    themes: { knight: 'Şövalye', clock: 'Göksel saat', cizelge: 'Çizelge', sutunlar: 'Sütunlar', turkic: 'Türk motifleri', saydam: 'Saydam', bozkir: 'Bozkır · atlı', bozkira: 'Bozkır · okçu' },
     weekOf: '{a} – {b}', example: 'Dene'
   },
   en: {
@@ -113,7 +113,7 @@ var MesaiText = {
       noDays: 'No days left to plan', needLeave: 'When do you want to leave? e.g. “leave Friday at 15:00, when should I arrive?”', arrivedM: 'You arrived at {t} today' },
     ans: { when: '{W} hours reached', whenDay: '{d} leave', planDay: '{d}', leaveFor: 'To leave {d} at {t}', arrive: '{d} in at {t}', izin: '{d} {type} · {D} h credit', ooo: 'Target {W} h',
       now: 'Core hours end at {t}', notYet: 'Not yet', nowOk: 'Today counts {x}', remaining: 'Weekly remaining', reset: 'Week plan will be cleared', hist: 'Past weeks' },
-    themes: { knight: 'Knight', clock: 'Celestial clock', cizelge: 'Timeline', sutunlar: 'Columns', turkic: 'Turkic motifs', saydam: 'Saydam', bozkir: 'Steppe · rider', bozkira: 'Steppe · standing' },
+    themes: { knight: 'Knight', clock: 'Celestial clock', cizelge: 'Timeline', sutunlar: 'Columns', turkic: 'Turkic motifs', saydam: 'Saydam', bozkir: 'Steppe · rider', bozkira: 'Steppe · archer' },
     weekOf: '{a} – {b}', example: 'Try'
   }
 };

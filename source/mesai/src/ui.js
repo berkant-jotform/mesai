@@ -13,6 +13,8 @@
     if (!o) { try { var old = JSON.parse(localStorage.getItem('mesai.v1')); if (old) o = { ppl: old.ppl || {}, ui: { lang: (old.ui || {}).lang } }; } catch (e) { /* none */ } }
     return o || {};
   })();
+  var returningUser=!!S.ui, THEME_CATALOG=BUILD.catalog||'bozkir-2026-11';
+  var themeNews=returningUser&&BUILD.theme==='all'&&S.ui.themeCatalog!==THEME_CATALOG;
   S.cfg = Object.assign({ W: 45, D: 9, start: '09:00', coreS: '10:00', coreE: '16:00', cap: 0, days: [0, 1, 2, 3, 4], hol: true }, S.cfg || {});
   S.ui = Object.assign({ lang: 'tr', theme: 'saydam', look: 'auto', col: false, bell: false, planOpen: true, cmp: false, w: null, h: null }, S.ui || {});
   // Minimize always means the Cep (pocket) view now; old collapsed-pill states migrate to it in every theme.
@@ -23,15 +25,18 @@
   if (S.ui.theme === 'sutunsor') { S.ui.theme = 'sutunlar'; S.ui.ask = true; }   // "Sütunlar + Sor" became Sütunlar with the question panel on
   if (S.ui.theme === 'sor') { S.ui.theme = 'cizelge'; S.ui.ask = true; }          // 3.3: "Soru odaklı" removed; the Sor button covers it
   if (S.ui.theme === 'bilet') S.ui.theme = 'cizelge';
+  if(S.ui.theme==='bozkirday')S.ui.theme='bozkir';
   if (BUILD.theme !== 'all') S.ui.theme = BUILD.theme;
   if (TH.ORDER.indexOf(S.ui.theme) < 0) S.ui.theme = TH.ORDER[0];   // draft or unknown theme                              // 3.3: "Bilet" removed
   S.ppl = S.ppl || {};
+  S.ui.themeCatalog=THEME_CATALOG;
   var save = function (record) { syncHistory(record !== false); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* private mode */ } };
   var nowFn = function () { return window.__MESAI_NOW ? window.__MESAI_NOW() : C.istanbulNow(); };
   var L = function () { return TX[S.ui.lang === 'en' ? 'en' : 'tr']; };
 
   var st = { code: 'loading', count: 0, person: S.lastPerson || null, name: '', off: 0, sel: null, view: 'week', job: null, tried: {},
     sig: '', readAt: 0, period: null, paged: false, ask: null, askText: '', rev: null, set: false, undo: null, toast: null, placed: false };
+  st.themeNews=themeNews;st.themes=themeNews&&S.ui.w!==220;
   var historyUI=['theme','look','lang','syv','cmp','w','bozkirWidth','pos','planOpen','habits'], historyEdits=['types','plan','ooo','ovr','pick'], history, historyPerson;
   function historyState(){var ui={},edits={},person=st&&st.person||S.lastPerson||null,p=S.ppl[person]||{};historyUI.forEach(function(k){ui[k]=S.ui[k]===undefined?null:S.ui[k];});historyEdits.forEach(function(k){edits[k]=p[k]||{};});return C.clone({person:person,cfg:S.cfg,ui:ui,edits:edits});}
   function syncHistory(record){if(!st)return;var current=historyState();if(!history||historyPerson!==current.person){history=MesaiHistory(current,50);historyPerson=current.person;}else if(record)history.capture(current);else history.rebase(current);st.undo=history.canUndo();}
@@ -508,7 +513,7 @@
     if (!/^bozkira?$/.test(S.ui.theme)) return '';
     var en = S.ui.lang === 'en';
     return '<div class="bozkir-view-switch" role="group" aria-label="' + (en ? 'Bozkır view' : 'Bozkır görünümü') + '">' + ['bozkir','bozkira'].map(function (id, i) {
-      var label = en ? ['Rider','Standing'][i] : ['Atlı','Ayakta'][i];
+      var label = en ? ['Rider','Archer'][i] : ['Atlı','Okçu'][i];
       return '<button type="button" data-a="bozkirView" data-v="' + id + '" title="' + label + '" aria-label="' + label + '" aria-pressed="' + (S.ui.theme === id) + '">' + TH.variantIcon(id) + '</button>';
     }).join('') + '</div>';
   }
@@ -901,11 +906,11 @@
       if(!boz)return card;
       return '<div class="bozkir-theme-choice">'+card+'<div class="bozkir-variants" role="group" aria-label="Bozkır">'+['bozkir','bozkira'].map(function(id){var label=t.themes[id];return '<button class="bozkir-variant" data-a="theme" data-v="'+id+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" aria-pressed="'+(S.ui.theme===id)+'">'+TH.variantIcon(id)+'</button>';}).join('')+'</div></div>';
     }).join('');
-    return '<section class="theme-panel" aria-label="'+esc(t.look)+'">'+panelHead(t.look,'themes')+'<div class="theme-choices">'+choices+'</div>'+rows+'</section>';
+    return '<section class="theme-panel" aria-label="'+esc(t.look)+'">'+panelHead(t.look,'themes')+(st.themeNews?'<p class="theme-news">'+(en?'Steppe has a new look: Rider and Archer. Your selected theme is unchanged.':'Bozkır yenilendi: Atlı ve Okçu. Seçtiğin tema aynı kaldı.')+'</p>':'')+'<div class="theme-choices">'+choices+'</div>'+rows+'</section>';
   }
   function dismissPanel(kind){
     var trigger=kind==='themes'?'themes':kind==='settings'?'set':kind==='history'?'hist':kind==='question'?'askOpen':'rev';
-    if(kind==='themes'){st.themes=false;if(st.themeReturn){st.set=true;st.themeReturn=false;trigger='set';}}
+    if(kind==='themes'){st.themeNews=false;st.themes=false;if(st.themeReturn){st.set=true;st.themeReturn=false;trigger='set';}}
     if(kind==='settings'){st.set=false;if(tierOf()==='compact'&&S.ui.theme!=='saydam')trigger='themes';}
     if(kind==='history')st.view='week';
     if(kind==='question'){S.ui.ask=false;st.ask=null;st.askText='';save();}
@@ -1012,10 +1017,10 @@
     return artPending[name];
   }
   function prepareControlArt(){
-    if(S.ui.theme!=='knight'&&S.ui.theme!=='clock')return;
+    if(TH.T[S.ui.theme].layout!=='knight'&&S.ui.theme!=='clock')return;
     MAIN.querySelectorAll('.sg,.sp2,.clock-forecast .bar>i,.pkbar,.cwk i:not(.pl):not(.cr)').forEach(function(el) {
       if(el.classList.contains('sg') && el.parentElement.querySelector('.sp2'))return;
-      el.insertAdjacentHTML('afterbegin',art('bar','progress-paint'));
+      el.insertAdjacentHTML('afterbegin',art(TH.T[S.ui.theme].art?'bzWeave':'bar','progress-paint'));
     });
     MAIN.querySelectorAll('.ed .fi,.ed .oo').forEach(function(el) {
       var shell=el;
@@ -1035,7 +1040,7 @@
         canvas.getContext('2d').drawImage(b,0,0);canvas.dataset.painted='true';
       }).catch(function() { /* Opaque surfaces and ordinary control borders remain usable. */ });
     });
-    if (S.ui.theme !== 'knight' && S.ui.theme !== 'clock') return;
+    if (TH.T[S.ui.theme].layout !== 'knight' && S.ui.theme !== 'clock') return;
     MAIN.querySelectorAll('canvas.progress-paint:not([data-painted]),canvas.control-paint').forEach(function(canvas) {
       bitmap(canvas.dataset.art).then(function(b) {
         if(!b || !canvas.isConnected)return;
@@ -1065,7 +1070,7 @@
   var UPDATE_URL='https://berkant-jotform.github.io/mesai/';
   var latestVersion=null, updateController=null, updateTimer=null, closed=false;
   function versionNewer(a,b){var x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(var i=0;i<3;i++){if(x[i]!==y[i])return x[i]>y[i];}return false;}
-  function releaseLink(){var en=S.ui.lang==='en', newer=latestVersion&&versionNewer(latestVersion,VERSION);return '<div class="release-row"><a href="'+UPDATE_URL+'?from='+VERSION+'&amp;theme='+BUILD.theme+'" target="_blank" rel="noopener noreferrer" title="'+(L().updHint)+'">Mesai v'+VERSION+'</a>'+(newer?'<a class="update-available" href="'+UPDATE_URL+'?from='+VERSION+'&amp;theme='+BUILD.theme+'" target="_blank" rel="noopener noreferrer">'+(L().updAvail)+' · v'+esc(latestVersion)+'</a>':'')+'</div>';}
+  function releaseLink(){var en=S.ui.lang==='en', newer=latestVersion&&versionNewer(latestVersion,VERSION);return '<div class="release-row"><a href="'+UPDATE_URL+'?from='+VERSION+'&amp;theme='+BUILD.theme+'" target="_blank" rel="noopener noreferrer" title="'+(L().updHint)+'">Mesai v'+VERSION+'</a>'+(st.themeNews?'<button class="lnk theme-news-link" data-a="themeNews">'+(en?'New looks':'Yeni görünümler')+'</button>':'')+(newer?'<a class="update-available" href="'+UPDATE_URL+'?from='+VERSION+'&amp;theme='+BUILD.theme+'" target="_blank" rel="noopener noreferrer">'+(L().updAvail)+' · v'+esc(latestVersion)+'</a>':'')+'</div>';}
   function checkVersion(){
     var cached=null;try{cached=JSON.parse(localStorage.getItem('mesai.release')||'null');}catch(e){}
     if(cached&&/^\d+\.\d+\.\d+$/.test(cached.version)){latestVersion=cached.version;if(Date.now()-cached.at<6*60*60*1000){render(nowFn(),true);return;}}
@@ -1317,12 +1322,12 @@
     if(tier==='compact'&&!syFull&&st.themes)html+=themePanel();
     if(tier==='compact'&&!syFull&&st.set)html+=settings();
     // The pocket's brand already links to the install page; repeat the release row there only to announce an update.
-    if (!syFull && (tier !== 'pocket' || (latestVersion && versionNewer(latestVersion, VERSION)))) html += releaseLink();
+    if (!syFull && (tier !== 'pocket' || st.themeNews || (latestVersion && versionNewer(latestVersion, VERSION)))) html += releaseLink();
     var pool = {};
     MAIN.querySelectorAll('canvas[data-art][data-painted]:not(.control-paint)').forEach(function (c) { var k = c.dataset.art + '|' + c.className; (pool[k] = pool[k] || []).push(c); });
     // Medieval faces draw O like 0: set the word OOO (text only, never inside attributes) in the gothic face.
     var plateArt = TH.T[th].art;   // Bozkır: painted steppe plates instead of Knight's
-    if ((lay === 'knight' && !plateArt) || lay === 'clock') html = html.replace(/>([^<]*)</g, function (m, txt) { return '>' + txt.replace(/\bOOO\b/g, '<span class="tri-o">OOO</span>') + '<'; });
+    if (lay === 'knight' || lay === 'clock') html = html.replace(/>([^<]*)</g, function (m, txt) { return '>' + txt.replace(/\bOOO\b/g, '<span class="tri-o">OOO</span>') + '<'; });
     MAIN=liveMain.cloneNode(false);
     MAIN.innerHTML = lay==='knight'&&tier!=='pocket'?'<div class="surface-stack">'+html+'</div>':html;
     st.artPool = pool;
@@ -1331,46 +1336,18 @@
       var variantAnchor = MAIN.querySelector(tier === 'pocket' ? '.pocket-heading' : '.hd');
       if (variantAnchor) {
         var variantBrand = tier !== 'pocket' ? variantAnchor.querySelector('.brand') : null;
-        if (variantBrand) variantBrand.outerHTML = bozkirSwitch();
+        if (variantBrand) variantBrand.outerHTML = '<span class="brand"><span class="brand-rest">Mesai</span></span>'+bozkirSwitch();
         else variantAnchor.insertAdjacentHTML('afterend', bozkirSwitch());
       }
     }
-    if(lay==='knight'&&!plateArt&&(tier==='wide'||tier==='std')){
-      MAIN.querySelectorAll('.side>div>.k:first-child,.side>.sec>div:first-child>.k,.tr .dn').forEach(function(el){el.insertAdjacentHTML('afterbegin',art('fleuron','manuscript-fleuron'));});
-      MAIN.querySelectorAll('.tl .lv').forEach(function(el){el.innerHTML=art('timeMarker','time-marker');});
+    if(lay==='knight'&&(tier==='wide'||tier==='std')){
+      if(!plateArt)MAIN.querySelectorAll('.side>div>.k:first-child,.side>.sec>div:first-child>.k,.tr .dn').forEach(function(el){el.insertAdjacentHTML('afterbegin',art('fleuron','manuscript-fleuron'));});
+      MAIN.querySelectorAll('.tl .lv').forEach(function(el){el.innerHTML=art(plateArt?'bzArrow':'timeMarker','time-marker');});
     }
     if(lay==='clock'&&tier==='wide'&&v&&st.view!=='history'){
       var dialBody=MAIN.querySelector('.clock-body'), head=MAIN.querySelector('.hd');
       if(dialBody&&head){var shell=document.createElement('div');shell.className='clock-composition';shell.innerHTML=art(isDark()?'panelDark':'panelLight','clock-panel-art');MAIN.prepend(shell);shell.appendChild(head);shell.appendChild(dialBody);}
       ['.wstrip','.ed'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el){el.classList.add('clock-framed-rail');el.insertAdjacentHTML('afterbegin',art(isDark()?'railDark':'railLight','clock-rail-art'));}});
-    }
-    if(plateArt&&tier!=='pocket'){MAIN.insertAdjacentHTML('afterbegin',art(plateArt+(tier==='compact'?'Compact':'Wide'),'bz-plate'));MAIN.setAttribute('data-drag','');MAIN.title=S.ui.lang==='en'?'Drag the painting or header to move':'Taşımak için resmi veya başlığı sürükle';}else{MAIN.removeAttribute('data-drag');MAIN.removeAttribute('title');}
-    if (plateArt && tier !== 'pocket') {
-      var workspace = document.createElement('section'), content = document.createElement('div');
-      workspace.className = 'bz-workspace'; content.className = 'bz-content';
-      var head = MAIN.querySelector('.hd');
-      if (head) {
-        var nav = document.createElement('div'), tools = document.createElement('div'), close = head.querySelector('[data-a="close"]');
-        nav.className='bz-nav'; tools.className='bz-tools';
-        Array.from(head.children).forEach(function(el){
-          if(el===close)return;
-          if(el.matches('.sp,.vr,.who')){el.remove();return;}
-          (el.matches('.bozkir-view-switch,.wk,[data-a="prev"],[data-a="next"]')?nav:tools).appendChild(el);
-        });
-        head.appendChild(nav);head.appendChild(tools);if(close)head.appendChild(close);
-        workspace.appendChild(head);
-      }
-      workspace.appendChild(content);
-      Array.from(MAIN.children).forEach(function(el){
-        if(el.classList.contains('bz-plate'))return;
-        if(el.matches('.ed,.strip,.release-row'))return;
-        if(el.matches('.theme-panel,.set,.revp,.toast,.imp'))workspace.appendChild(el);
-        else content.appendChild(el);
-      });
-      ['.ed','.strip','.release-row'].forEach(function(sel){var el=MAIN.querySelector(sel);if(el)content.appendChild(el);});
-      MAIN.appendChild(workspace);
-      var bankNote=content.querySelector('.side>.sec:nth-child(2)>.k:last-child');
-      if(bankNote&&v){bankNote.title=bankNote.textContent;bankNote.textContent=v.bank>0?'+'+hm(v.bank)+' '+L().bank.toLowerCase():'';}
     }
     if(S.ui.theme==='turkic'&&tier!=='pocket'){var tkb=turkicBands(tier);MAIN.insertAdjacentHTML('afterbegin',tkb[0]);if(tkb[1])MAIN.insertAdjacentHTML('beforeend',tkb[1]);}
     if(lay==='knight'&&tier!=='pocket'){
@@ -1388,6 +1365,10 @@
       if(composition){var cp=MAIN.querySelector('.set');if(cp){cp.classList.add('clock-settings');composition.appendChild(cp);}var cq=MAIN.querySelector('.askr'),ca=MAIN.querySelector('.askp');if(cq&&ca){var cs=document.createElement('section');cs.className='clock-question';composition.appendChild(cs);cs.appendChild(cq);cs.appendChild(ca);}}
     }
     if(lay!=='knight'){var askBox=MAIN.querySelector('.askp');if(S.ui.ask&&askBox&&!syFull)askBox.insertAdjacentHTML('afterbegin',panelHead(L().ask,'question'));var histBox=MAIN.querySelector('.hist');if(histBox)histBox.insertAdjacentHTML('afterbegin',panelHead(L().history,'history'));}
+    var feedback=MAIN.querySelector('.toast'),dock=MAIN.querySelector('.sy-low');
+    if(feedback&&dock){feedback.setAttribute('role','status');dock.prepend(feedback);}
+    if(plateArt&&tier==='wide'){var weekLegend=MAIN.querySelector('.tl>.lg'),weekAxis=MAIN.querySelector('.tl>.ax>span');if(weekLegend&&weekAxis)weekAxis.appendChild(weekLegend);}
+    if(plateArt&&tier==='wide'){var dayHead=MAIN.querySelector('.edh'),startField=MAIN.querySelector('.ed .fl:has([data-e="os"])'),resetDay=MAIN.querySelector('.edf [data-a="dreset"]');if(dayHead&&startField)dayHead.appendChild(startField);if(dayHead&&resetDay)dayHead.appendChild(resetDay);}
     prepareControlArt();
     var stagedMain=MAIN;MAIN=liveMain;syncForm(MAIN,stagedMain);st.artPool=null;
     if (fkey && (!act || !act.isConnected)) { var el = root.querySelector('[data-e="' + fkey + '"],[data-c="' + fkey + '"]'); if (el && !el.disabled) { el.focus({preventScroll:true}); try { if (fsel != null && el.setSelectionRange) el.setSelectionRange(fsel, fsel); } catch (e) { /* select */ } } }
@@ -1398,6 +1379,8 @@
     else if(!st.rs&&!st.move){var bounds=W.getBoundingClientRect();setPos(bounds.left,bounds.top);}
     keepInView();
     paintArt();
+    var dock=MAIN.querySelector('.sy-low'),detail=MAIN.querySelector('.sy-dt');
+    if(dock&&detail)detail.style.setProperty('--dock-clearance',(dock.offsetHeight+16)+'px');
     fitHourglass();
   }
 
@@ -1410,8 +1393,8 @@
     var svg=glass.querySelector('svg');if(svg)svg.setAttribute('viewBox',compact?'-40 0 440 660':short?'0 0 360 660':'0 0 650 660');
   }
   // ---------------- placement ----------------
-  var CMPW = { saydam: 500, bozkir: 510, bozkira: 480 };   // Bozkır: the parchment beside the figure must hold the compact view (tier < 520)   // Saydam keeps Gün/Kum saati in compact
-  var FULLW = { cizelge: 880, sutunlar: 880, knight: 1100, clock: 1050, saydam: 1120, bozkir: 1040, bozkira: 1040 };
+  var CMPW = { saydam: 500, bozkir: 380, bozkira: 380 };   // Bozkır: the parchment beside the figure must hold the compact view (tier < 520)   // Saydam keeps Gün/Kum saati in compact
+  var FULLW = { cizelge: 880, sutunlar: 880, knight: 1100, clock: 1050, saydam: 1120, bozkir: 1350, bozkira: 1350 };
   function sizeOf() { return S.ui.cmp ? 'compact' : (S.ui.w && S.ui.w < 300) ? 'pocket' : 'full'; }
   function setSize(sz) { S.ui.cmp = sz === 'compact'; S.ui.w = sz === 'pocket' ? 220 : null; S.ui.h = null; S.ui.col = false; S.ui.pre = null; }
   function fullW() { var vw = document.documentElement.clientWidth || window.innerWidth, limit = (/^bozkira?$/.test(S.ui.theme) && S.ui.bozkirWidth) || FULLW[S.ui.theme] || 880; if (/^bozkira?$/.test(S.ui.theme)) limit = Math.min(limit, Math.floor(Math.max(180, window.innerHeight - 24) * 1605 / 980)); return Math.round(Math.min(limit, vw - 24)); }
@@ -1465,7 +1448,7 @@
     if (st.ask && st.ask.store) st.ask = null;
     render(nowFn(), true);
   }
-  function toast(msg) { st.toast = msg; clearTimeout(st.tt); st.tt = setTimeout(function () { st.toast = null; render(nowFn(), true); }, 5000); }
+  function toast(msg) { st.toast = msg; render(nowFn(), true); clearTimeout(st.tt); st.tt = setTimeout(function () { st.toast = null; render(nowFn(), true); }, 5000); }
   function editDay(field, raw) {
     var v = st.v, r = v && v.rows[st.sel]; if (!r) return false;
     var past = r.past || !v.thisWeek, k = r.key;
@@ -1526,6 +1509,7 @@
     if (a === 'dark') { S.ui.look = isDark() ? 'light' : 'dark'; save(); render(now, true); return; }
     if (a === 'look') { S.ui.look = v; save(); render(now, true); return; }
     if (a === 'dismiss') {dismissPanel(b.dataset.panel);return;}
+    if(a==='themeNews'){setSize('full');st.themes=true;save(false);render(now,true);return;}
     if (a === 'themes') {var open=!st.themes;st.themeReturn=st.set;st.set=false;st.view='week';S.ui.ask=false;st.rev=null;st.themes=open;render(now,true);if(open){var choice=root.querySelector('.theme-panel .theme-choice.on');if(choice)choice.focus();}return;}
     if (a === 'set') { st.settingsTrigger=b.closest('.sy-foot')?'core':'toolbar';st.themes=false;S.ui.ask=false;st.view='week';st.rev=null;st.set = !st.set; render(now, true);if(st.set){var closer=root.querySelector('.set .panel-close');if(closer)closer.focus();}return; }
     if (a === 'prev') { st.off--; st.view = 'week'; st.sel = 0; st.ask = null; tick(true); return; }
@@ -1701,6 +1685,8 @@
     state: function () { return { st: st, S: S }; }
   };
   tick(true);
-  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,embeddedBytes(MesaiFonts[name]),name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;font.load().then(function(f){document.fonts.add(f);if(!closed)render(nowFn(),true);}).catch(function(){});});
+  if(themeNews)save(false);
+
+  if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,embeddedBytes(MesaiFonts[name]),name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;font.load().then(function(f){document.fonts.add(f);host.setAttribute('data-loaded-fonts',(host.getAttribute('data-loaded-fonts')||'')+'|'+name);if(!closed)render(nowFn(),true);}).catch(function(error){console.warn('Mesai font could not load:',name,error);});});
   checkVersion();
 })();

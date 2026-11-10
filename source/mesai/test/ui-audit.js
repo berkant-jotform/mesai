@@ -4,6 +4,7 @@
 // node source/mesai/test/ui-audit.js   → prints findings grouped by problem; exit 1 if any are found.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path'), http = require('http');
+const CATALOG = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../version.json'), 'utf8')).themeCatalog;
 const BUNDLE = fs.readFileSync(path.join(__dirname, '../dist/mesai.min.js'), 'utf8');
 const THEMES = require('../src/themes.js').ORDER.filter(t => !process.env.THEME || t === process.env.THEME);
 const server = http.createServer((q, r) => fs.readFile(path.join(__dirname, 'portal.html'), (e, d) => { r.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); r.end(d); })).listen(0);
@@ -68,7 +69,7 @@ function probe() {
     await ctx.route('https://berkant-jotform.github.io/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
     const p = await ctx.newPage(), errs = [];
     p.on('pageerror', e => errs.push(e.message));
-    await p.addInitScript(([n, seed]) => { window.__MESAI_NOW = () => n; localStorage.setItem('mesai.v3', JSON.stringify(seed)); }, [NOW, { ui: Object.assign({ lang: 'tr', theme, look: mode }, ui0), ppl: { '1001': STORE } }]);
+    await p.addInitScript(([n, seed]) => { window.__MESAI_NOW = () => n; localStorage.setItem('mesai.v3', JSON.stringify(seed)); }, [NOW, { ui: Object.assign({ lang: 'tr', theme, look: mode, themeCatalog: CATALOG }, ui0), ppl: { '1001': STORE } }]);
     await p.goto('http://127.0.0.1:' + server.address().port + '/portal.html');
     await p.evaluate(d => { portal.setDB(d); portal.setDelay(30); portal.open({ persons: [['1001', 'Örnek Kişi']] }); }, DB);
     await p.evaluate(BUNDLE); await p.waitForFunction(() => window.__mesai && window.__mesai.state().st.code === 'ready', null, { timeout: 10000 }); await p.waitForTimeout(500);

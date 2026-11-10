@@ -17,11 +17,11 @@ var MesaiThemes = (function () {
   T.knight={swatch:'#8f392e',layout:'knight',font:'"Mesai Gothic", Georgia, serif',num:blackNum,disp:'"Mesai Gothic", Georgia, serif',radius:7,light:paper,dark:night};
   T.clock={swatch:'#bf9c53',layout:'clock',font:SANS,num:manuscript,disp:manuscript,radius:20,light:Object.assign({},paper,{card:'#f6f2e6',side:'#eee7d5',goldInk:'#84602b',acc:'#446c5a',accInk:'#355743',core:'rgba(68,108,90,.06)'}),dark:Object.assign({},night,{card:'#101e2d',side:'#172739',acc:'#a9c296',accInk:'#c2d7b2',accSoft:'rgba(169,194,150,.12)'})};
 
-  // 3.4: Bozkır — painted steppe plates (atlı okçu / ayakta), Almendra type, light only. Palette from the artwork handoff.
+  // 3.4: Bozkır — painted steppe plates (atlı okçu / ayakta), carved Latin type, light only. Palette from the artwork handoff.
   var steppe = Object.assign({}, paper, { card: '#f2ead8', side: '#ebe1cb', frame: '#a68b61', line: '#c4ad84', sunk: '#e6dac0', grid: '#ddd0b4', ink: '#30251c', body: '#3d3126', mut: '#645442', faint: '#645442', acc: '#245b77', accInk: '#1d4a61', accSoft: 'rgba(36,91,119,.1)', accSoft2: 'rgba(36,91,119,.3)', gold: '#8a622b', goldInk: '#7a5420', rubric: '#a24931', goldSoft: '#efe2c4', goldLine: '#c9ad78', ok: '#527043', okSoft: 'rgba(82,112,67,.14)', bad: '#a24931', badSoft: 'rgba(162,73,49,.1)', core: 'rgba(36,91,119,.05)', bar: '#245b77' });
   var book = '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif';   // small text stays readable; Almendra carries titles and numbers
-  var steppeFont = '"Mesai Steppe", ' + book;   // Kurale: cut, carved strokes close to Orkhon inscriptions, still easy to read
-  T.bozkir = { swatch: '#a24931', layout: 'cizelge', art: 'bzMounted', lightOnly: true, rune: '\uD803\uDC22\uD803\uDC3E\uD803\uDC00\uD803\uDC03', font: steppeFont, num: steppeFont, disp: steppeFont, radius: 6, light: steppe, dark: steppe };
+  var steppeFont = '"Mesai Steppe", ' + book;   // Nova Cut: carved Latin lettering; genuine Old Turkic remains a separate script
+  T.bozkir = { swatch: '#a24931', layout: 'knight', art: 'bzMounted', lightOnly: true, rune: '\uD803\uDC22\uD803\uDC3E\uD803\uDC00\uD803\uDC03', font: steppeFont, num: steppeFont, disp: steppeFont, radius: 6, light: steppe, dark: steppe };
   T.bozkira = Object.assign({}, T.bozkir, { swatch: '#245b77', art: 'bzStanding' });
 
   // 3.3: Türk motifleri — Seljuk tile colours (turquoise, cobalt), madder and ochre of kilims, eight-point star bands.

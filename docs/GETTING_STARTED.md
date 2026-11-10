@@ -10,9 +10,9 @@
 2. Çubuk görünmüyorsa Mac’te **⌘⇧B**, Windows’ta **Ctrl+Shift+B** kullan.
 3. ARGE Portal’da **PDKS Giriş Çıkış Bilgi Kartı**’nı aç. Dönem ve personeli kontrol et; sonra çubuktaki Mesai’ye tıkla.
 
-Temaları **Kurulumdan önce dene** bölümünde deneyebilirsin. Sıra: Saydam, Şövalye, Bozkır, Çizelge, Sütunlar, Göksel saat. Bozkır’daki at simgesi atlı, Kuman maskesi ayakta görünümü açar. Aynı seçimler aracın **Görünüm** menüsündedir.
+Temaları **Kurulumdan önce dene** bölümünde deneyebilirsin. Sıra: Saydam, Şövalye, Bozkır, Çizelge, Sütunlar, Göksel saat. Bozkır’daki at simgesi atlı, Kuman maskesi okçu görünümü açar. Aynı seçimler aracın **Görünüm** menüsündedir.
 
-Daha küçük bir yer işareti istersen **Kurulumdan önce dene** bölümünde bir tema seç. Tema düğmelerinin hemen altındaki yer işareti düğmesi seçimini takip eder; **Hazır** yazınca çubuğa sürükle. Hesaplar ve özellikler aynıdır; diğer temaların görselleri eklenmez. Bozkır’da Atlı ve Ayakta birlikte gelir. Bu seçim üstteki ana düğmeyi değiştirmez; ana düğme her zaman tam pakettir. Tek temalı indirme hazırlanamazsa **Yeniden dene**’yi kullan.
+Daha küçük bir yer işareti istersen **Kurulumdan önce dene** bölümünde bir tema seç. Tema düğmelerinin hemen altındaki yer işareti düğmesi seçimini takip eder; **Hazır** yazınca çubuğa sürükle. Hesaplar ve özellikler aynıdır; diğer temaların görselleri eklenmez. Bozkır’da Atlı ve Okçu birlikte gelir. Bu seçim üstteki ana düğmeyi değiştirmez; ana düğme her zaman tam pakettir. Tek temalı indirme hazırlanamazsa **Yeniden dene**’yi kullan.
 
 ### Sayıları oku
 

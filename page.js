@@ -15,7 +15,7 @@
   const sourceCache = new Map();
   const requestedVariant = new URLSearchParams(location.search).get('theme');
   if (themes.includes(requestedVariant)) state.theme = requestedVariant;
-  const themeLabels = {saydam:['Saydam','Liquid glass'],knight:['Şövalye','Knight'],bozkir:['Bozkır · Atlı','Steppe · Rider'],bozkira:['Bozkır · Ayakta','Steppe · Standing'],cizelge:['Çizelge','Timeline'],sutunlar:['Sütunlar','Columns'],clock:['Göksel saat','Celestial clock']};
+  const themeLabels = {saydam:['Saydam','Liquid glass'],knight:['Şövalye','Knight'],bozkir:['Bozkır · Atlı','Steppe · Rider'],bozkira:['Bozkır · Okçu','Steppe · Archer'],cizelge:['Çizelge','Timeline'],sutunlar:['Sütunlar','Columns'],clock:['Göksel saat','Celestial clock']};
   function installLabel() { return themeLabels[state.theme][state.lang === 'tr' ? 0 : 1]; }
   function paintInstaller() {
     const ready = installState.phase === 'ready';

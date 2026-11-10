@@ -54,7 +54,7 @@ Short windows keep the toolbar reachable; narrow toolbars wrap. Hourglass labels
 
 ## 3.4.0 — Bozkır themes; one source again
 
-- Two new light themes: **Bozkır · atlı** (mounted archer) and **Bozkır · ayakta** (standing). Illustrated steppe pages (eagle, running herd, yurts, river, a resting wolf companion), the planner in the page's empty parchment, never stretched. Kurale type, an Old Turkic-letter brand signature (a modern rendering, not a claim of historical spelling), kilim bands, steppe colours for the time bars. Compact and Cep sizes included.
+- Two new light themes: **Bozkır · atlı** (mounted archer) and **Bozkır · okçu** (standing). Illustrated steppe pages (eagle, running herd, yurts, river, a resting wolf companion), the planner in the page's empty parchment, never stretched. Nova Cut carved lettering (Latin text with Turkish glyphs), kilim bands, steppe colours for the time bars. Compact and Cep sizes included.
 - Knight and Göksel saat art re-encoded as AVIF: reduced payload size; compare the rendered delivery with the source artwork at the intended screen size. The bookmark is ~1.41M characters (the project checks an internal size budget; actual browser installation remains a separate acceptance check).
 - Saydam's 3.3.1/3.3.2 fixes are back in the modular source (src/); the compiled-export build is retired. A forecast that passes midnight now shows the right weekday everywhere (also in Sor answers).
 - Sor understands more questions: “bugün 18:20’de çıkarsam kaç saat olur?” (that day’s hours and when the week completes), “her gün 9:30 saat yaparsam cuma kaçta çıkarım?” (9:30 / 9.30 / 9 saat 30 dk = 9 h 30 min), “bugün 9.30 saat çalışırsam kaçta çıkarım?” (keeps the length you named), English equivalents; today’s exit answers also show when the daily 9 h complete.
@@ -68,7 +68,7 @@ The middle window size now keeps Saydam's Day and Hourglass views, day selection
 
 The main setup button always installs the **full package**, with **Saydam / Liquid glass** as the initial appearance. The smaller bookmark button sits directly beneath the preview theme controls and follows the theme you are trying. It contains only that theme’s appearance assets and keeps the calculator, planning, Ask, Reverse, language and supported color settings. A smaller payload is intended to reduce loading work; timing depends on the browser and portal.
 
-Use the main **Mesai** button if you want to switch between appearances inside the tool. A single-theme bookmark does not offer other themes; return to the setup page to choose another variant. There is no separate installation selector. Bozkır includes both mounted and standing artwork, with an Atlı / Ayakta switch in every window size.
+Use the main **Mesai** button if you want to switch between appearances inside the tool. A single-theme bookmark does not offer other themes; return to the setup page to choose another variant. There is no separate installation selector. Bozkır includes both mounted and standing artwork, with an Atlı / Okçu switch in every window size.
 
 The optional single-theme button and Copy stay disabled until the chosen code has loaded and passed version/size checks. A failed load clears the link rather than keeping a previously selected theme. The main button already contains the full build. Selecting a preview theme fetches its bundle and puts its full code in that separate bookmark; the bookmark itself does not need a remote script loader.
 
@@ -87,7 +87,7 @@ A larger main install button includes all themes. Optional smaller bookmarks sit
 
 ## 3.4.3 — Bozkır switch and preview-linked install
 
-Atlı / Ayakta is available directly in Bozkır at full, compact and pocket sizes, preserving plans and open questions. Both Bozkır bookmarks include both paintings. The standing compact header clears its painted border. The smaller install button is visible below the preview controls, follows the selected theme, and shows the size saving against the full package.
+Atlı / Okçu is available directly in Bozkır at full, compact and pocket sizes, preserving plans and open questions. Both Bozkır bookmarks include both paintings. The standing compact header clears its painted border. The smaller install button is visible below the preview controls, follows the selected theme, and shows the size saving against the full package.
 
 ## 3.4.5 — Responsive workspaces
 

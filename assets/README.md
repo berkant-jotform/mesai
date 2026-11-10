@@ -23,7 +23,7 @@ Preserve the accompanying SIL Open Font License notices when redistributing the 
 | Mesai Manuscript / `almendra.woff2`; Mesai Calligraphy / `almendra-bold.woff2` | Almendra, Ana Sanfelippo | `Almendra-OFL.txt` |
 | Mesai Gothic / `gothic.woff2` | Grenze Gotisch, Renata Polastri / Omnibus-Type | `GrenzeGotisch-OFL.txt` |
 | Mesai Blackletter / `blackletter.woff2` | UnifrakturMaguntia, J. Mach Wust / contributors | `UnifrakturMaguntia-OFL.txt` |
-| Mesai Steppe / `steppe.woff2` | Kurale | `Kurale-OFL.txt` |
+| Mesai Steppe / `NovaCut.woff2` | Nova Cut | `NovaCut-OFL.txt` |
 | Mesai Orkhon / `orkhon.woff2` | Noto Sans Old Turkic | `NotoSansOldTurkic-OFL.txt` |
 
 Additional retained font/reference files and their notices may remain for project history. The Old Turkic letter signature is a design/transliteration choice; font glyph support alone does not prove a historically attested spelling or translation.
@@ -35,3 +35,6 @@ Knight uses the approved bareheaded figure, natural gaze, silver relief armor, c
 Historical border references include the [Getty Book of Hours](https://www.getty.edu/art/collection/object/105SWS), [Leeds floral border, 1470–1480](https://digital.library.leeds.ac.uk/10862/) and [Fitzwilliam Book of Hours](https://www.fitzmuseum.cam.ac.uk/illuminated/manuscript/discover/book-of-hours/folio/folio-15r-411). These inform the generated work; they are not bundled source paintings.
 
 Legacy screenshots, preview images and earlier artwork may remain in the public tree for existing links and traceability. Their presence does not mean the current build embeds or presents them as selectable themes. Do not delete unrelated remote assets merely because they are absent from a new release ZIP; check references first.
+
+## Bozkır replacement, November 2026
+The mounted wide plate, parchment ribbon and woven progress band were generated from the approved Mesai Bozkır visual direction. Transparent margins were trimmed and web assets compressed for the self-contained bookmark. The rendered text and controls are live HTML; the artwork contains no frozen interface text. Standing and compact plates retain the prior handoff artwork.

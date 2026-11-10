@@ -1,6 +1,7 @@
 // Browser stress test against a simulated portal. Each scenario injects the bundle exactly as a bookmark click would.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path'), assert = require('assert');
+const CATALOG = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../version.json'), 'utf8')).themeCatalog;
 const BUNDLE = fs.readFileSync(path.join(__dirname, '../dist/mesai.min.js'), 'utf8');
 // Serve the simulated portal over http (like the real https portal); file:// storage is not reliable across reloads.
 const http = require('http');
@@ -38,12 +39,12 @@ async function page(now = NOV3, opts = {}) {
   await p.addInitScript(([n, seed]) => {
     window.__MESAI_NOW = () => window.__nowOverride || n;
     if (seed && !localStorage.getItem('mesai.v3')) localStorage.setItem('mesai.v3', JSON.stringify(seed));
-  }, [now, opts.seed || (opts.fresh ? null : { ui: { theme: 'cizelge' } })]);   // most checks read Çizelge markup; new users get Saydam
+  }, [now, opts.seed || (opts.fresh ? null : { ui: { theme: 'cizelge', themeCatalog: CATALOG } })]);   // most checks read Çizelge markup; new users get Saydam
   await p.goto(URL());
   await p.evaluate(([db, d]) => { portal.setDB(db); portal.setDelay(d); }, [DB, opts.delay || 250]);
   p.ctx = ctx; return p;
 }
-const seedFor = (store, ui) => ({ ui: Object.assign({ theme: 'cizelge', lang: 'tr' }, ui || {}), ppl: { '1001': store || {} } });
+const seedFor = (store, ui) => ({ ui: Object.assign({ theme: 'cizelge', lang: 'tr', themeCatalog: CATALOG }, ui || {}), ppl: { '1001': store || {} } });
 const click = p => p.evaluate(BUNDLE);
 const H = '#mesai-host >> ';
 const sh = (p, sel) => p.evaluate(s => { const e = document.getElementById('mesai-host')?.shadowRoot.querySelector(s); return e ? e.textContent : null; }, sel);
