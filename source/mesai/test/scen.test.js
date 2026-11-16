@@ -72,13 +72,13 @@ ok('real sentence: Friday held at 16:00, week done 14:12', () => {
   assert.equal(clk(r.pv.hit.t), '14:12');
 });
 ok('9 h each → Friday 16:12', () => { const r = S('her gün 9 saat yapsam cuma 8de gelsem kaçta çıkarım'); assert.equal(clk(r.end), '16:12'); assert.equal(r.held, false); });
-ok('reqLen: 14:00 Friday needs 2 h OOO → 11:36 per day', () => {
+ok('reqLen: Friday 14:00 calculates directly; optional OOO is separate', () => {
   const q = S('cuma 14te çıkmak için her gün kaç saat kalmalıyım');
-  assert.equal(q.kind, 'confirmOOO'); assert.equal(q.m, 120); assert.equal(q.W1, 47 * H); assert.equal(q.ask, 'reqLen');
+  assert.equal(q.kind, 'reqLen'); assert.equal(q.m, 636); assert.equal(q.W, 45 * H); assert.ok(q.coreHint); assert.deepEqual(q.store.ooo, {});
   const r = S('cuma 14te çıkmak için her gün kaç saat kalmalıyım', {}, true);
   assert.equal(r.kind, 'reqLen'); assert.ok(r.chips.some(c => c.k === 'auto' && c.ooo === 120 && c.ok)); assert.equal(r.m, 696); assert.equal(r.W, 47 * H); assert.deepEqual(r.days, [2, 3]);
 });
-ok('arrive Thursday 15:00 → asks for OOO first', () => { const r = S('perşembe 15\'te çıkmak istiyorum kaçta gelmeliyim'); assert.equal(r.kind, 'confirmOOO'); assert.equal(r.m, 60); });
+ok('arrive Thursday 15:00 is calculated with a core-hours note', () => { const r = S('perşembe 15\'te çıkmak istiyorum kaçta gelmeliyim'); assert.equal(r.kind, 'arrive'); assert.equal(r.s, 408); assert.equal(r.W,45*H); assert.ok(r.coreHint); });
 ok('arrive Thursday 15:00 → 05:48 (46 h)', () => { const r = S('perşembe 15\'te çıkmak istiyorum kaçta gelmeliyim', {}, true); assert.equal(r.kind, 'arrive'); assert.equal(r.s, 348); assert.equal(r.W, 46 * H); assert.ok(r.early); });
 ok('arrive Friday 17:00 with banked hours → capped at core start', () => {
   const r = S('her gün 10 saat yapsam cuma 17de çıkmak için kaçta gelmeliyim');
@@ -88,7 +88,7 @@ ok('done = 20:43', () => { const r = S('bu hafta kaç saat yaptım'); assert.equ
 ok('balance = +0:48', () => { const r = S('kaç saat fazlam var'); assert.equal(C.hm(r.bal), '0:48'); });
 ok('avg = 8:44', () => { const r = S('kalan günlerde ortalama kaç saat yapmalıyım'); assert.equal(r.m, 524); });
 ok('OOO question answers without asking', () => { const r = S('cuma 14 te cikarsam ooo kaç saat olur'); assert.equal(r.kind, 'oooNeed'); assert.equal(r.oooDay, 120); });
-ok('late arrival asks too', () => { const r = S('yarın 11de gelirsem kaçta çıkarım'); assert.equal(r.kind, 'confirmOOO'); assert.equal(r.m, 60); });
+ok('late arrival gives a note without adding OOO', () => { const r = S('yarın 11de gelirsem kaçta çıkarım'); assert.equal(r.kind, 'leave'); assert.equal(r.W,45*H); assert.ok(r.coreHint); });
 ok('check today 17:00 → 17 min short', () => { const r = S('bugün 17 de çıksam yeter mi'); assert.equal(r.kind, 'check'); assert.equal(r.ok, false); assert.equal(r.margin, -17 * MIN); });
 ok('check before core', () => { const r = S('16dan önce çıkabilir miyim'); assert.equal(r.before, true); });
 ok('izin Thursday → Friday 17:12', () => { const r = S('yarın izinliyim cuma kaçta çıkarım'); assert.equal(clk(r.end), '17:12'); });

@@ -14,8 +14,8 @@ const version=release.version;
 const themes={saydam:['Saydam','Saydam'],cizelge:['Çizelge','Timeline'],knight:['Şövalye','Knight'],sutunlar:['Sütunlar','Columns'],clock:['Göksel saat','Celestial clock'],bozkir:['Bozkır · atlı','Steppe · rider'],bozkira:['Bozkır · okçu','Steppe · archer']};
 const themeAssets={saydam:[],cizelge:[],sutunlar:[],knight:['bar','controlDark','controlLight','compactDark','compactLight','plateLight','plateDark','timeMarker','fleuron','toggle'],clock:['bar','controlDark','controlLight','face','panelDark','panelLight','railDark','railLight','clock','town','toggle'],bozkir:['bzWeave','bzArrow','controlLight','bzMountedWide','bzMountedCompact','bzStandingWide','bzStandingCompact'],bozkira:['bzWeave','bzArrow','controlLight','bzMountedWide','bzMountedCompact','bzStandingWide','bzStandingCompact']};
 const themeFonts={saydam:[],cizelge:[],sutunlar:[],knight:['Mesai Calligraphy','Mesai Gothic','Mesai Manuscript','Mesai Blackletter'],clock:['Mesai Calligraphy','Mesai Gothic','Mesai Manuscript'],bozkir:['Mesai Steppe','Mesai Orkhon'],bozkira:['Mesai Steppe','Mesai Orkhon']};
-const css=cssMin(['heritage.css','manuscript.css','illuminated.css','motifs.css'].map(f=>fs.readFileSync(path.join(__dirname,'src',f),'utf8')).join('\n'));
-const modules=['core.js','adapter.js','ask.js','scenario.js','holidays.js','i18n.js','themes.js','history.js','ui.js'].map(src).join('\n');
+const css=cssMin(['heritage.css','manuscript.css','illuminated.css','motifs.css','motion.css'].map(f=>fs.readFileSync(path.join(__dirname,'src',f),'utf8')).join('\n'));
+const modules=['core.js','adapter.js','ask.js','scenario.js','holidays.js','i18n.js','themes.js','history.js','persistence.js','milestones.js','motion.js','ui.js'].map(src).join('\n');
 fs.mkdirSync(path.join(__dirname,'dist'),{recursive:true});fs.mkdirSync(path.join(root,'bookmarks'),{recursive:true});
 (async()=>{
  const {minify}=require('terser'); const variants=[];
@@ -24,13 +24,14 @@ fs.mkdirSync(path.join(__dirname,'dist'),{recursive:true});fs.mkdirSync(path.joi
   const families=id==='all'?Object.keys(fontFiles):themeFonts[id];
   const art=Object.fromEntries(keys.map(k=>[k,'data:image/webp;base64,'+asset(artFiles[k])]));
   const fonts=Object.fromEntries(families.map(k=>[k,'data:font/woff2;base64,'+asset(fontFiles[k])]));
-  const config={version,theme:id,catalog:release.themeCatalog};
-  const prefix='var MesaiBuild='+JSON.stringify(config)+';var MesaiArt='+JSON.stringify(art)+';var MesaiFonts='+JSON.stringify(fonts)+';var MesaiHeritageCSS='+JSON.stringify(css)+';';
+  const sounds=Object.fromEntries(['near','day','week'].map(k=>[k,'data:audio/mpeg;base64,'+fs.readFileSync(path.join(assets,'sounds',k+'.mp3')).toString('base64url')]));
+  const config={version,theme:id,catalog:release.themeCatalog,build:require('crypto').createHash('sha256').update(modules+css+JSON.stringify([art,fonts,sounds])).digest('hex').slice(0,12)};
+  const prefix='var MesaiBuild='+JSON.stringify(config)+';var MesaiArt='+JSON.stringify(art)+';var MesaiFonts='+JSON.stringify(fonts)+';var MesaiSounds='+JSON.stringify(sounds)+';var MesaiHeritageCSS='+JSON.stringify(css)+';';
   const bundle="(function(){'use strict';\n"+prefix+modules+'\n})();\n';
   const out=await minify(bundle,{compress:{passes:2},mangle:true,format:{ascii_only:false}});
   const href='javascript:'+encodeURIComponent(out.code);
   // Project safety budget, not a promise about every browser's bookmark/sync path.
-  if(href.length>1500000)throw new Error(id+' bookmark exceeds1500000-character project budget');
+  if(href.length>1550000)throw new Error(id+' bookmark exceeds1550000-character project budget');
   const output=id==='all'?'mesai.js':'bookmarks/'+id+'.js';
   fs.writeFileSync(path.join(root,output),out.code);
   if(id==='all'){

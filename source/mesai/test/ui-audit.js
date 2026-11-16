@@ -13,7 +13,7 @@ const DB = { '1001': { '2026-10': [], '2026-11': [wk('2026-11-02', [['08:05:29',
 const NOW = Date.UTC(2026, 10, 3, 13, 35), STORE = { types: { '2026-11-05': 'izin' }, ooo: { '2026-11-03': { m: 60, s: 840 } } };
 const SIZES = { full: {}, compact: { cmp: true }, pocket: { w: 220 } };
 const STATES = { full: ['default', 'editor', 'ask', 'look', 'settings', 'history', 'reverse'], compact: ['default', 'look'], pocket: ['default'] };   // compact asks inline
-const OPEN = { editor: '[data-a="sel"][data-v="3"]', ask: '.hd [data-a="askOpen"], .sy [data-a="askOpen"]', look: '[data-a="themes"]', settings: '.hd [data-a="set"], .sy [data-a="set"]', history: '.hd [data-a="hist"], .sy [data-a="hist"]', reverse: '[data-a="rev"]', kum: '.sy [data-a="syv"][data-v="kum"]' };
+const OPEN = { editor: '[data-a="sel"][data-v="3"]', ask: '.hd [data-a="askOpen"], .sy [data-a="askOpen"]', look: '[data-a="themes"]', settings: '.hd [data-a="set"], .sy-tb [data-a="set"]', history: '.hd [data-a="hist"], .sy [data-a="hist"]', reverse: '[data-a="rev"]', kum: '.sy [data-a="syv"][data-v="kum"]' };
 const EXTRA = { saydam: { full: ['kum'] } };   // theme-only states
 
 function probe() {
@@ -29,7 +29,7 @@ function probe() {
   const clippedBy = e => { for (let p = e.parentElement; p && p !== W; p = p.parentElement) { const s = getComputedStyle(p); if (/(auto|scroll)/.test(s.overflowY + s.overflowX)) return p; } return null; };
   for (const e of ctl) {
     const r = e.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const sc = clippedBy(e); if (sc) { const pr = sc.getBoundingClientRect(); if (cy < pr.top || cy > pr.bottom) continue; }
+    const sc = clippedBy(e); if (sc) { const pr = sc.getBoundingClientRect(); if (cy < pr.top + sc.clientTop || cy >= pr.top + sc.clientTop + sc.clientHeight) continue; }
     if (cx < 0 || cy < 0 || cx > innerWidth || cy > innerHeight) { out.push(['off-window', tag(e), name(e)]); continue; }
     if (cx < wr.left || cx > wr.right || cy < wr.top || cy > wr.bottom) out.push(['outside-panel', tag(e), name(e)]);
     const hit = R.elementFromPoint(cx, cy);
@@ -40,7 +40,7 @@ function probe() {
     if (e.tagName === 'BUTTON' && !name(e)) out.push(['no-label', tag(e), '']);
   }
   // scrolled out of view inside a scroll box: reachable by scrolling, not a layout fault
-  const hidden = e => { const sc = clippedBy(e); if (!sc) return false; const r = e.getBoundingClientRect(), pr = sc.getBoundingClientRect(), cy = r.top + r.height / 2; return cy < pr.top || cy > pr.bottom; };
+  const hidden = e => { const sc = clippedBy(e); if (!sc) return false; const r = e.getBoundingClientRect(), pr = sc.getBoundingClientRect(), cy = r.top + r.height / 2; return cy < pr.top + sc.clientTop || cy >= pr.top + sc.clientTop + sc.clientHeight; };
   for (let i = 0; i < ctl.length; i++) for (let j = i + 1; j < ctl.length; j++) {
     const a = ctl[i], b = ctl[j]; if (hidden(a) || hidden(b)) continue; if (a.contains(b) || b.contains(a)) continue;
     const r1 = a.getBoundingClientRect(), r2 = b.getBoundingClientRect();

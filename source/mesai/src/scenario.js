@@ -33,6 +33,9 @@ var MesaiScen = (function () {
     return out.join(' ')
       .replace(/(\d)(SAATLIK|SAAT(?:IMI?|I)?|SA|DAKIKA|DK|HOURS?|HRS?|H|MINS?|MINUTES?|AM|PM)\b/g, '$1 $2')
       .replace(/(\d)(DEN|DAN|TEN|TAN|DE|DA|TE|TA|YE|YA|E|A|U|I|IN|AR|ER|SAR|SER)\b/g, '$1 $2')
+      .replace(/\b([01]?\d|2[0-3])\s+([0-5]\d)\b/g, '$1:$2')
+      .replace(/\b(\d{1,2})\s*BUCUK(TA|TE)?\b/g, function (_, h, suffix) { return h + ':30' + (suffix ? ' DA' : ''); })
+      .replace(/\b(ISTIYOM|ISTIOM)\b/g, 'ISTIYORUM')
       .replace(/\b(\d+) H (\d+)\b/g, '$1 SAAT $2 DK').replace(/\s+/g, ' ').trim();
   }
 
@@ -95,6 +98,7 @@ var MesaiScen = (function () {
       if (/^(TOPLAM|TOTAL|SO$|SOFAR|SIMDIYE|BURADAYIM|ICERDEYIM|OLDU$|BERI$|MESAIM|MESAIMIZ)/.test(x) || (x === 'SU' && /^ANA/.test(at(i + 1)))) { it.push({ t: 'MARK', m: 'done' }); continue; }
       if (/^(SIMDI|NOW|HEMEN)$/.test(x) || (x === 'SU' && /^AN$/.test(at(i + 1))) || (x === 'RIGHT' && at(i + 1) === 'NOW')) { if (x === 'SU' || x === 'RIGHT') i++; it.push({ t: 'MARK', m: 'now' }); continue; }
       if (/^(SIFIRLA|TEMIZLE|RESET|CLEAR)/.test(x)) { it.push({ t: 'MARK', m: 'reset' }); continue; }
+      if (/^ISTIYOR/.test(x)) { it.push({ t: 'MARK', m: 'want' }); continue; }
       if (/^(GECEN|ONCEKI|LAST|PREVIOUS)$/.test(x) && /^(HAFTA|WEEK)/.test(at(i + 1))) { i++; it.push({ t: 'MARK', m: 'history' }); continue; }
       if (/^HAFTA/.test(x) || x === 'WEEK' || x === 'WEEKLY') { it.push({ t: 'MARK', m: 'week' }); continue; }
       if (/^(OLUR|OLURUM|OLURSUN|OLURUZ|EDER|EDERIM|OLACAK|YAPAR|YAPARIM)$/.test(x)) { it.push({ t: 'MARK', m: 'olur' }); continue; }
@@ -151,7 +155,7 @@ var MesaiScen = (function () {
     if (h > 23 || (mi != null && mi > 59)) return { i: j, item: { t: 'X' } };
     var sfx = /^(DE|DA|TE|TA|DEN|DAN|TEN|TAN|YE|YA|E|A|U|I|IN)$/.test(at(j + 1)) ? at(++j) : '';
     if (/^(AM|PM)$/.test(at(j + 1))) { if (h < 1 || h > 12) return { i: j + 1, item: { t: 'X' } }; var pm = at(++j) === 'PM'; return { i: j, item: { t: 'TIME', h: h, mi: mi || 0, pm: pm, ampm: true, sfx: sfx } }; }
-    var item = { t: 'TIME', h: h, mi: mi || 0, sfx: sfx, bare: mi == null && !buc, colon: m[2] === ':' };
+    var item = { t: 'TIME', h: h, mi: mi || 0, sfx: sfx, bare: mi == null && !buc, colon: m[2] === ':', literal: /^0\d/.test(m[1]) };
     if (/^(DEN|DAN|TEN|TAN)$/.test(sfx)) item.from = true;
     if (!sfx && !hasFrac && !buc && h <= 16) item.maybeDur = true;
     return { i: j, item: item };
@@ -235,6 +239,7 @@ var MesaiScen = (function () {
     if (q && q.q === 'when' && !marks.week && !marks.earliest && !each && frames.length <= 1 && (!gf || (!gf.ooo && !gf.type && gf.s == null && gf.e == null)) &&
       ((todayOnly && (!gf || gf.len == null || completeWords)) || (dailyWords && (!gf || gf.len == null || completeWords)) || (completeWords && gf && gf.len != null))) kind = 'dayGoal';
     if (it.some(function (x) { return x.t === 'X'; })) kind = 'invalidTime';
+    if (!kind && !verbs.length && it.some(function (x) { return x.t === 'TIME'; })) kind = 'clarifyTime';
     var qi = q ? frames.indexOf(q.frame) : -1;
     if (qi < 0 && q && q.frame && !q.frame.days.length) qi = -1;
     return { frames: frames, query: { kind: kind, frame: qi }, each: frames.some(function (fr) { return fr.days.indexOf('EACH') >= 0; }), marks: marks, norm: f };
@@ -267,6 +272,7 @@ var MesaiScen = (function () {
     if (x.fixed) return x.m;
     var h = x.h, mi = x.mi || 0;
     if (x.ampm) { if (x.pm && h < 12) h += 12; if (!x.pm && h === 12) h = 0; return h * 60 + mi; }
+    if (x.literal) return h * 60 + mi;
     if (h === 24) h = 0;
     if (role === 'arr' && h >= 1 && h <= 5) h += 12;
     if (role === 'lv' && h >= 1 && h <= 11) h += 12;
@@ -285,6 +291,7 @@ var MesaiScen = (function () {
     var oooAsk = frames.some(function (fr) { return fr.ooo && fr.ooo.dflt && (fr.e != null || fr.s != null); });
     if (q && q.q === 'much' && oooAsk) return 'oooNeed';
     if (!q) {
+      if (marks.want && frames.some(function (fr) { return fr.e != null; })) return 'reqLen';
       if (marks.earliest) return 'earliest';
       if (marks.remaining) return 'remaining';
       if (!frames.length) return null;
@@ -393,6 +400,7 @@ var MesaiScen = (function () {
     if (trow && !trow.workday) return { kind: 'weekend', day: target, chips: chips };
     if (trow && trow.past && /^(leave|earliest|arrive|dayGoal)$/.test(kind)) return { kind: 'pastDay', day: target, chips: chips };
     if (kind === 'invalidTime') return { kind: 'invalidTime', chips: [] };
+    if (kind === 'clarifyTime') return { kind: 'clarifyTime', chips: [], store: null };
     if (kind === 'dayGoal') {
       if (trow.credit) return { kind: 'credit', day: target, type: trow.type, chips: [], pv: v0, store: null };
       var goal = C.dayGoal(v0, target, qf && qf.len != null ? qf.len : (frames[0] && frames[0].len != null ? frames[0].len : null));
@@ -425,6 +433,7 @@ var MesaiScen = (function () {
         }
         if (f.s != null && !arrived) chips.push({ k: 'given', d: d, s: f.s });
         if (f.e != null) chips.push({ k: 'given', d: d, e: f.e, before: f.before });
+        if(p.e!=null){var start=p.s!=null?p.s:arrived?minOf(r.first,r):cfg.start;if(p.e<start)p.e+=1440;}
         if (p.s != null || p.e != null || p.m != null) s2.plan[key] = p;
         if (f.ooo && !f.ooo.dflt) { s2.ooo[key] = { m: f.ooo.m, s: f.ooo.s }; chips.push({ k: 'given', d: d, ooo: f.ooo.m }); }
         else coreAuto(r, p);
@@ -433,8 +442,9 @@ var MesaiScen = (function () {
     // Leaving before / arriving after the core window needs OOO for the gap; that raises the weekly target.
     function coreAuto(r, p) {
       if (cfg.coreE <= cfg.coreS) return;
-      var ce = r.half ? Math.min(cfg.coreE, 780) : cfg.coreE, st = p.s != null ? p.s : (r.first != null ? minOf(r.first, r) : null), m = 0, s = null;
-      if (p.e != null && p.e < ce) { m += ce - Math.max(p.e, cfg.coreS); s = Math.max(p.e, cfg.coreS); }
+      var ce = r.half ? Math.min(cfg.coreE, 780) : cfg.coreE, st = p.s != null ? p.s : (r.first != null ? minOf(r.first, r) : cfg.start), m = 0, s = null;
+      var end = p.e != null ? p.e : p.m != null ? st + p.m : null;
+      if (end != null && end < ce) { m += ce - Math.max(end, cfg.coreS); s = Math.max(end, cfg.coreS); }
       if (st != null && st > cfg.coreS + 1 && r.first == null) { m += Math.min(st, ce) - cfg.coreS; s = s == null ? cfg.coreS : null; }
       if (m <= 0) return;
       // OOO already on that day: an interval that covers the gap needs nothing; otherwise the new one replaces it (net change only)
@@ -442,7 +452,11 @@ var MesaiScen = (function () {
       if (ex && ex.s != null && ex.s <= from && ex.s + ex.m >= from + m) return;
       var prev = ex ? ex.m : 0;
       // Never take OOO on the user's behalf: ask first (sc.oooOK), except when the question is about OOO itself.
-      if (!sc.oooOK && kind !== 'oooNeed') { needOOO.push({ d: r.dow, m: m, prev: prev, s: s, e: p.e, st: st }); return; }
+      if (!sc.oooOK && kind !== 'oooNeed') {
+        p.softCore = true;
+        chips.push({ k: 'core', d: r.dow, cs: cfg.coreS, ce: ce });
+        return;
+      }
       s2.ooo[r.key] = { m: m, s: s }; autoOOO[r.dow] = m; chips.push({ k: 'auto', d: r.dow, ooo: m, ok: !!sc.oooOK });
     }
     frames.forEach(applyFrame);
@@ -461,7 +475,7 @@ var MesaiScen = (function () {
       });
     };
     var week = function (st, absorb) { return C.week(data, now, cfgIn, st, 0, absorb ? { absorb: absorb } : {}); };
-    var out = { kind: kind, day: target, chips: chips, auto: autoOOO, W0: v0.W, before: frames.some(function (f) { return f.before; }) };
+    var out = { kind: kind, day: target, chips: chips, auto: autoOOO, W0: v0.W, before: frames.some(function (f) { return f.before; }), coreHint: chips.some(function(c){return c.k==='core';}) };
 
     if (kind === 'leave' || kind === 'earliest') {
       if (trow.credit && !named[target]) { out.kind = 'credit'; out.type = trow.type; return out; }
@@ -548,6 +562,8 @@ var MesaiScen = (function () {
       var pv6 = week(s2), r6 = pv6.rows[out.day];
       if (!r6) return out;
       Object.assign(out, { pv: pv6, len: r6.val, end: r6.end, W: pv6.W, store: applyStore });
+      var requested = null; frames.forEach(function(f){if(f.e!=null)requested=f.e;});
+      if(requested!=null&&r6.start!=null){out.end=r6.date+requested*MIN;if(out.end<r6.start)out.end+=C.DAY;out.len=out.end-r6.start;if(r6.today&&out.end<now){out.historicalHypothesis=true;out.store=null;}}
       return out;
     }
     if (kind === 'remaining' || kind === 'target') {

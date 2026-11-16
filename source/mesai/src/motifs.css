@@ -482,3 +482,12 @@
 .theme-news-link{font-size:inherit;color:var(--accInk);text-decoration:underline;text-underline-offset:3px}
 
 .w.H.L-knight.T-wide.illuminated.TH-bozkira .release-row{margin-left:calc(var(--bz-left) + 48px);color:#4b3927;text-shadow:0 1px 1px #fff2d7}
+
+/* Compact panels share the existing appearance-panel inset, without changing full mode. */
+.w.T-compact:not(.TH-saydam) .set{position:absolute;z-index:25;top:50px;right:8px;width:calc(100% - 16px);max-height:calc(100% - 66px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:10px;grid-template-columns:repeat(2,minmax(0,1fr));background:var(--card);color:var(--ink);border:1px solid var(--frame);border-radius:5px;box-shadow:0 12px 36px #0005}
+.w.H.T-compact:not(.TH-saydam) .set{top:70px;right:12px;width:calc(100% - 24px);max-height:calc(100% - 90px)}
+.w.T-compact:not(.TH-saydam) .set .panel-head{grid-column:1/-1}
+.TH-saydam.T-compact .sy .sy-askpop{top:48px;bottom:auto;max-height:calc(100% - 56px);overflow:auto;z-index:8}
+.TH-saydam.T-compact .sy-askpop .askp .sugs{max-height:none;overflow:visible}
+.H.L-knight.T-wide.illuminated.TH-knight .ed{height:auto;min-height:calc(104px * var(--ms))}
+.H.L-knight.T-wide.illuminated.TH-knight .ed .note:not(:empty):not(.habit){position:static;margin-top:6px;text-align:left}

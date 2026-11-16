@@ -48,3 +48,5 @@ html[data-look=dark]{color-scheme:dark;--bg:#181b19;--surface:#222623;--ink:#e7e
 .drag-callout{display:flex;align-items:flex-start;gap:12px;flex:1 0 100%;max-width:440px;padding:14px 16px;border:2px solid #326b60;border-radius:7px;background:#eaf3ef;color:#224c42}
 .drag-callout svg{flex:none;margin-top:4px}.drag-callout p{margin:0;font-size:15px;line-height:1.5}.drag-callout strong{display:block;font-weight:650}.drag-step{display:block;font-size:10px;font-weight:750;letter-spacing:.08em;margin-bottom:3px;color:#326b60}
 html[data-look=dark] .drag-callout{background:#1d3933;color:#eef8f3;border-color:#72b7a4}html[data-look=dark] .drag-step{color:#a1d7c6}
+
+#bookmark[aria-disabled=true]{opacity:.5;cursor:wait}#update-status{margin:10px 0}#update-retry{margin:4px 0 8px}

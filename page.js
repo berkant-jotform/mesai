@@ -5,7 +5,7 @@
   const bookmark = document.querySelector('#variant-bookmark');
   const themes = ['saydam', 'knight', 'bozkir', 'bozkira', 'cizelge', 'sutunlar', 'clock'];
   let resetting = false, previewClosed = false;
-  const state = {lang:'tr', look:'light', theme:'saydam', size:'full'};
+  const state = {lang:'tr', look:'light', theme:'saydam', size:'full',syv:'day'};
   const pageVersion = document.querySelector('meta[name="mesai-version"]')?.content || '';
   const installStatus = document.querySelector('#install-status');
   const retryInstall = document.querySelector('#install-retry');
@@ -13,7 +13,11 @@
   const installState = {phase:'loading', id:null, variant:null, href:null, fullBytes:0};
   let manifestPromise = null, sourceController = null, installSerial = 0;
   const sourceCache = new Map();
-  const requestedVariant = new URLSearchParams(location.search).get('theme');
+  const incoming=new URLSearchParams(location.search);
+  const requestedVariant = incoming.get('theme');
+  const updateVariant=[...themes,'all'].includes(requestedVariant)?requestedVariant:'all';
+  const fullHref=mainBookmark.getAttribute('href');
+  let matchingHref=updateVariant==='all'?fullHref:null,updatePhase=updateVariant==='all'?'ready':'idle';
   if (themes.includes(requestedVariant)) state.theme = requestedVariant;
   const themeLabels = {saydam:['Saydam','Liquid glass'],knight:['Şövalye','Knight'],bozkir:['Bozkır · Atlı','Steppe · Rider'],bozkira:['Bozkır · Okçu','Steppe · Archer'],cizelge:['Çizelge','Timeline'],sutunlar:['Sütunlar','Columns'],clock:['Göksel saat','Celestial clock']};
   function installLabel() { return themeLabels[state.theme][state.lang === 'tr' ? 0 : 1]; }
@@ -107,13 +111,58 @@
     if (['tr','en'].includes(saved.lang)) state.lang = saved.lang;
     if (['light','dark'].includes(saved.look)) state.look = saved.look;
   } catch (_) {}
-  const installed=new URLSearchParams(location.search).get('from');
+  const installed=/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(incoming.get('from')||'')?incoming.get('from'):null;
+  if(installed){
+    if(themes.includes(incoming.get('selected')))state.theme=incoming.get('selected');
+    for(const key of ['lang','look'])if((key==='lang'?['tr','en']:['light','dark']).includes(incoming.get(key)))state[key]=incoming.get(key);
+    if(['full','compact','pocket'].includes(incoming.get('size')))state.size=incoming.get('size');
+    if(['day','kum'].includes(incoming.get('view')))state.syv=incoming.get('view');
+  }
   let installMode=installed && /^\d+\.\d+\.\d+$/.test(installed)?'update':'new';
   function installPaint(){
     document.querySelector('#setup-new').hidden=installMode!=='new';
     document.querySelector('#setup-update').hidden=installMode!=='update';
     document.querySelectorAll('[data-install]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.install===installMode)));
+    paintPrimary();
+    if(installMode==='update'&&updatePhase==='idle')prepareMatchingUpdate();
   }
+  function packageLabel(id){return id==='all'?(state.lang==='tr'?'Tüm temalar':'All themes'):/^bozkir/.test(id)?(state.lang==='tr'?'Bozkır · Atlı ve Okçu':'Steppe · Rider and Archer'):themeLabels[id][state.lang==='tr'?0:1];}
+  function pageIsOlder(){if(!installed)return false;const a=installed.split('.').map(Number),b=pageVersion.split('.').map(Number);for(let i=0;i<3;i++)if(a[i]!==b[i])return a[i]>b[i];return false;}
+  function paintPrimary(){
+    const updating=installMode==='update',older=updating&&pageIsOlder(),href=updating?matchingHref:fullHref,ready=!!href&&!older;
+    mainBookmark.setAttribute('aria-disabled',String(!ready));mainBookmark.draggable=ready;
+    if(ready)mainBookmark.setAttribute('href',href);else mainBookmark.removeAttribute('href');
+    const label=updating?packageLabel(updateVariant):packageLabel('all');
+    mainBookmark.setAttribute('aria-label','Mesai · '+label+' — '+(state.lang==='tr'?'yer işaretleri çubuğuna sürükle':'drag to bookmarks bar'));
+    const notes=document.querySelector('.full-package-note');
+    notes.querySelector('[data-tr]').textContent=updating?'Güncellenecek paket: '+packageLabel(updateVariant)+'. Tema, saat ayarları ve planlar aynı tarayıcıda korunur.':'Tüm temalar dahil. Temanı araç içinden değiştirebilirsin.';
+    notes.querySelector('[data-en]').textContent=updating?'Package to update: '+packageLabel(updateVariant)+'. Theme, hour settings and plans stay in this browser.':'All themes included. Switch themes inside the tool.';
+    const previewHint=document.querySelector('#preview-package-hint');
+    if(previewHint){previewHint.querySelector('[data-tr]').textContent=updating?(themes.includes(incoming.get('selected'))?'Temaları burada dene. Önizleme seçimin güncellenecek paketi değiştirmez.':'Bu önizleme örnektir; araçtaki teman değişmez. Önizleme seçimin güncellenecek paketi değiştirmez.'):'Temaları burada dene. Yukarıdaki Mesai düğmesi hepsini içerir.';previewHint.querySelector('[data-en]').textContent=updating?(themes.includes(incoming.get('selected'))?'Try themes here. Your preview choice does not change the update package.':'This preview is an example; your theme in the tool stays saved. Previewing does not change the update package.'):'Try themes here. The Mesai button above includes all of them.';}
+    document.querySelector('.drag-step[data-tr]').textContent=updating?'GÜNCELLEME':'İLK ADIM';
+    document.querySelector('.drag-step[data-en]').textContent=updating?'UPDATE':'FIRST STEP';
+    const status=document.querySelector('#update-status');
+    status.textContent=older?(state.lang==='tr'?'Bu sayfa kullandığın sürümden eski. Sayfayı yenile; eski sürümü yükleme.':'This page is older than your installed version. Refresh before updating.'):
+      updatePhase==='error'?(state.lang==='tr'?'Güncelleme hazırlanamadı. Yeniden deneyebilirsin.':'Could not prepare the update. You can retry.'):
+      !ready?(state.lang==='tr'?'Kullandığın paket hazırlanıyor…':'Preparing your existing package…'):
+      (state.lang==='tr'?'Hazır · '+label+' · v'+pageVersion:'Ready · '+label+' · v'+pageVersion);
+    document.querySelector('#update-retry').hidden=updatePhase!=='error';
+  }
+  async function prepareMatchingUpdate(){
+    updatePhase='loading';paintPrimary();
+    try{
+      const manifest=await loadManifest(),list=manifest.variants.filter(x=>x.id===updateVariant),variant=list[0],expected='bookmarks/'+updateVariant+'.js';
+      if(list.length!==1||variant.path!==expected||!Number.isSafeInteger(variant.bytes)||variant.bytes<=0||!Number.isSafeInteger(variant.hrefBytes)||variant.hrefBytes<=11)throw Error('Invalid update');
+      let code=sourceCache.get(updateVariant);
+      if(code==null){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);try{const response=await fetch(expected+'?v='+encodeURIComponent(pageVersion),{cache:'no-cache',credentials:'omit',signal:controller.signal});if(!response.ok)throw Error('Update unavailable');code=await response.text();}finally{clearTimeout(timer);}}
+      const href='javascript:'+encodeURIComponent(code);
+      if(!code.trim()||/^\s*</.test(code)||new TextEncoder().encode(code).byteLength!==variant.bytes||href.length!==variant.hrefBytes)throw Error('Incomplete update');
+      sourceCache.set(updateVariant,code);matchingHref=href;updatePhase='ready';
+    }catch(_){matchingHref=null;updatePhase='error';}
+    paintPrimary();
+  }
+  document.querySelector('#update-retry').addEventListener('click',()=>{manifestPromise=null;sourceCache.delete(updateVariant);prepareMatchingUpdate();});
+  mainBookmark.addEventListener('dragstart',e=>{if(mainBookmark.getAttribute('aria-disabled')==='true')e.preventDefault();});
   document.querySelectorAll('[data-install]').forEach(b=>b.addEventListener('click',()=>{installMode=b.dataset.install;installPaint();}));
   installPaint();
   function paint() {
@@ -135,7 +184,7 @@
     document.querySelectorAll('.variant-icon').forEach(b => {
       b.title = b.dataset[state.lang === 'tr' ? 'labelTr' : 'labelEn']; b.setAttribute('aria-label', b.title);
     });
-    mainBookmark.setAttribute('aria-label', state.lang === 'tr' ? 'Mesai · tüm temalar — yer işaretleri çubuğuna sürükle' : 'Mesai · all themes — drag to bookmarks bar');
+    paintPrimary();
     if (installState.id !== state.theme) prepareBookmark();
     else paintInstaller();
     paintClickHints();
@@ -164,6 +213,7 @@
     if (['tr','en'].includes(data.lang)) state.lang = data.lang;
     if (['light','dark'].includes(data.look)) state.look = data.look;
     if (['full','compact','pocket'].includes(data.size)) state.size = data.size;
+    if(['day','kum'].includes(data.syv))state.syv=data.syv;
     paint();
   });
   function resetExample(keepSize=false){
@@ -216,6 +266,7 @@
   }
   mainBookmark.addEventListener('click', event => {
     event.preventDefault();
+    if(mainBookmark.getAttribute('aria-disabled')==='true')return;
     const hint = document.querySelector('#main-install-hint'); hint.hidden = false;
     paintClickHints();
   });

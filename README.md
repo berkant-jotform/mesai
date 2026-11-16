@@ -4,6 +4,15 @@ ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work h
 
 **Version:** [version.json](version.json) · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
+## 3.6.0 — Daha sağlam kayıtlar, Sor ve temaya uygun efektler
+
+- Aynı tarayıcıdaki sekmeler tema, ayar ve planları birbirinin üstüne yazmadan paylaşır. Tek temalı yer işaretleri, tüm temalı paketin seçimini değiştirmez.
+- Sor, Türkçe saatleri ve süreleri daha iyi ayırır: “9.30’da gelmek” ile “9:30 saat çalışmak” farklıdır; belirsiz “9 30” için sorar. Çıkış denemelerinde zorunlu saatler bir not olarak görünür; kendiliğinden OOO eklenmez.
+- İsteğe bağlı sıcak sesler; açılışta ve gerçekleşen hedeflerde temaya uygun hareketler. Konfeti yok. Sesler varsayılan olarak kapalıdır; hareketler Ayarlar’dan kapanır ve hareketi azalt tercihine uyar.
+- Bozuk yedekler kayıtların üstüne yazmaz; kaydetme sorunu görünür kalır. Yeni sürümde güncelleme için yer işaretini yeniden ekle; kayıtlarını silmen gerekmez.
+
+[3.6.0 release notes](docs/RELEASE-3.6.0.md) · [QA and acceptance](docs/QA-3.6.0.md)
+
 ![Three-step workflow overview](docs/images/workflow.svg)
 
 ## Start here

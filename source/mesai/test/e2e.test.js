@@ -227,19 +227,19 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
   await test('a half-typed time survives the live refresh', async () => {
     const p = await page(NOV3, { seed: seedFor(HANDOFF) }); await p.evaluate(() => portal.open()); await click(p); await ready(p);
     await p.click(H + '.tr[data-v="2"]');
-    await p.click(H + '.ed [data-e="e"]'); await p.keyboard.press('Control+A'); await p.keyboard.type('19');
+    await p.click(H + '.ed [data-e="e"]'); await p.keyboard.press('ControlOrMeta+A'); await p.keyboard.type('19');
     await p.evaluate(() => { window.__nowOverride = Date.UTC(2026, 10, 3, 13, 36, 30); });
     await p.waitForTimeout(2500);
     assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelector('.ed [data-e="e"]').value), '19');
     await p.ctx.close();
   });
 
-  await test('Sor: "cuma 16:00’da çıkmak istiyorum" → Wednesday later; apply + undo', async () => {
+  await test('Sor: "cuma 16:00’da çıkmak istiyorum" → balanced remaining days; apply + undo', async () => {
     const p = await page(NOV3, { seed: seedFor(HANDOFF, { theme: 'sutunlar' }) }); await p.evaluate(() => portal.open()); await click(p); await ready(p);
     await p.click(H + '.hd [data-a="askOpen"]');
-    await p.click(H + '.askp .sugs [data-v="2"]');
+    await p.locator(H + '.askp .sugs [data-a="sug"]').filter({ hasText: /cuma 16:00/i }).click();
     const ans = await sh(p, '.ans');
-    assert.match(ans, /Cuma 16:00 çıkış için/); assert.match(ans, /Çar 20:19/); assert.match(ans, /Cum 18:19 → Çar 20:19|→/);
+    assert.match(ans, /günde/);assert.match(ans, /Cum · 16:00 çıkış/);const preview=await p.evaluate(()=>window.__mesai.state().st.ask.res);assert.ok(preview.pv.total>=preview.W);assert.equal(preview.pv.rows[4].end,Date.UTC(2026,10,6,16));
     await p.click(H + '[data-a="askApply"]');
     await until(p, async () => clk((await view(p)).rows[4].end) === '16:00', 3000, 'applied');
     assert.match(await sh(p, '.toast'), /Uygulandı/);
@@ -254,7 +254,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     assert.match(await sh(p, '.ans'), /Cuma İzin/);
     assert.match(await sh(p, '.ans'), /Çar 18:19/);
     await p.fill(H + '[data-e="ask"]', 'şimdi çıksam?'); await p.press(H + '[data-e="ask"]', 'Enter');
-    assert.match(await sh(p, '.ans'), /En erken çıkış 16:00/);
+    assert.match(await sh(p, '.ans'), /Şimdi çıkarsan/);assert.match(await sh(p,'.ans'),/Takım saatin 10:00–16:00/);assert.match(await sh(p,'.ans'),/Bugün 5 sa 11 dk sayılır/);
     await p.fill(H + '[data-e="ask"]', 'blabla'); await p.press(H + '[data-e="ask"]', 'Enter');
     assert.match(await sh(p, '.ans'), /anlayamadım/);
     await p.ctx.close();
@@ -276,7 +276,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     const look = async () => { if (!(await p.evaluate(() => !!document.getElementById('mesai-host').shadowRoot.querySelector('.theme-panel')))) await p.click(H + '.hd [data-a="themes"]'); };
     for (const th of ['sutunlar', 'knight', 'clock', 'cizelge']) { await look(); await p.click(H + `.theme-panel [data-a="theme"][data-v="${th}"]`); await isTheme(th); }
     await look();
-    assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.theme-panel .theme-choice').length), 7, 'seven released themes (drafts hidden)');
+    assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.theme-panel .theme-choice').length), 6, 'six theme groups; the two Bozkır variants share one group');
     assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.hd .seg, .hd .sws').length), 0, 'language/theme live in Görünüm'); assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.hd [data-a="dark"]').length), 1, 'one light/dark button');
     await p.click(H + '.theme-panel [data-a="lang"][data-v="en"]'); await look(); await p.click(H + '.theme-panel [data-a="look"][data-v="dark"]');
     assert.match(await sh(p, '.side'), /9-hour target reached at/);
@@ -409,13 +409,10 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     await p.click(H + '[data-a="askApply"]');
     await until(p, async () => { const v = await view(p); return clk(v.rows[2].end) === '19:00'; }, 3000, 'applied 10h Wed');
     await ask(p, 'cuma 14te çıkmak için her gün kaç saat kalmalıyım');
-    assert.match(await sh(p, '.ans'), /2 sa 00 dk OOO gerekir/); assert.match(await sh(p, '.ans'), /46 → 48 sa/);
-    assert.equal(await sh(p, '[data-a="askApply"]'), null);
-    await p.click(H + '[data-a="oooYes"]');
-    assert.match(await sh(p, '.ans'), /günde/i); assert.match(await sh(p, '.ans'), /OOO 2 sa 00 dk \(onaylı\)/); assert.match(await sh(p, '.ans'), /Önizleme/);
+    assert.match(await sh(p,'.ans'),/Takım saatin 10:00–16:00/);assert.match(await sh(p,'.ans'),/Önizleme/);assert.equal(await p.evaluate(()=>window.__mesai.state().st.ask.res.W),46*3600000);assert.ok(await p.locator(H+'[data-a="askApply"]').count());assert.equal(await p.locator(H+'[data-a="oooYes"]').count(),0);
     await ask(p, 'bu hafta kaç saat yaptım'); assert.match(await sh(p, '.ans'), /Bu hafta çalışılan/);
     await ask(p, 'kaç saat fazlam var'); assert.match(await sh(p, '.ans'), /\+0:41/);
-    await ask(p, 'perşembe 15te çıkmak istiyorum kaçta gelmeliyim'); assert.match(await sh(p, '.ans'), /OOO gerekir/);
+    await ask(p, 'perşembe 15te çıkmak istiyorum kaçta gelmeliyim');assert.match(await sh(p,'.ans'),/Takım saatin 10:00–16:00/);
     await ask(p, 'if I work 10 hours every day and come in at 8 on Friday when can I leave');
     assert.match(await sh(p, '.ans'), /16:00/);
     await p.ctx.close();
@@ -539,6 +536,99 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     await p.screenshot({ path: path.join(SHOTS, 'final-' + name + '.png'), clip: box });
     await p.ctx.close();
   }
+  await test('Turkish Sor: spaced clocks and durations retain different meanings',async()=>{
+    const p=await page(NOV3,{seed:seedFor(HANDOFF)});await p.evaluate(()=>portal.open());await click(p);await ready(p);await p.click(H+'[data-a="askOpen"]');
+    const ask=async q=>{await p.fill(H+'[data-e="ask"]',q);await p.press(H+'[data-e="ask"]','Enter');};
+    await ask('yarın 9 30da gelirsem');assert.match(await sh(p,'.ans'),/09:30/);
+    await ask('her gün 9 30 saat yaparsam cuma kaçta çıkarım');assert.equal(await p.evaluate(()=>window.__mesai.state().st.ask.sc.frames[0].len),570);assert.match(await sh(p,'.ans'),/9 sa 30 dk/);
+    await ask('bugun kacta mesai bitiyo');assert.match(await sh(p,'.ans'),/9 saat/);await p.ctx.close();
+  });
+  await test('Turkish Sor: 14:00 what-if stays exact, core is a note, OOO unchanged, apply and undo',async()=>{
+    const p=await page(NOV3,{seed:seedFor(HANDOFF)});await p.evaluate(()=>portal.open());await click(p);await ready(p);await p.click(H+'[data-a="askOpen"]');
+    await p.fill(H+'[data-e="ask"]','bugün 14te çıksam kaç saat olur');await p.press(H+'[data-e="ask"]','Enter');
+    assert.match(await sh(p,'.ans'),/14:00/);assert.match(await sh(p,'.ans'),/aklında olsun/);assert.equal(await p.locator(H+'[data-a="oooYes"]').count(),0);
+    assert.equal(await p.evaluate(()=>window.__mesai.state().st.ask.res.W),46*3600000);
+    await p.screenshot({path:path.join(SHOTS,'turkish-core-note.png')});
+    await p.click(H+'[data-a="askApply"]');assert.equal(clk((await view(p)).rows[1].end),'14:00');assert.equal((await view(p)).W,46*3600000);
+    await p.click(H+'[data-a="undo"]');assert.equal(clk((await view(p)).rows[1].end),'17:24');await p.ctx.close();
+  });
+  await test('Turkish Sor: a bare 9 30 asks a clarification without an Apply button',async()=>{
+    const p=await page(NOV3,{seed:seedFor(HANDOFF)});await p.evaluate(()=>portal.open());await click(p);await ready(p);await p.click(H+'[data-a="askOpen"]');await p.fill(H+'[data-e="ask"]','9 30');await p.press(H+'[data-e="ask"]','Enter');
+    assert.match(await sh(p,'.ans'),/Giriş saati mi, süre mi/);assert.equal(await p.locator(H+'[data-a="askApply"]').count(),0);await p.ctx.close();
+  });
+  await test('Turkish Sor: an earlier hypothetical exit does not rewrite attendance',async()=>{
+    const p=await page(NOV3,{seed:seedFor(HANDOFF)});await p.evaluate(()=>portal.open());await click(p);await ready(p);await p.click(H+'[data-a="askOpen"]');await p.fill(H+'[data-e="ask"]','bugün 12de çıksaydım kaç saat olur');await p.press(H+'[data-e="ask"]','Enter');
+    assert.match(await sh(p,'.ans'),/12:00/);assert.equal(await p.locator(H+'[data-a="askApply"]').count(),0);assert.equal(await p.evaluate(()=>window.__mesai.state().S.ppl['1001'].plan['2026-11-03']),undefined);await p.ctx.close();
+  });
+  await test('Turkish Sor: explicit 02:30 remains next-day in both preview and applied plan',async()=>{
+    const p=await page(NOV3,{seed:seedFor(HANDOFF)});await p.evaluate(()=>portal.open());await click(p);await ready(p);await p.click(H+'[data-a="askOpen"]');await p.fill(H+'[data-e="ask"]','bugün 02:30 da çıksam kaç saat olur');await p.press(H+'[data-e="ask"]','Enter');
+    const end=await p.evaluate(()=>window.__mesai.state().st.ask.res.end);assert.equal(end,Date.UTC(2026,10,4,2,30));await p.click(H+'[data-a="askApply"]');assert.equal((await view(p)).rows[1].end,end);await p.ctx.close();
+  });
+  // Observe real decoded buffers and source starts without replacing the browser's decoder.
+  async function soundClick(p,selector){
+    const el=p.locator(H+selector).last();
+    // macOS headless WebKit can deliver pointer coordinates outside its viewport.
+    // Use real keyboard activation there; Chrome/Firefox retain normal pointer checks.
+    if(browser.browserType().name()==='webkit'){await el.focus();await el.press('Space');}
+    else await el.click();
+  }
+  async function watchSounds(p){await p.evaluate(()=>{
+    window.__soundStarts=[];
+    const AC=window.AudioContext||window.webkitAudioContext,original=AC.prototype.createBufferSource;
+    AC.prototype.createBufferSource=function(){const src=original.call(this),start=src.start;src.start=function(...args){window.__soundStarts.push(src.buffer.duration);return start.apply(src,args);};return src;};
+  });}
+  async function enableSounds(p){await soundClick(p,'[data-a="set"]');await soundClick(p,'[data-e="sound"]');await until(p,async()=>await p.evaluate(()=>window.__soundStarts.length===1),5000,'opt-in sample');}
+  await test('Milestone audio: opt-in, all three decode, volume and settings survive reopen',async()=>{
+    const p=await page(NOV3,{seed:seedFor({})});await watchSounds(p);await p.evaluate(()=>portal.open());await click(p);await ready(p);
+    assert.equal(await p.evaluate(()=>!!window.__mesai.state().S.ui.sound),false);assert.deepEqual(await p.evaluate(()=>window.__soundStarts),[]);
+    await enableSounds(p);
+    assert.equal(await p.locator(H+'[data-e="soundLead"]').inputValue(),'10');
+    assert.equal(await p.locator(H+'[data-e="soundVolume"]').inputValue(),'0.35');
+    for(const [name,min,max] of [['day',1.5,1.9],['week',2.7,3.1],['near',2.2,2.6]]){
+      const n=await p.evaluate(()=>window.__soundStarts.length);await soundClick(p,'[data-a="soundTry"][data-v="'+name+'"]');await until(p,async()=>await p.evaluate(n=>window.__soundStarts.length===n+1,n),5000,name+' decode');
+      const dur=await p.evaluate(()=>window.__soundStarts.at(-1));assert.ok(dur>min&&dur<max,name+' actual decoded duration '+dur);
+    }
+    await p.locator(H+'[data-e="soundVolume"]').fill('0.2');await p.locator(H+'[data-e="soundLead"]').selectOption('5');
+    assert.ok(await p.locator(H+'[data-e="sound"]').isVisible(),'settings remain open');
+    await p.evaluate(()=>window.__mesai.close());await click(p);await ready(p);
+    const ui=await p.evaluate(()=>window.__mesai.state().S.ui);assert.equal(ui.sound,true);assert.equal(ui.soundVolume,.2);assert.equal(ui.soundLead,5);await p.ctx.close();
+  });
+  await test('Milestone audio: heads-up and daily crossing happen once; no replay after reopen',async()=>{
+    const start=Date.UTC(2026,10,3,17,13,6),p=await page(start,{seed:seedFor({})});await watchSounds(p);await p.evaluate(()=>portal.open());await click(p);await ready(p);await enableSounds(p);await p.waitForTimeout(1100);
+    await p.evaluate(n=>window.__nowOverride=n,start+2000);await until(p,async()=>await p.evaluate(()=>window.__soundStarts.length===2),5000,'heads-up');
+    // Approach, then cross the daily milestone without an artificial long sleep.
+    const edge=Date.UTC(2026,10,3,17,23,6);await p.evaluate(n=>window.__nowOverride=n,edge);await p.waitForTimeout(1200);const before=await p.evaluate(()=>window.__soundStarts.length);
+    await p.evaluate(n=>window.__nowOverride=n,edge+2000);await until(p,async()=>await p.evaluate(n=>window.__soundStarts.length===n+1,before),5000,'daily goal');
+    assert.ok((await p.evaluate(()=>window.__soundStarts.at(-1)))<2,'daily sound');
+    await p.waitForTimeout(1200);assert.equal(await p.evaluate(()=>window.__soundStarts.length),before+1);
+    await p.evaluate(()=>window.__mesai.close());await click(p);await ready(p);await p.waitForTimeout(1200);assert.equal(await p.evaluate(()=>window.__soundStarts.length),before+1);await p.ctx.close();
+  });
+  await test('Milestone audio: simultaneous daily and weekly goal, two tabs, one weekly playback',async()=>{
+    const start=Date.UTC(2026,10,3,17,23,6),seed=seedFor({});seed.cfg={W:18+41/60};
+    const p=await page(start,{seed});await watchSounds(p);await p.evaluate(()=>portal.open());await click(p);await ready(p);await enableSounds(p);
+    const q=await page(start,{ctx:p.ctx});await watchSounds(q);await q.evaluate(()=>portal.open());await click(q);await ready(q);await soundClick(q,'[data-a="set"]');await soundClick(q,'[data-a="soundTry"][data-v="near"]');await until(q,async()=>await q.evaluate(()=>window.__soundStarts.length===1));
+    await p.waitForTimeout(1100);for(const tab of [p,q])await tab.evaluate(n=>window.__nowOverride=n,start+2000);
+    await until(p,async()=>await p.evaluate(()=>window.__soundStarts.length)+await q.evaluate(()=>window.__soundStarts.length)===3,7000,'single cross-tab alert');
+    await p.waitForTimeout(1200);const starts=[...await p.evaluate(()=>window.__soundStarts.slice(1)),...await q.evaluate(()=>window.__soundStarts.slice(1))];assert.equal(starts.length,1);assert.ok(starts[0]>2.7,'weekly wins');
+    assert.equal(await p.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem('mesai.alerts.v1'))).filter(k=>k.endsWith(':done')).length),2);await p.ctx.close();
+  });
+  await test('Milestone audio: blocked playback is recoverable and does not break controls',async()=>{
+    const p=await page(NOV3,{seed:seedFor({})});await watchSounds(p);await p.evaluate(()=>{portal.open();const AC=window.AudioContext||window.webkitAudioContext;window.__realResume=AC.prototype.resume;AC.prototype.resume=()=>Promise.reject(new Error('blocked'));});await click(p);await ready(p);await soundClick(p,'[data-a="set"]');await soundClick(p,'[data-e="sound"]');
+    await until(p,async()=>/Dinle’ye bas/.test(await sh(p,'.set')));await p.evaluate(()=>{(window.AudioContext||window.webkitAudioContext).prototype.resume=window.__realResume;});
+    await soundClick(p,'[data-a="soundTry"][data-v="day"]');await until(p,async()=>await p.evaluate(()=>window.__soundStarts.length===1));assert.ok(await p.locator(H+'[data-c="W"]').isVisible());await p.ctx.close();
+  });
+  await test('Milestone audio: shared controls work in Saydam, Knight and both Bozkır layouts',async()=>{
+    const p=await page(NOV3,{seed:seedFor({}, {theme:'saydam'})});await watchSounds(p);await p.evaluate(()=>portal.open());await click(p);await ready(p);await enableSounds(p);
+    for(const theme of ['saydam','knight','bozkir','bozkira']){
+      await p.evaluate(theme=>{window.__mesai.state().S.ui.theme=theme;window.__mesai.poke();},theme);
+      if(!await p.locator(H+'[data-e="sound"]').isVisible())await soundClick(p,'[data-a="set"]');
+      assert.equal(await p.locator(H+'[data-e="sound"]').isChecked(),true);assert.equal(await p.locator(H+'[data-a="soundTry"]').count(),3);
+      const count=await p.evaluate(()=>window.__soundStarts.length);await soundClick(p,'[data-a="soundTry"][data-v="day"]');await until(p,async()=>await p.evaluate(n=>window.__soundStarts.length===n+1,count));
+      await p.screenshot({path:path.join(SHOTS,'milestone-settings-'+theme+'.png')});
+    }
+    await p.ctx.close();
+  });
+  await require('./resilience.browser')({test,page,click,ready,until,H,sh,seedFor,DB,NOV3,BUNDLE,fs,path,SHOTS});
   await browser.close();
   server.close();
   console.log(`\n${pass} browser checks passed${errors.length ? ', page errors: ' + errors.length : ''}`);

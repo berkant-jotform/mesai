@@ -16,7 +16,7 @@ Use the configured project environment for these commands. Any optional live-ser
 ## 3.1.0
 
 - **Sor senaryo hesaplar:** “her gün 10 saat yapsam cuma 8’de gelsem kaçta çıkarım”, “cuma 14’te çıkmak için her gün kaç saat”, “perşembe 15’te çıkmak için kaçta gelmeliyim”, “bu hafta kaç saat yaptım”, “kaç saat fazlam var”, “bugün 17’de çıksam yeter mi”. Cevabın altında “Anladığım” etiketleri; uygulanmamış cevaplar “Önizleme” olarak işaretlenir.
-- **Zorunlu saat dışına taşan planlarda OOO önce sorulur**, kullanıcı onaylamadan eklenmez (onaylanınca hedef artar, örn. 45 → 47 sa).
+- **Sor’daki çıkış denemeleri istenen saati korur.** Zorunlu saatler bir nottur; araç kendiliğinden OOO eklemez. OOO eklenmesi teklif edildiğinde önce onay istenir; kabul edilirse hedef artar (örn. 45 → 47 sa).
 - **Portal satırı ile giriş-çıkış listesi farklıysa** (örn. portal 08:23–11:56 = 3:33, liste 08:23–17:38 = 9:14) uyarı gösterilir; varsayılan olarak liste sayılır, gün bazında “Portal” seçilebilir.
 - Pencere kenar/köşeden boyutlandırılır; daralınca Standart → Kompakt → Cep. Tek tıkla kompakt görünüm (Alt+K, başlığa çift tık).
 - Resmi tatiller (Jotform 2026 TR, 2027 resmi takvim; arife tam gün) 9 saat sayılır; ayarlardan kapatılabilir. Google Takvim .ics içe aktarma (yerelde okunur, onayla eklenir).
@@ -78,3 +78,13 @@ Kurulum sayfasını `http://127.0.0.1:8080` adresinde aç. `demo.html` ve `previ
 ### Build
 
 Run `npm ci`, then `npm run build` at the repository root. The build reads modules from `source/mesai/src`, art and fonts from `assets`, and rebuilds `mesai.js` and the install bookmark in `index.html`. `npm test` runs core, scenario and question tests. Keep `version.json`, the VERSION constant in ui.js, and page version labels aligned.
+
+## 3.6 motion and alert delivery
+
+`src/motion.js` and `src/motion.css` own transient effects. They do not write attendance, plans or clocks. The build includes both in every applicable bookmark. Only an active theme’s effect artwork is decoded; existing decoded artwork is reused. No new art/font degradation or external media request is introduced.
+
+Opening effects run on a bookmark invocation once the portal is readable and fonts settle (bounded wait). Actual values remain in place. Earned events come from `MesaiMilestones.events`: elapsed actual progress, unchanged person/date/targets and no correction-sized jumps. Daily and weekly receipts share a browser-origin ledger across tabs via Web Locks. Visual and sound receipts are separate so disabling sounds does not disable visuals. If storage or coordination is unavailable, earned effects fail quietly; calculations and the opening still work.
+
+Open menus, active form edits, other selected days, hidden tabs, scroll, input and resize prevent or cancel overlays. A reduced-motion preference suppresses moving effects and keeps earned confirmation static. All transient nodes, animation handles, timers and temporary visibility changes are restored on completion or close.
+
+`npm run test:motion` checks the exact built bookmark on a synthetic portal. Use `MESAI_ENGINE=firefox` or `webkit` with installed Playwright engines; `MESAI_CHROME` selects a Chrome executable. These are isolated engine checks, not signed-in ARGE acceptance. See QA-3.6.0.md for this release’s evidence and remaining checks.

@@ -1,17 +1,23 @@
 {
   "devDependencies": {
+    "playwright": "1.65.0",
     "terser": "^5.51.2",
     "wawoff2": "^2.0.1"
   },
   "name": "mesai",
   "private": true,
-  "version": "3.5.0",
+  "version": "3.6.0",
   "scripts": {
     "build": "node source/mesai/build.js && cp source/mesai/dist/mesai.min.js mesai.js && python3 build.py",
-    "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js && node source/mesai/test/independent.test.js && node source/mesai/test/history.test.js",
+    "test": "node source/mesai/test/core.test.js && node source/mesai/test/scen.test.js && node source/mesai/test/ask.test.js && node source/mesai/test/independent.test.js && node source/mesai/test/history.test.js && node source/mesai/test/persistence.test.js && node source/mesai/test/turkish.test.js && node source/mesai/test/milestones.test.js && node source/mesai/test/reliability.test.js",
     "dev": "python3 -m http.server 17869 --bind 127.0.0.1",
     "audit": "node source/mesai/test/ui-audit.js",
     "e2e": "node source/mesai/test/e2e.test.js",
-    "test:distribution": "node source/mesai/test/distribution.test.js"
+    "test:distribution": "node source/mesai/test/distribution.test.js",
+    "test:installer": "node source/mesai/test/installer.test.cjs",
+    "qa": "npm test && npm run build && npm run test:distribution && npm run e2e && npm run test:installer && npm run test:motion && npm run test:panels",
+    "test:motion": "node source/mesai/test/motion.browser.js",
+    "test:upgrade": "node source/mesai/test/upgrade.browser.js",
+    "test:panels": "node source/mesai/test/panels.browser.cjs"
   }
 }

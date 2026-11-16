@@ -233,6 +233,7 @@ var MesaiCore = (function () {
         if (end < ce - MIN && !(r.today && !r.inside && r.last != null && !r.planned)) {
           if (covers(end, ce)) return;
           if (unknown) { r.flags.push('coreUnknown'); return; }
+          if (PL[r.key] && PL[r.key].softCore) { r.flags.push('coreEarly'); return; }
           r.plan = ce - r.start; r.held = true;
         }
       }

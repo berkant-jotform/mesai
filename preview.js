@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   let root;
-  const allowed = {theme:['cizelge','knight','sutunlar','saydam','clock','bozkir','bozkira'],lang:['tr','en'],look:['light','dark']};
+  const allowed = {theme:['cizelge','knight','sutunlar','saydam','clock','bozkir','bozkira'],lang:['tr','en'],look:['light','dark'],syv:['day','kum']};
   function size() {
     const panel = root.querySelector('.w');
     return panel.classList.contains('T-pocket') ? 'pocket' : panel.classList.contains('T-compact') ? 'compact' : 'full';
@@ -9,7 +9,7 @@
   function report(ready = false) {
     if (!window.__mesai || !root) return;
     const ui = window.__mesai.state().S.ui;
-    parent.postMessage({type:'mesai-preview-state',ready,theme:ui.theme,lang:ui.lang,look:ui.look,size:size()},location.origin);
+    parent.postMessage({type:'mesai-preview-state',ready,theme:ui.theme,lang:ui.lang,look:ui.look,size:size(),syv:ui.syv||'day'},location.origin);
     document.documentElement.lang = ui.lang;
     document.documentElement.style.colorScheme = ui.look;
     document.documentElement.style.background = ui.look === 'dark' ? '#0c1520' : '#e9e8e2';

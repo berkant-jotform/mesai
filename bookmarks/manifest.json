@@ -1,13 +1,13 @@
 {
-  "version": "3.5.0",
+  "version": "3.6.0",
   "variants": [
     {
       "id": "all",
       "labelTr": "Tüm temalar",
       "labelEn": "All themes",
       "path": "mesai.js",
-      "bytes": 1307611,
-      "hrefBytes": 1453518,
+      "bytes": 1377072,
+      "hrefBytes": 1539603,
       "assets": [
         "bzWeave",
         "bzArrow",
@@ -58,8 +58,8 @@
       "labelTr": "Saydam",
       "labelEn": "Saydam",
       "path": "bookmarks/saydam.js",
-      "bytes": 346635,
-      "hrefBytes": 492020,
+      "bytes": 416096,
+      "hrefBytes": 577955,
       "assets": [],
       "fonts": []
     },
@@ -68,8 +68,8 @@
       "labelTr": "Çizelge",
       "labelEn": "Timeline",
       "path": "bookmarks/cizelge.js",
-      "bytes": 346636,
-      "hrefBytes": 492021,
+      "bytes": 416097,
+      "hrefBytes": 577956,
       "assets": [],
       "fonts": []
     },
@@ -78,8 +78,8 @@
       "labelTr": "Şövalye",
       "labelEn": "Knight",
       "path": "bookmarks/knight.js",
-      "bytes": 699157,
-      "hrefBytes": 844636,
+      "bytes": 768618,
+      "hrefBytes": 930721,
       "assets": [
         "bar",
         "controlDark",
@@ -104,8 +104,8 @@
       "labelTr": "Sütunlar",
       "labelEn": "Columns",
       "path": "bookmarks/sutunlar.js",
-      "bytes": 346637,
-      "hrefBytes": 492022,
+      "bytes": 416098,
+      "hrefBytes": 577957,
       "assets": [],
       "fonts": []
     },
@@ -114,8 +114,8 @@
       "labelTr": "Göksel saat",
       "labelEn": "Celestial clock",
       "path": "bookmarks/clock.js",
-      "bytes": 679480,
-      "hrefBytes": 824953,
+      "bytes": 748941,
+      "hrefBytes": 911038,
       "assets": [
         "bar",
         "controlDark",
@@ -140,8 +140,8 @@
       "labelTr": "Bozkır · atlı",
       "labelEn": "Steppe · rider",
       "path": "bookmarks/bozkir.js",
-      "bytes": 638763,
-      "hrefBytes": 784150,
+      "bytes": 708224,
+      "hrefBytes": 870235,
       "assets": [
         "bzWeave",
         "bzArrow",
@@ -161,8 +161,8 @@
       "labelTr": "Bozkır · okçu",
       "labelEn": "Steppe · archer",
       "path": "bookmarks/bozkira.js",
-      "bytes": 638764,
-      "hrefBytes": 784151,
+      "bytes": 708225,
+      "hrefBytes": 870236,
       "assets": [
         "bzWeave",
         "bzArrow",

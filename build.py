@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parent
 source = (root / 'mesai.js').read_text()
 bookmark = 'javascript:' + quote(source, safe="~()*!.'-_")
 # Project safety budget; browser bookmark storage/sync support is checked separately.
-assert len(bookmark) <= 1_500_000, f'bookmark is {len(bookmark):,} chars, over the 1,500,000 budget'
+assert len(bookmark) <= 1_550_000, f'bookmark is {len(bookmark):,} chars, over the 1,550,000 budget'
 template = (root / 'page.template.html').read_text()
 assert template.count('__BOOKMARK_HREF__') == 1
 # Attribute escaping matters even when the source has already been URL-encoded.

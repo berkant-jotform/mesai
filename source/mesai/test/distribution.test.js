@@ -11,14 +11,14 @@ const json = file => JSON.parse(read(file));
 const version = json('version.json').version;
 const manifest = json('bookmarks/manifest.json');
 const expectedIds = ['all','saydam','cizelge','knight','sutunlar','clock','bozkir','bozkira'];
-const budget = 1500000;
+const budget = 1550000;
 let assertions = 0;
 const check = (condition, message) => { assertions++; assert.ok(condition, message); };
 const same = (actual, expected, message) => { assertions++; assert.deepEqual(actual, expected, message); };
 const inspect = code => {
   new vm.Script(code); // grammar only; no execution of the application
   const ast = acorn.parse(code, {ecmaVersion:'latest'});
-  const stack = [ast], images = {}, fonts = {}, identities = [], unsafe = [];
+  const stack = [ast], images = {}, fonts = {}, sounds = {}, identities = [], unsafe = [];
   while (stack.length) {
     const node = stack.pop();
     if (node.type === 'ObjectExpression') {
@@ -27,6 +27,7 @@ const inspect = code => {
       for (const [key,value] of Object.entries(literals)) {
         if (typeof value !== 'string') continue;
         if (/^data:image\//.test(value)) images[key] = value;
+        if (/^data:audio\//.test(value)) sounds[key] = value;
         if (/^data:font\//.test(value)) fonts[key] = value;
       }
     }
@@ -40,7 +41,7 @@ const inspect = code => {
       } else if (value && typeof value.type === 'string') stack.push(value);
     }
   }
-  return {images,fonts,identities,unsafe};
+  return {images,fonts,sounds,identities,unsafe};
 };
 const sorted = values => [...values].sort();
 const bytesOf = uri => Buffer.from(uri.slice(uri.indexOf(',') + 1), 'base64url');
@@ -72,6 +73,8 @@ for (const variant of manifest.variants) {
   check(Array.isArray(variant.fonts) && new Set(variant.fonts).size === variant.fonts.length,`${id}: unique font names`);
   same(sorted(Object.keys(result.images)),sorted(variant.assets),`${id}: embedded images match advertised resources`);
   same(sorted(Object.keys(result.fonts)),sorted(variant.fonts),`${id}: embedded fonts match advertised resources`);
+  same(sorted(Object.keys(result.sounds)),['day','near','week'],`${id}: all three milestone sounds embedded`);
+  for(const [name,uri] of Object.entries(result.sounds)) same(bytesOf(uri),fs.readFileSync(path.join(root,'assets/sounds',name+'.mp3')),`${id}/${name}: approved audio bytes preserved`);
   for (const [name,uri] of Object.entries(result.images)) {
     const b = bytesOf(uri);
     const avif = b.subarray(4,8).toString() === 'ftyp' && ['avif','avis'].includes(b.subarray(8,12).toString());

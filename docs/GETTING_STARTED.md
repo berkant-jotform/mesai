@@ -34,7 +34,7 @@ Bu değişiklikler Mesai’deki plana aittir; ARGE’deki resmi kaydı değişti
 
 ### Ayarlar ve zorunlu saatler
 
-Başlıktaki **Ayarlar**’dan haftalık/günlük hedef, varsayılan giriş, çalışma günleri ve zorunlu saat aralığını değiştir. Varsayılan zorunlu aralık **10:00–16:00**; kendi ekibinin kuralını kullan. Birikmiş fazla saat, bu aralığın dışında çalışma izni vermez. Sor’da böyle bir plan için gereken OOO eklenmeden önce onayın istenir.
+Başlıktaki **Ayarlar**’dan haftalık/günlük hedef, varsayılan giriş, çalışma günleri ve zorunlu saat aralığını değiştir. Varsayılan zorunlu aralık **10:00–16:00**; kendi ekibinin kuralını kullan. Birikmiş fazla saat, bu aralığın dışında çalışma izni vermez. Sor’da “şimdi çıksam?” gibi denemeler istediğin saati aynen hesaplar ve zorunlu saatleri not düşer. OOO kendiliğinden eklenmez; ekleme gerektiren bir işlemde onayın istenir.
 
 ### Sor ve Ters hesap
 
@@ -137,3 +137,27 @@ Vibe-coded by Berkant. For bugs, ideas or feedback, message Berkant on Slack. Re
 Kayıtların, planların ve takvim dosyan tarayıcıda kalır. Sürüm kontrolü portal izin verirse herkese açık sürüm dosyasını okur; saat kayıtlarını göndermez.
 
 Your records, plans and calendar file stay in your browser. If allowed by the portal, the update check reads a public version file; it does not send attendance records.
+
+### Sesler ve açılış hareketi
+
+Ayarlar’da **Açılış ve hedef hareketleri** açılış efektini ve gerçekleşen hedeflerin kısa tamamlanma efektini kapatır. Açılışta gerçek saatlerin yerinde kalır. Aynı hedef, her yeniden açışta tekrar kutlanmaz. Cihazın **hareketi azalt** tercihine uyulur; hedef bilgisi yine görünür.
+
+**Sesli bildirimler** kapalı başlar. Açıp **Dinle** ile deneyebilirsin. Ses düzeyini ve önceden haber verme süresini buradan seç. Sekme ve Mesai açık olmalı; tarayıcı izin vermezse Dinle’ye bas. Sesler düğmeler için değil, gerçekleşen hedefler içindir.
+
+Güncellemede eski yer işaretini yenisiyle değiştir. Planların ve ayarların aynı tarayıcıda ve aynı portal adresinde saklanır. Farklı tarayıcı, gizli pencere, başka portal adresi veya temizlenen tarayıcı verisi bunları paylaşmaz. **Yedekle** ile kopyasını saklayabilirsin.
+
+Güncellerken eski Mesai’nin açık olduğu portal sekmelerini de yenile. Eski sürüm açık kalırsa, kayıtları eski bilgiyle yeniden kaydedebilir.
+
+### Ayarları koruyarak güncelleme
+
+Araçtaki **Mesai v…** bağlantısına tıkla. Kurulum sayfası **Güncelleme** ile açılır;
+kullandığın paket ve görünüm seçili gelir. Mesai düğmesini yeniden çubuğa sürükle
+ve eski yer işaretini kaldır. Bu işlem kayıtları silmez: tema, dil, saat hedefleri,
+zorunlu saatler, planlar ve OOO aynı tarayıcıdaki aynı ARGE adresinde kalır.
+
+Önizlemede başka bir temayı denemek güncellenecek paketi değiştirmez. Farklı
+paket kurmak istersen **İlk kurulum** veya **Bir Tema** bölümünü kullanabilirsin;
+portal kayıtları yine ortaktır. Özel pencereler, farklı tarayıcılar ve silinen
+site verileri bu kayıtları paylaşmaz.
+
+Eski bir sürümün bağlantısı seçili temayı göndermiyorsa, web önizlemesi Saydam ile başlayabilir. Bu, ARGE’deki tema seçimini değiştirmez.
