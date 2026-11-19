@@ -117,7 +117,7 @@ var MesaiScen = (function () {
       if (/^(ONCE|BEFORE|ERKEN)$/.test(x)) { it.push({ t: 'BOUND', b: 'before' }); continue; }
       if (/^(KADAR)$/.test(x)) { it.push({ t: 'BOUND', b: 'until' }); continue; }
       if (/^(SABAH|MORNING)$/.test(x)) { it.push({ t: 'MOD', pm: false }); continue; }
-      if (/^(AKSAM|EVENING|GECE)$/.test(x) || (x === 'OGLEDEN' && /^SONRA/.test(at(i + 1)))) { if (x === 'OGLEDEN') i++; it.push({ t: 'MOD', pm: true }); continue; }
+      if (/^(AKSAM|EVENING|GECE)$/.test(x) || (x === 'OGLEDEN' && /^SONRA/.test(at(i + 1)))) { if (x === 'OGLEDEN') i++; it.push({ t: 'MOD', pm: true, night: x === 'GECE' }); continue; }
       var tn = /^(LAZIM|GEREK)/.test(at(i + 1)) ? 'modal' : tense(x);
       if (V_ARR.test(x)) { it.push({ t: 'VERB', v: 'arr', tense: tn }); continue; }
       if (V_LV.test(x)) { it.push({ t: 'VERB', v: 'lv', tense: tn }); continue; }
@@ -155,7 +155,7 @@ var MesaiScen = (function () {
     if (h > 23 || (mi != null && mi > 59)) return { i: j, item: { t: 'X' } };
     var sfx = /^(DE|DA|TE|TA|DEN|DAN|TEN|TAN|YE|YA|E|A|U|I|IN)$/.test(at(j + 1)) ? at(++j) : '';
     if (/^(AM|PM)$/.test(at(j + 1))) { if (h < 1 || h > 12) return { i: j + 1, item: { t: 'X' } }; var pm = at(++j) === 'PM'; return { i: j, item: { t: 'TIME', h: h, mi: mi || 0, pm: pm, ampm: true, sfx: sfx } }; }
-    var item = { t: 'TIME', h: h, mi: mi || 0, sfx: sfx, bare: mi == null && !buc, colon: m[2] === ':', literal: /^0\d/.test(m[1]) };
+    var item = { t: 'TIME', h: h, mi: mi || 0, sfx: sfx, bare: mi == null && !buc, literal: mi != null || /^0\d/.test(m[1]) };
     if (/^(DEN|DAN|TEN|TAN)$/.test(sfx)) item.from = true;
     if (!sfx && !hasFrac && !buc && h <= 16) item.maybeDur = true;
     return { i: j, item: item };
@@ -167,7 +167,14 @@ var MesaiScen = (function () {
     var it = lex(f), frames = [], cur = { days: [] }, q = null, marks = {}, verbs = [];
     var slots = function (fr) { return fr.s != null || fr.e != null || fr.len != null || fr.type || fr.ooo || fr.unk; };
     var push = function () { if (cur.days.length || slots(cur)) frames.push(cur); cur = { days: [] }; };
-    it.forEach(function (x) { if (x.t === 'MARK') marks[x.m] = true; if (x.t === 'VERB') verbs.push(x); });
+    it.forEach(function (x, i) {
+      if (x.t === 'MARK') marks[x.m] = true;
+      if (x.t === 'VERB') verbs.push(x);
+      if (x.t === 'TIME' && !x.ampm && x.h >= 1 && x.h <= 12) {
+        var mod = it[i - 1]?.t === 'MOD' ? it[i - 1] : it[i + 1];
+        if (mod?.t === 'MOD') { x.ampm = true; x.pm = mod.pm && (!mod.night || x.h > 5 && x.h < 12); }
+      }
+    });
     for (var i = 0; i < it.length; i++) {
       var x = it[i];
       if (x.t === 'DAY') {
@@ -410,7 +417,7 @@ var MesaiScen = (function () {
     // days covered by "her gün"
     var eachDays = rows.filter(function (r) { return !r.past && r.office && !named[r.dow] && r.dow !== target; }).map(function (r) { return r.dow; });
     var s2 = C.clone(store); ['types', 'plan', 'ooo'].forEach(function (k) { s2[k] = s2[k] || {}; });
-    var autoOOO = {}, needOOO = [];
+    var autoOOO = {};
     function applyFrame(f) {
       var ds = []; f.days.forEach(function (d) { if (d === 'EACH') ds = ds.concat(eachDays); else ds.push(res(d)); });
       if (!f.days.length) ds = target != null ? [target] : (kind === 'check' || f.e != null || f.s != null || f.len != null ? [tdow] : []);
@@ -421,7 +428,7 @@ var MesaiScen = (function () {
         var key = r.key;
         if (f.type && f.type !== 'ofis') { s2.types[key] = f.type; delete s2.plan[key]; delete s2.ooo[key]; chips.push({ k: 'given', d: d, type: f.type }); return; }
         if (f.type === 'ofis' || (r.credit && (f.s != null || f.e != null || f.len != null))) { if (r.hol) s2.types[key] = 'ofis'; else delete s2.types[key]; }
-        var p = {}, arrived = r.first != null;
+        var p = {}, arrived = r.first != null, prior = s2.plan[key];
         if (f.s != null) { if (arrived) chips.push({ k: 'warn', w: 'arrived', d: d, t: minOf(r.first, r) }); else p.s = f.s; }
         if (f.e != null) p.e = f.e;
         if (f.len != null) {
@@ -433,7 +440,8 @@ var MesaiScen = (function () {
         }
         if (f.s != null && !arrived) chips.push({ k: 'given', d: d, s: f.s });
         if (f.e != null) chips.push({ k: 'given', d: d, e: f.e, before: f.before });
-        if(p.e!=null){var start=p.s!=null?p.s:arrived?minOf(r.first,r):cfg.start;if(p.e<start)p.e+=1440;}
+        if ((p.e != null || p.m != null) && p.s == null && !arrived && prior && prior.s != null) p.s = prior.s;
+        if (p.e != null) p.e = C.exitMinute(r, p, p.e);
         if (p.s != null || p.e != null || p.m != null) s2.plan[key] = p;
         if (f.ooo && !f.ooo.dflt) { s2.ooo[key] = { m: f.ooo.m, s: f.ooo.s }; chips.push({ k: 'given', d: d, ooo: f.ooo.m }); }
         else coreAuto(r, p);
@@ -460,11 +468,6 @@ var MesaiScen = (function () {
       s2.ooo[r.key] = { m: m, s: s }; autoOOO[r.dow] = m; chips.push({ k: 'auto', d: r.dow, ooo: m, ok: !!sc.oooOK });
     }
     frames.forEach(applyFrame);
-    if (needOOO.length) {
-      var sum = needOOO.reduce(function (a, n) { return a + Math.max(0, n.m - n.prev); }, 0);   // net: accepting replaces that day's OOO
-      return { kind: 'confirmOOO', day: needOOO[0].d, need: needOOO, chips: chips, W0: v0.W, W1: v0.W + sum * MIN, m: sum, ask: kind,
-        coreS: cfg.coreS, coreE: cfg.coreE };
-    }
     var applyStore = C.clone(s2);
     var defaults = function (skip) {
       rows.forEach(function (r) {
@@ -513,7 +516,7 @@ var MesaiScen = (function () {
       var skip = {}; defaults(skip);
       var pv3 = week(s2);
       var d3 = target != null ? target : tdow, r3 = pv3.rows[d3];
-      Object.assign(out, { kind: out.kind === 'arrived' ? 'arrivedCheck' : kind, day: d3, pv: pv3, margin: pv3.total - pv3.W, ok: pv3.total >= pv3.W - MIN,
+      Object.assign(out, { kind: out.kind === 'arrived' ? 'arrivedCheck' : kind, day: d3, pv: pv3, margin: pv3.total - pv3.W, ok: pv3.total >= pv3.W - 1,
         end: r3 && r3.end, start: r3 && r3.start, W: pv3.W, ooo: pv3.W - cfg.W * MIN, oooDay: autoOOO[d3] || 0, held: r3 && r3.held, store: applyStore });
       return out;
     }
@@ -529,14 +532,15 @@ var MesaiScen = (function () {
       if (!F.length) { out.kind = 'noDays'; return out; }
       if (target != null && kind === 'reqLen') { var tp = s2.plan[rows[target].key]; if (tp && tp.e != null && tp.s == null && rows[target].first == null) { tp.s = cfg.start; chips.push({ k: 'default', d: target, s: cfg.start }); } }
       var skipF = {}; F.forEach(function (d) { skipF[d] = 1; }); defaults(skipF);
-      var test = function (m) { F.forEach(function (d) { var r = rows[d]; s2.plan[r.key] = { m: m }; }); return week(s2); };
+      var test = function (m) { F.forEach(function (d) { var key = rows[d].key, p = s2.plan[key]; s2.plan[key] = { s: p && p.s, m: m }; }); return week(s2); };
       var lo = 0, hi = 20 * 60, pvX = test(hi);
-      if (pvX.total < pvX.W - MIN) { out.kind = 'impossible'; out.m = hi; return out; }
-      if (test(0).total >= test(0).W - MIN) { out.kind = kind === 'avg' ? 'avgDone0' : 'reqZero'; out.days = F; out.pv = test(0); out.held = true; return out; }
+      if (pvX.total < pvX.W - 1) { out.kind = 'impossible'; out.m = hi; return out; }
+      var zero = test(0);
+      if (zero.total >= zero.W - 1) { out.kind = kind === 'avg' ? 'avgDone0' : 'reqZero'; out.days = F; out.pv = zero; out.held = true; return out; }
       while (hi - lo > 1) { var mid = (lo + hi) >> 1; var w2 = test(mid); if (w2.total >= w2.W - 1) hi = mid; else lo = mid; }   // the recommended plan must reach the target, not a minute short
       var pv4 = test(hi);
       Object.assign(out, { m: hi, days: F, pv: pv4, W: pv4.W, ooo: pv4.W - cfg.W * MIN, ends: F.map(function (d) { var r = pv4.rows[d]; return { d: d, end: r.end, held: r.held }; }) });
-      F.forEach(function (d) { applyStore.plan[rows[d].key] = { m: hi }; });
+      F.forEach(function (d) { var key = rows[d].key; applyStore.plan[key] = s2.plan[key]; });
       out.store = applyStore; out.impossible = hi > 16 * 60;
       return out;
     }
@@ -562,8 +566,11 @@ var MesaiScen = (function () {
       var pv6 = week(s2), r6 = pv6.rows[out.day];
       if (!r6) return out;
       Object.assign(out, { pv: pv6, len: r6.val, end: r6.end, W: pv6.W, store: applyStore });
-      var requested = null; frames.forEach(function(f){if(f.e!=null)requested=f.e;});
-      if(requested!=null&&r6.start!=null){out.end=r6.date+requested*MIN;if(out.end<r6.start)out.end+=C.DAY;out.len=out.end-r6.start;if(r6.today&&out.end<now){out.historicalHypothesis=true;out.store=null;}}
+      var plan = s2.plan[r6.key];
+      if (plan && plan.e != null && r6.start != null && frames.some(function (f) { return f.e != null; })) {
+        out.end = r6.date + plan.e * MIN; out.len = Math.max(0, out.end - r6.start);
+        if (r6.today && out.end < now) { out.historicalHypothesis = true; out.store = null; }
+      }
       return out;
     }
     if (kind === 'remaining' || kind === 'target') {

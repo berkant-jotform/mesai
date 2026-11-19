@@ -133,6 +133,7 @@ var MesaiCore = (function () {
         if (r.today && evs.length) {
           r.segs = sg.segs; r.inside = sg.inside;
           if (sg.segs.length) { r.first = sg.segs[0][0]; r.last = sg.segs[sg.segs.length - 1][1]; r.actual = capm(r.last - r.first); }
+          else if (sg.openAt === now) r.first = now;
           if (evs.slice().sort(function (a, b) { return a.t - b.t; })[0].k === 'C') r.flags.push('noentry');
           r.src = 'live';
         } else if (off) {
@@ -205,13 +206,20 @@ var MesaiCore = (function () {
       }
     }
     // ----- projection (current week only) -----
+    var canBalance = function (r) {
+      var p = PL[r.key];
+      return r.office && !r.past && (!p || (p.e == null && p.m == null));
+    };
     var absorber = null;
     if (thisWeek) {
-      if (opts.absorb) absorber = rows.filter(function (r) { return r.key === opts.absorb && !r.past; })[0] || null;
-      if (!absorber) for (var j = 6; j >= 0; j--) {
-        var rr = rows[j]; if (rr.past || !rr.office) continue;
-        var pp = PL[rr.key]; if (pp && (pp.e != null || pp.m != null)) continue;
-        absorber = rr; break;
+      if (opts.absorb) absorber = rows.find(function (r) { return r.key === opts.absorb && !r.past; }) || null;
+      if (!absorber) {
+        var source = rows.find(function (r) {
+          var p = PL[r.key];
+          return r.office && !r.past && p && (p.e != null || p.m != null) && p.balance;
+        });
+        if (source) absorber = rows.find(function (r) { return r.key === PL[source.key].balance && canBalance(r); }) || null;
+        if (!absorber) absorber = rows.slice().reverse().find(canBalance) || null;
       }
     }
     var startOf = function (r) {
@@ -227,17 +235,17 @@ var MesaiCore = (function () {
       var cs = r.date + cfg.coreS * MIN, ce = r.date + (r.half ? Math.min(cfg.coreE, 780) : cfg.coreE) * MIN, o = r.ooo;
       var covers = function (a, b) { return o && o.s != null && r.date + o.s * MIN <= a && r.date + (o.s + o.m) * MIN >= b; };
       var unknown = o && o.s == null;
-      if (r.start != null && r.start > cs + MIN && !covers(cs, r.start)) { if (unknown) r.flags.push('coreUnknown'); else r.flags.push(r.first != null ? 'coreLate' : 'coreStart'); }
+      if (r.start != null && r.start >= cs + MIN && !covers(cs, r.start)) { if (unknown) r.flags.push('coreUnknown'); else r.flags.push(r.first != null ? 'coreLate' : 'coreStart'); }
       if (r.plan != null && !r.past && r.start != null) {
         var end = r.start + r.plan;
-        if (end < ce - MIN && !(r.today && !r.inside && r.last != null && !r.planned)) {
+        if (end <= ce - MIN && !(r.today && !r.inside && r.last != null && !r.planned)) {
           if (covers(end, ce)) return;
           if (unknown) { r.flags.push('coreUnknown'); return; }
           if (PL[r.key] && PL[r.key].softCore) { r.flags.push('coreEarly'); return; }
           r.plan = ce - r.start; r.held = true;
         }
       }
-      if (r.past && r.last != null && r.last < ce - MIN && !covers(r.last, ce) && r.actual > 0) r.flags.push(unknown ? 'coreUnknown' : 'coreEarly');
+      if (r.past && r.last != null && r.last <= ce - MIN && !covers(r.last, ce) && r.actual > 0) r.flags.push(unknown ? 'coreUnknown' : 'coreEarly');
     };
     var fixed = 0;
     rows.forEach(function (r) {
@@ -304,12 +312,29 @@ var MesaiCore = (function () {
       absorber: absorber, ws: ws, thisWeek: thisWeek, now: now, ooo: W - cfg.W * MIN };
   }
 
-  // What must another day become so that `day` can end at `endMin`? Returns the projected week.
+  // Compare a typed clock to a known arrival. The moving "now" placeholder is not an arrival.
+  function exitMinute(row, plan, end) {
+    var start = row.first != null ? row.first : plan && plan.s != null ? row.date + plan.s * MIN : row.future ? row.start : null;
+    return start != null && end < Math.floor((start - row.date) / MIN) ? end + 1440 : end;
+  }
+
+  // Build the exact plan the calculator previews and applies.
   function reverse(data, now, cfg, store, day, endMin, absorbKey) {
-    var s2 = clone(store); s2.plan = s2.plan || {};
-    s2.plan[day] = Object.assign({}, s2.plan[day] || {}, { e: endMin });
-    if (absorbKey && s2.plan[absorbKey]) { s2.plan[absorbKey] = Object.assign({}, s2.plan[absorbKey]); delete s2.plan[absorbKey].e; }
-    return week(data, now, cfg, s2, 0, { absorb: absorbKey });
+    if (!Number.isInteger(endMin) || endMin < 0 || endMin >= 1440 || day === absorbKey) return null;
+    var base = week(data, now, cfg, store, 0);
+    var eligible = function (key) { return base.rows.find(function (r) { return r.key === key && !r.past && r.office; }); };
+    var requested = eligible(day), balancing = eligible(absorbKey);
+    if (!requested || !balancing) return null;
+    var draft = clone(store), edits = draft.plan = draft.plan || {};
+    endMin = exitMinute(requested, edits[day], endMin);
+    base.rows.forEach(function (r) { if (edits[r.key]) delete edits[r.key].balance; });
+    edits[day] = Object.assign({}, edits[day], { e: endMin, softCore: true, balance: absorbKey });
+    edits[absorbKey] = Object.assign({}, edits[absorbKey], { softCore: true });
+    delete edits[absorbKey].e;
+    delete edits[absorbKey].m;
+    var result = week(data, now, cfg, draft, 0);
+    result.planEdits = edits;
+    return result;
   }
   function clone(o) { return JSON.parse(JSON.stringify(o || {})); }
 
@@ -371,7 +396,7 @@ var MesaiCore = (function () {
 
   return { MIN: MIN, DAY: DAY, pad: pad, dayStart: dayStart, dkey: dkey, mkey: mkey, dow: dow, weekStart: weekStart,
     istanbulNow: istanbulNow, parseStamp: parseStamp, parseDur: parseDur, parseKind: parseKind, parsePeriod: parsePeriod,
-    parseClock: parseClock, classify: classify, segments: segments, config: config, week: week, reverse: reverse, habits: habits,
+    parseClock: parseClock, classify: classify, segments: segments, config: config, week: week, reverse: reverse, exitMinute: exitMinute, habits: habits,
     clone: clone, hm: hm, clock: clock, dayGoal: dayGoal, fold: fold, TYPES: TYPES };
 })();
 if (typeof module !== 'undefined') module.exports = MesaiCore;

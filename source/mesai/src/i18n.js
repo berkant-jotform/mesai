@@ -1,7 +1,6 @@
 // Mesai copy. Turkish is the default; labels with {D}/{W} are filled from the configured targets.
 var MesaiText = {
   tr: {
-    revAria: ['Çıkılacak gün', 'Çıkış saati', 'Telafi günü', 'Geliş hesabı günü', 'Geliş hesabı çıkış saati'],
     sy: { day: 'Gün', kum: 'Kum saati', view: 'Görünüm', worked: 'Çalışılan', planned: 'Planlanan çıkış', offDay: 'Çalışma günü değil', dayLine: 'Gün çizgisi', tlHint: 'Çıkışı değiştirmek için çizgiye tıkla', plan: 'Plan', leave: 'İzin · tatil', unplanned: 'Plansız', left: 'Kalan', lastDrop: 'Son damla', kumNote: 'Hafta camın içinde akar: üstte kalan {l}, altta çalışılan {d}.', kumAria: 'Kum saati: {d} / {W} sa', lightOnly: 'Bu tema yalnız açık modda', ends: 'Hafta biter', lights: { close: 'Kapat', min: 'Cep', cmp: 'Kompakt' }, prev: 'Önceki hafta', next: 'Sonraki hafta', bad: 'Geçerli bir değer yaz. Saat için SS:DD kullan (örn. 17:30).' },
     closeMesai: 'Mesai’yi kapat', argeWas: 'ARGE {t}', notInArge: 'ARGE’de henüz yok', lag: 'ARGE kesin kayıtları 10:00 ve 22:00’de günceller; bugünkü giriş henüz görünmeyebilir.', pOpen: '{d} · çıkış yok', pNight: '{d} · gece yarısı', dayAlso: 'Günlük {D} sa · {t}', leaveToday: 'Bugün çıkış', leaveHeld: 'Zorunlu saat nedeniyle', habitDay: 'Genelde {d} günleri giriş: {t}', fu: { label: 'Devam et', arrive: 'ya {t|de} gelirsem', leave: 'peki {d} izin alırsam', ooo: 'ya 1 saat OOO alırsam' }, habitUse: 'Plana ekle', habitAll: 'Haftanın kalanına', habitHide: 'Gizle', habitOffT: 'Alışkanlık önerileri kapandı · Ayarlar’dan açabilirsin', habitSum: 'Son {n} ofis gününde genelde giriş {s}, çıkış {e}', habitDef: 'Varsayılan giriş {t} olsun', habitTips: 'Alışkanlık önerileri', on: 'Açık', off: 'Kapalı', themesTitle: 'Temalar', themeBtn: 'Tema', change: 'Değiştir', now: 'Şimdi', selected: 'Seçili',
     updAvail: 'Güncelleme var', updHint: 'Güncellemek için kurulum sayfasını aç', resizeKeys: 'Boyut: Cep, Kompakt ve Geniş arasında geçer; sürükle veya ok tuşlarını kullan, sıfırlamak için çift tıkla',
@@ -16,7 +15,7 @@ var MesaiText = {
     st: { portal: 'portal', live: 'canlı', raw: 'kayıt', manual: 'düzeltme', typed: 'elle giriş', plan: 'plan', auto: 'tahmin', credit: '{D} sa sayılır', none: '—', absent: 'kayıt yok', open: 'çıkış eksik', month: 'ay yüklenmedi', future: 'plan' },
     types: { ofis: 'Ofis', izin: 'İzin', tatil: 'Tatil' }, type: 'Tür', in: 'Giriş', out: 'Çıkış', len: 'Süre', ooo: 'OOO', oooStart: 'başlangıç',
     resetDay: 'Günü sıfırla', resetWeek: 'Planı sıfırla', undo: 'Geri al', apply: 'Uygula', cancel: 'Vazgeç', applied: 'Uygulandı',
-    reverse: 'Ters hesap', revLeave: 'çıkmak için', revFrom: 'farkı', revStay: '{d} {t|e} kadar kal', revArrive: 'Kaçta gelmeliyim?', revCome: '{t|de} gel',
+    reverse: 'Ters hesap', revStay: '{d} {t|e} kadar kal',
     shortfall: '{x} eksik', ask: 'Sor', askPh: 'Sor: cuma kaçta çıkarım? · yarın 10–19 · perşembe izin', askNo: 'Bunu anlayamadım. Örneklerden birini dene.',
     saved: 'Kayıtlı', noData: 'veri yok', settings: 'Ayarlar', theme: 'Tema', lang: 'Dil', look: 'Görünüm', language: 'Dil', colorMode: 'Renk', light: 'Açık', dark: 'Koyu', autoLook: 'Sistem',
     weekly: 'Haftalık hedef', daily: 'Günlük hedef', defStart: 'Varsayılan giriş', cap: 'Günlük tavan', capOff: '0 = kapalı', workdays: 'Çalışma günleri',
@@ -28,7 +27,7 @@ var MesaiText = {
     sugg: ['Şimdi çıksam?', 'cuma kaçta çıkarım?', 'her gün 10 saat yapsam cuma 8’de gelsem kaçta çıkarım?', 'cuma 16:00’da çıkmak istiyorum', 'cuma 14’te çıkmak için her gün kaç saat kalmalıyım?', 'bu hafta kaç saat yaptım?'],
     sugg2: ['perşembe 15’te çıkmak için kaçta gelmeliyim?', 'kaç saat fazlam var?', 'kalan günlerde ortalama kaç saat?', 'yarın izinliyim cuma kaçta çıkarım?', 'bugün 17’de çıksam yeter mi?', 'cuma 14’te çıkarsam kaç saat OOO gerekir?', 'bugün 18:20’de çıkarsam kaç saat olur?', 'her gün 9:30 saat yaparsam cuma kaçta çıkarım?'],
     compact: 'Kompakt görünüm', expand: 'Genişlet', tiers: { pocket: 'Cep', compact: 'Kompakt', std: 'Standart', wide: 'Geniş' }, resizeHint: 'Boyutlandır · çift tık: varsayılan',
-    hol: 'Resmi tatiller', holSrc: 'Jotform TR takvimi 2026 · resmi takvim 2027 (arife tam gün)', pkD: '{D} sa dolar', pkW: 'Hafta biter', holOn: 'Açık', holOff: 'Kapalı', holNext: 'Sıradaki', half: 'yarım gün',
+    hol: 'Resmi tatiller', holSrc: 'Jotform TR takvimi 2026 · resmi takvim 2027 (arife tam gün)', pkD: '{D} sa dolar', pkW: 'Hafta biter', pkGap: 'Hafta açığı', holOn: 'Açık', holOff: 'Kapalı', holNext: 'Sıradaki', half: 'yarım gün',
     ics: 'Google Takvim’den al (.ics)', icsHint: 'Google Takvim → Ayarlar → İçe ve dışa aktar → Dışa aktar. ZIP’i açıp .ics dosyasını seç. Dosya bu tarayıcıda okunur, hiçbir yere gönderilmez.',
     icsTitle: 'Takvimden bulunanlar', icsNone: 'Bu dosyada izin, tatil veya OOO etkinliği bulunamadı.', icsApplied: '{n} gün eklendi',
     mism: '{d}: portal {p} sayıyor ({pf}–{pl}), giriş-çıkış listesi {r} ({rf}–{rl})', mismUse: 'Hesapta kullan', mismRaw: 'Liste {r}', mismPortal: 'Portal {p}',
@@ -60,7 +59,6 @@ var MesaiText = {
     weekOf: '{a} – {b}', example: 'Dene'
   },
   en: {
-    revAria: ['Exit day', 'Exit time', 'Compensation day', 'Arrival calculation day', 'Arrival calculation exit time'],
     sy: { day: 'Day', kum: 'Hourglass', view: 'View', worked: 'Worked', planned: 'Planned exit', offDay: 'Not a workday', dayLine: 'Day line', tlHint: 'Click the line to change the exit', plan: 'Plan', leave: 'Leave · holiday', unplanned: 'Unplanned', left: 'Left', lastDrop: 'Last drop', kumNote: 'The week flows through the glass: {l} left on top, {d} worked below.', kumAria: 'Hourglass: {d} / {W} h', lightOnly: 'This theme is light only', ends: 'Week ends', lights: { close: 'Close', min: 'Pocket', cmp: 'Compact' }, prev: 'Previous week', next: 'Next week', bad: 'Enter a valid value. For a time, use HH:MM (for example, 17:30).' },
     closeMesai: 'Close Mesai', argeWas: 'ARGE {t}', notInArge: 'not in ARGE yet', lag: 'ARGE finalises records at 10:00 and 22:00; today’s entry may not show yet.', pOpen: '{d} · no exit', pNight: '{d} · past midnight', dayAlso: 'Daily {D} h · {t}', leaveToday: 'Leave today', leaveHeld: 'Because of core hours', habitDay: 'On {d}s you usually arrive at {t}', fu: { label: 'Follow up', arrive: 'what if I come at {t}', leave: 'what if I take {d} off', ooo: 'what if I take 1 hour OOO' }, habitUse: 'Use in plan', habitAll: 'Rest of the week', habitHide: 'Hide', habitOffT: 'Habit suggestions off · turn them on in Settings', habitSum: 'Last {n} office days: usually in {s}, out {e}', habitDef: 'Make {t} the default start', habitTips: 'Habit suggestions', on: 'On', off: 'Off', themesTitle: 'Themes', themeBtn: 'Themes', change: 'Change', now: 'Now', selected: 'Selected',
     updAvail: 'Update available', updHint: 'Open the install page to update', resizeKeys: 'Size: switches between Pocket, Compact and Wide; drag or use the arrow keys, double-click to reset',
@@ -75,7 +73,7 @@ var MesaiText = {
     st: { portal: 'portal', live: 'live', raw: 'records', manual: 'corrected', typed: 'typed entry', plan: 'plan', auto: 'estimate', credit: 'counts {D} h', none: '—', absent: 'no record', open: 'exit missing', month: 'month not loaded', future: 'plan' },
     types: { ofis: 'Office', izin: 'Leave', tatil: 'Holiday' }, type: 'Type', in: 'In', out: 'Out', len: 'Length', ooo: 'OOO', oooStart: 'start',
     resetDay: 'Reset day', resetWeek: 'Reset plan', undo: 'Undo', apply: 'Apply', cancel: 'Cancel', applied: 'Applied',
-    reverse: 'Reverse', revLeave: 'to leave at', revFrom: 'take it from', revStay: 'Stay {d} until {t}', revArrive: 'When should I arrive?', revCome: 'Arrive at {t}',
+    reverse: 'Reverse', revStay: 'Stay {d} until {t}',
     shortfall: '{x} short', ask: 'Ask', askPh: 'Ask: when do I leave Friday? · tomorrow 10–19 · Thursday off', askNo: 'I didn’t get that. Try one of the examples.',
     saved: 'Saved', noData: 'no data', settings: 'Settings', theme: 'Theme', lang: 'Language', look: 'Appearance', language: 'Language', colorMode: 'Colour', light: 'Light', dark: 'Dark', autoLook: 'System',
     weekly: 'Weekly target', daily: 'Daily target', defStart: 'Default start', cap: 'Daily cap', capOff: '0 = off', workdays: 'Work days',
@@ -87,7 +85,7 @@ var MesaiText = {
     sugg: ['What if I leave now?', 'when do I leave Friday?', 'if I work 10 hours every day and come in at 8 on Friday when can I leave?', 'leave Friday at 16:00', 'leave Friday at 14:00, how many hours per day?', 'how many hours have I worked this week?'],
     sugg2: ['leave Thursday at 15:00, what time should I arrive?', 'overtime balance', 'average hours needed per day', 'Thursday off, when do I leave Friday?', 'can I leave today at 17:00?', 'how much OOO if I leave Friday at 14:00?', 'if I leave today at 18:20, how many hours will I have?', 'if I work 9:30 hours every day, when do I leave Friday?'],
     compact: 'Compact view', expand: 'Expand', tiers: { pocket: 'Pocket', compact: 'Compact', std: 'Standard', wide: 'Wide' }, resizeHint: 'Resize · double-click: default',
-    hol: 'Public holidays', holSrc: 'Jotform TR calendar 2026 · official calendar 2027 (eves as full days)', pkD: '{D} h at', pkW: 'Week done', holOn: 'On', holOff: 'Off', holNext: 'Next', half: 'half day',
+    hol: 'Public holidays', holSrc: 'Jotform TR calendar 2026 · official calendar 2027 (eves as full days)', pkD: '{D} h at', pkW: 'Week done', pkGap: 'Weekly gap', holOn: 'On', holOff: 'Off', holNext: 'Next', half: 'half day',
     ics: 'Import Google Calendar (.ics)', icsHint: 'Google Calendar → Settings → Import & export → Export. Unzip and pick the .ics file. It is read in this browser and never sent anywhere.',
     icsTitle: 'Found in your calendar', icsNone: 'No leave, holiday or OOO events found in this file.', icsApplied: '{n} days added',
     mism: '{d}: portal counts {p} ({pf}–{pl}), entry/exit list shows {r} ({rf}–{rl})', mismUse: 'Count', mismRaw: 'List {r}', mismPortal: 'Portal {p}',

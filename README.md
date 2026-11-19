@@ -4,6 +4,12 @@ ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work h
 
 **Version:** [version.json](version.json) · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
+## 3.6.5
+
+- Saydam’da planladığın çıkış öne çıkar. Çıkış planı yoksa haftalık hedefin ne zaman dolacağı öne çıkar, 9 saat bilgisi küçük kalır.
+- Kısa bir cuma planlarken telafi gününün önerilen çıkışını görebilir, günler arasında geçebilirsin.
+- Gün ve Kum saati görünümlerinde planlanan saatler ile çalışılan saatler ayrı kalır. Hedefe yetişmeyen planlarda eksik süre gösterilir.
+
 ## 3.6.0 — Daha sağlam kayıtlar, Sor ve temaya uygun efektler
 
 - Aynı tarayıcıdaki sekmeler tema, ayar ve planları birbirinin üstüne yazmadan paylaşır. Tek temalı yer işaretleri, tüm temalı paketin seçimini değiştirmez.

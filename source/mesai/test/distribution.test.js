@@ -25,10 +25,12 @@ const inspect = code => {
       const literals = Object.fromEntries(node.properties.filter(p => p.type === 'Property' && !p.computed && p.value.type === 'Literal').map(p => [p.key.name || p.key.value,p.value.value]));
       if (typeof literals.version === 'string' && typeof literals.theme === 'string') identities.push(literals);
       for (const [key,value] of Object.entries(literals)) {
-        if (typeof value !== 'string') continue;
-        if (/^data:image\//.test(value)) images[key] = value;
-        if (/^data:audio\//.test(value)) sounds[key] = value;
-        if (/^data:font\//.test(value)) fonts[key] = value;
+        if (typeof value !== 'string' || value.length < 64 || !/^[A-Za-z0-9_-]+$/.test(value)) continue;
+        const header = Buffer.from(value.slice(0, 16), 'base64url');
+        const signature = header.toString('ascii', 0, 4);
+        if (signature === 'RIFF' || header.toString('ascii', 4, 8) === 'ftyp') images[key] = value;
+        if (signature === 'wOF2') fonts[key] = value;
+        if (header.toString('ascii', 0, 3) === 'ID3' || (header[0] === 255 && (header[1] & 224) === 224)) sounds[key] = value;
       }
     }
     if (node.type === 'ImportExpression') unsafe.push('dynamic import');
@@ -44,7 +46,7 @@ const inspect = code => {
   return {images,fonts,sounds,identities,unsafe};
 };
 const sorted = values => [...values].sort();
-const bytesOf = uri => Buffer.from(uri.slice(uri.indexOf(',') + 1), 'base64url');
+const bytesOf = payload => Buffer.from(payload, 'base64url');
 check(/^\d+\.\d+\.\d+$/.test(version), 'Release version is semver');
 same(manifest.version,version,'Manifest agrees with version.json');
 same(json('package.json').version,version,'Package agrees with release');

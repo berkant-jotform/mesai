@@ -22,16 +22,17 @@ fs.mkdirSync(path.join(__dirname,'dist'),{recursive:true});fs.mkdirSync(path.joi
  for(const id of ['all',...Object.keys(themes)]){
   const keys=id==='all'?Object.keys(artFiles):themeAssets[id];
   const families=id==='all'?Object.keys(fontFiles):themeFonts[id];
-  const art=Object.fromEntries(keys.map(k=>[k,'data:image/webp;base64,'+asset(artFiles[k])]));
-  const fonts=Object.fromEntries(families.map(k=>[k,'data:font/woff2;base64,'+asset(fontFiles[k])]));
-  const sounds=Object.fromEntries(['near','day','week'].map(k=>[k,'data:audio/mpeg;base64,'+fs.readFileSync(path.join(assets,'sounds',k+'.mp3')).toString('base64url')]));
+  const art=Object.fromEntries(keys.map(k=>[k,asset(artFiles[k])]));
+  const fonts=Object.fromEntries(families.map(k=>[k,asset(fontFiles[k])]));
+  const sounds=Object.fromEntries(['near','day','week'].map(k=>[k,fs.readFileSync(path.join(assets,'sounds',k+'.mp3')).toString('base64url')]));
   const config={version,theme:id,catalog:release.themeCatalog,build:require('crypto').createHash('sha256').update(modules+css+JSON.stringify([art,fonts,sounds])).digest('hex').slice(0,12)};
   const prefix='var MesaiBuild='+JSON.stringify(config)+';var MesaiArt='+JSON.stringify(art)+';var MesaiFonts='+JSON.stringify(fonts)+';var MesaiSounds='+JSON.stringify(sounds)+';var MesaiHeritageCSS='+JSON.stringify(css)+';';
   const bundle="(function(){'use strict';\n"+prefix+modules+'\n})();\n';
-  const out=await minify(bundle,{compress:{passes:2},mangle:true,format:{ascii_only:false}});
+  // Single quotes save URL bytes since bookmark encoding escapes double quotes.
+  const out=await minify(bundle,{compress:{passes:2},mangle:true,format:{ascii_only:false,quote_style:1}});
   const href='javascript:'+encodeURIComponent(out.code);
   // Project safety budget, not a promise about every browser's bookmark/sync path.
-  if(href.length>1550000)throw new Error(id+' bookmark exceeds1550000-character project budget');
+  if(href.length>1550000)throw new Error(id+' bookmark is '+href.length+' characters, over the 1550000-character project budget');
   const output=id==='all'?'mesai.js':'bookmarks/'+id+'.js';
   fs.writeFileSync(path.join(root,output),out.code);
   if(id==='all'){

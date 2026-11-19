@@ -30,6 +30,8 @@ Daha küçük bir yer işareti istersen **Kurulumdan önce dene** bölümünde b
 
 Haftadan günü seç. **Giriş**, **Çıkış** veya **Süre** alanını değiştir; ± düğmeleri küçük adımlarla ayarlar. Saydam’da gün çizgisinden de çıkışı seçebilirsin. İzinli veya tatildeysen günün türünü değiştir. OOO süresini ve biliniyorsa başlangıcını gir.
 
+Çıkışı değiştirince seçtiğin saat büyük görünür. Hemen altında günlük hedefin kaçta dolduğu ve planladığın süre yazar. Haftayı dengelemek için başka bir günün çıkışı değişirse, o saati de aynı yerde görürsün. Üstüne basıp o güne geçebilir veya dengeyi başka bir güne alabilirsin. Zorunlu saate takılan planın yanında uyarı çıkar.
+
 Bu değişiklikler Mesai’deki plana aittir; ARGE’deki resmi kaydı değiştirmez. Günü veya haftalık planı sıfırlamak için ilgili sıfırlama düğmesini kullan.
 
 ### Ayarlar ve zorunlu saatler
@@ -94,6 +96,8 @@ Hours run from first entry to last exit, including lunch gaps. The weekly target
 ### Change a day
 
 Select a day, then edit **In**, **Out** or **Length**. The ± buttons make small changes; Liquid glass also lets you set departure on the day line. Choose Leave/Holiday for the day’s type, and enter OOO duration and start time if known.
+
+When you change an exit, the large time shows the selected day’s planned departure. Below it you can see when the daily target is reached and how long you’ve planned to work. If another day picks up the difference, tap its suggested exit to open that day, or choose a different day for the balance. Plans outside core hours show a warning.
 
 These changes affect your Mesai plan, not the official ARGE records. Use the day or plan reset control to clear the corresponding changes.
 

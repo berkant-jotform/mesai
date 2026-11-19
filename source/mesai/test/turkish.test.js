@@ -21,4 +21,49 @@ test('applied overnight plan agrees with the answer',()=>{const r=solve('bugün 
 test('casual desire is a plan preview, not a forced OOO dialog',()=>{const r=solve('cuma 14te cikmak istiyom');assert.equal(r.kind,'reqLen');assert.ok(r.coreHint);assert.equal(r.W,45*H);assert.deepEqual(r.store.ooo,{});});
 for(const q of ['yarın 9 75 de gelirsem kaçta çıkarım','bugün 25:00 de çıksam kaç saat olur','her gün 9:75 saat yapsam cuma kaçta çıkarım'])test('invalid '+q,()=>assert.equal(solve(q).kind,'invalidTime'));
 test('Friday remains exact while allocated days cover the unchanged target',()=>{const r=solve('cuma 14te çıkmak için her gün kaç saat kalmalıyım');assert.equal(r.pv.rows[4].end,U(6,14));assert.ok(r.pv.total>=r.W);assert.equal(r.W,45*H);});
+test('explicit clock stays exact while contextual bare hours and modifiers still work', () => {
+  const exit = text => SC.parse(text).frames[0].e;
+  for (const clock of ['10:00', '10.00', '10 00']) assert.equal(exit('bugün ' + clock + ' da çıksam kaç saat olur'), 600);
+  assert.equal(exit('cuma 2de çıkmak istiyorum'), 840);
+  assert.equal(exit('cuma sabah 10da çıksam kaç saat olur'), 600);
+  assert.equal(exit('cuma akşam 5:30da çıksam kaç saat olur'), 1050);
+  assert.equal(exit('bugün gece 02:30da çıksam kaç saat olur'), 150);
+});
+test('Sor keeps a previously planned arrival when only the exit is named', () => {
+  const fri = '2026-11-06', store = { plan: { [fri]: { s: 480 } } };
+  const r = solve('cuma 17:00 de çıksam kaç saat olur', store);
+  assert.equal(r.end, U(6,17));
+  assert.equal(r.len, 9 * H);
+  assert.equal(r.store.plan[fri].s, 480);
+  const w = C.week(data, now, {}, r.store);
+  assert.equal(w.rows[4].plan, r.len);
+});
+test('Sor changes OOO without replacing a saved arrival and exit', () => {
+  const fri = '2026-11-06', plan = { [fri]: { s: 480, e: 1020 } };
+  const r = solve('cuma 1 saat OOO alırsam 45 saati doldurur muyum?', { plan });
+  assert.deepEqual(r.store.plan, plan);
+  assert.equal(r.store.ooo[fri].m, 60);
+});
+test('a past exit on a day with no entry does not turn into a next-day shift', () => {
+  const r = SC.solve(C, { ...data, events: {} }, now, {}, {}, SC.parse('bugün 10:00 da çıksam kaç saat olur'));
+  assert.equal(r.end, U(4,10));
+  assert.equal(r.len, 0);
+  assert.equal(r.store, null);
+});
+test('Sor reports a one-minute deficit as a deficit', () => {
+  const r = solve('45 saati doldurur muyum?', { plan: {
+    '2026-11-04': { m: 540 }, '2026-11-05': { m: 540 }, '2026-11-06': { m: 419, softCore: true }
+  } });
+  assert.equal(r.margin, -MIN);
+  assert.equal(r.ok, false);
+});
+test('Sor equal-hour balancing preserves planned arrivals in preview and after apply', () => {
+  const thu = '2026-11-05', store = { plan: { [thu]: { s: 495, e: 1040 } } };
+  const r = solve('cuma 14te çıkmak için her gün kaç saat kalmalıyım', store);
+  assert.equal(r.pv.rows[3].start, U(5,8,15));
+  const w = C.week(data, now, {}, r.store);
+  assert.equal(w.rows[3].start, U(5,8,15));
+  assert.equal(w.rows[3].end, r.pv.rows[3].end);
+  assert.ok(w.total >= w.W);
+});
 console.log(passed+' Turkish Sor checks passed');

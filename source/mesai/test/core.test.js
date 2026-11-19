@@ -123,6 +123,20 @@ ok('reverse: leave Friday 17:00 → Wednesday until 19:19', () => {
   const w = C.reverse(ex(), NOW, {}, exStore(), '2026-11-06', 17 * 60, '2026-11-04');
   assert.equal(clk(w.rows[4].end), '17:00'); assert.equal(clk(w.rows[2].end), '19:19');
 });
+ok('reverse keeps an early exit and saves the exact preview with OOO credit', () => {
+  const initial = exStore();
+  const copy = C.clone(initial);
+  const result = C.reverse(ex(), NOW, {}, initial, '2026-11-06', 15 * 60, '2026-11-04');
+  assert.deepEqual(initial,copy);
+  assert.equal(clk(result.rows[4].end),'15:00');
+  assert.ok(result.rows[4].flags.includes('coreEarly'));
+  assert.equal(clk(result.rows[2].end),'21:19');
+  assert.equal(result.W,46 * H);
+  assert.equal(result.shortfall,0);
+  const applied = C.week(ex(), NOW, {}, {...initial,plan:result.planEdits}, 0);
+  assert.deepEqual(applied.rows,result.rows);
+  assert.equal(C.reverse(ex(), NOW, {}, initial, '2026-11-06', 15 * 60, '2026-11-05'),null);
+});
 ok('planned start moves the day, length kept', () => {
   const w = C.week(ex(), NOW, {}, { plan: { '2026-11-04': { s: 600 } } }, 0);
   assert.equal(clk(w.rows[2].start), '10:00'); assert.equal(clk(w.rows[2].end), '19:00');
@@ -272,5 +286,80 @@ ok('daily goal explains explicit OOO core-end exceptions and unknown intervals',
 ok('daily goal respects configured duration and explicit requested duration', () => {
   const w = C.week(ex(), NOW, { D: 7.5 }, {}, 0);
   assert.equal(C.dayGoal(w, 1).D, 7.5 * H); assert.equal(C.dayGoal(w, 1, 540).D, 9 * H);
+});
+ok('planning matrix: exact recorded, credited, planned and remaining minutes', () => {
+  const tue = '2026-11-03', wed = '2026-11-04', thu = '2026-11-05', fri = '2026-11-06';
+  const records = data({ events: {
+    '2026-11-02': [ev('02.11.2026 08:30', 'G'), ev('02.11.2026 12:00', 'C'), ev('02.11.2026 13:00', 'G'), ev('02.11.2026 18:00', 'C')],
+    [tue]: [ev('03.11.2026 09:05:30', 'G'), ev('03.11.2026 12:00', 'C'), ev('03.11.2026 13:00', 'G')]
+  } });
+  for (const baseline of [40, 45, 48]) for (const appointment of [0, 30, 60, 120])
+    for (const credit of ['izin', 'tatil', 'half']) for (const wedEnd of [959, 1065, 1140]) {
+      const store = {
+        types: credit === 'izin' ? { [thu]: credit } : {},
+        hol: credit === 'izin' ? {} : { [thu]: { half: credit === 'half' } },
+        plan: { [wed]: { s: 495, e: wedEnd, softCore: true }, [fri]: { s: 525 } },
+        ooo: appointment ? { [tue]: { m: appointment } } : {}
+      };
+      if (credit === 'half') store.plan[thu] = { s: 510, e: 780, softCore: true };
+      const w = C.week(records, NOW, { W: baseline }, store);
+      const done = 570 + 269.5; // Mon 08:30–18:00, Tue 09:05:30–13:35, both including breaks.
+      const target = baseline * 60 + appointment, wedWork = wedEnd - 495;
+      const friWork = Math.max(960 - 525, target - (570 + 540 + wedWork + 540));
+      assert.equal(w.W / MIN, target);
+      assert.equal(w.done / MIN, done);
+      assert.equal(w.remaining / MIN, target - done);
+      assert.equal(w.rows[2].plan / MIN, wedWork);
+      assert.equal(w.rows[3].val / MIN, 540);
+      assert.equal(w.rows[3].plan / MIN, credit === 'half' ? 270 : 0);
+      assert.equal(w.rows[4].end, Date.UTC(2026, 10, 6) + (525 + friWork) * MIN);
+      assert.equal(w.total / MIN, 570 + 540 + wedWork + 540 + friWork);
+      assert.equal(w.shortfall, 0);
+    }
+});
+ok('reverse keeps exact typed time, selected partner, shortfall and original records', () => {
+  const wed = '2026-11-04', fri = '2026-11-06';
+  const store = exStore();
+  store.plan = { [wed]: { s: 510, e: 1080 }, '2026-11-13': { s: 480 } };
+  const original = JSON.stringify(store);
+  for (const [requested, expectedDay, expectedLead, expectedGap] of [
+    [900, '06.11.2026 15:00', '04.11.2026 20:49', 0],
+    [1020, '06.11.2026 17:00', '04.11.2026 18:49', 0],
+    [120, '07.11.2026 02:00', '04.11.2026 09:49', 0]
+  ]) {
+    const draft = C.reverse(ex(), NOW, {}, store, fri, requested, wed);
+    assert.equal(draft.rows[4].end, U(expectedDay));
+    assert.equal(draft.rows[2].end, U(expectedLead));
+    assert.equal(draft.W, 46 * H);
+    assert.equal(draft.shortfall, expectedGap);
+    assert.equal(draft.done, C.week(ex(), NOW, {}, store).done);
+    assert.equal(draft.planEdits['2026-11-13'].s, 480);
+    const saved = C.week(ex(), NOW, {}, { ...store, plan: draft.planEdits });
+    assert.deepEqual(saved.rows.map(r => r.end), draft.rows.map(r => r.end));
+    assert.equal(JSON.stringify(store), original);
+  }
+  assert.equal(C.reverse(ex(), NOW, {}, store, fri, 1500, wed), null);
+  assert.equal(C.reverse(ex(), NOW, {}, store, fri, 1020, '2026-11-05'), null); // Thursday is leave.
+  assert.equal(C.reverse(ex(), NOW, {}, store, fri, 1020, fri), null);
+  const pinned = { '2026-11-03': { m: 540 }, [wed]: { s: 540, e: 960, softCore: true }, [fri]: { s: 540, e: 960, softCore: true } };
+  const locked = C.week(ex(), NOW, {}, { ...store, plan: pinned });
+  assert.equal(locked.shortfall / MIN, 259); // 46h minus 9:41 + 9:00 + 7:00 + 9:00 + 7:00.
+  assert.equal(locked.hit, null);
+});
+ok('clock boundaries: exact entry, same-minute exit and core warnings', () => {
+  const start = U('03.11.2026 08:23:07');
+  const live = C.week(ex(), start, {}, {});
+  assert.equal(live.today.first, start);
+  assert.equal(live.today.actual, 0);
+  assert.equal(live.milestone, start + 9 * H);
+  assert.equal(C.exitMinute(live.today, {}, 503), 503);
+  assert.equal(C.exitMinute(live.today, {}, 502), 1942);
+  const unrecorded = C.week(data(), NOW, {}, {});
+  assert.equal(C.exitMinute(unrecorded.today, {}, 720), 720);
+  assert.equal(C.exitMinute(unrecorded.today, { s: 840 }, 720), 2160);
+  const wed = '2026-11-04';
+  const w = C.week(ex(), NOW, {}, { plan: { [wed]: { s: 601, e: 959, softCore: true } } });
+  assert.equal(w.rows[2].end, U('04.11.2026 15:59'));
+  assert.deepEqual(w.rows[2].flags, ['coreStart', 'coreEarly']);
 });
 console.log(n + ' core tests passed');
