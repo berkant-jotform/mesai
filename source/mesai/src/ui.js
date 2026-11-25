@@ -13,52 +13,55 @@
     if (!o) { try { var old = JSON.parse(localStorage.getItem('mesai.v1')); if (old) {var migrated={ ppl: old.ppl || {}, ui: { lang: (old.ui || {}).lang } };if(MesaiPersistence.valid(migrated))o=migrated;} } catch (e) { /* none */ } }
     return o || {};
   })();
-  var storedState=C.clone(S);
   var returningUser=!!S.ui, THEME_CATALOG=BUILD.catalog||'bozkir-2026-11';
   var themeNews=returningUser&&BUILD.theme==='all'&&S.ui.themeCatalog!==THEME_CATALOG;
-  S.cfg = Object.assign({ W: 45, D: 9, start: '09:00', coreS: '10:00', coreE: '16:00', cap: 0, days: [0, 1, 2, 3, 4], hol: true }, S.cfg || {});
-  S.ui = Object.assign({ lang: 'tr', theme: 'saydam', look: 'auto', col: false, bell: false, planOpen: true, cmp: false, w: null, h: null }, S.ui || {});
-  // Minimize always means the Cep (pocket) view now; old collapsed-pill states migrate to it in every theme.
-  if(S.ui.col){S.ui.col=false;S.ui.cmp=false;S.ui.w=220;S.ui.h=null;}
-  // 3.3: three sizes only (Cep 220 · Kompakt 340 · Geniş). Free widths in between broke every theme's layout.
-  if (S.ui.w && S.ui.w >= 300) { if (S.ui.w < 760) S.ui.cmp = true; S.ui.w = null; } S.ui.h = null; S.ui.pre = null;
-  if (!S.ui.lang) S.ui.lang = 'tr';
-  if (S.ui.theme === 'sutunsor') { S.ui.theme = 'sutunlar'; S.ui.ask = true; }   // "Sütunlar + Sor" became Sütunlar with the question panel on
-  if (S.ui.theme === 'sor') { S.ui.theme = 'cizelge'; S.ui.ask = true; }          // 3.3: "Soru odaklı" removed; the Sor button covers it
-  if (S.ui.theme === 'bilet') S.ui.theme = 'cizelge';
-  if(S.ui.theme==='bozkirday')S.ui.theme='bozkir';
-  S.ppl = S.ppl || {};
-  S.ui.themeCatalog=THEME_CATALOG;
+  function normalize(state) {
+    state.cfg = Object.assign({ W: 45, D: 9, start: '09:00', coreS: '10:00', coreE: '16:00', cap: 0, days: [0, 1, 2, 3, 4], hol: true }, state.cfg || {});
+    var ui = state.ui = Object.assign({ lang: 'tr', look: 'auto', col: false, bell: false, planOpen: true, cmp: false, w: null, h: null }, state.ui || {});
+    if (!ui.theme && BUILD.theme === 'all') ui.theme = 'saydam';
+    if (ui.col) { ui.col = false; ui.cmp = false; ui.w = 220; }
+    if (ui.w && ui.w >= 300) { if (ui.w < 760) ui.cmp = true; ui.w = null; }
+    ui.h = null;
+    ui.pre = null;
+    if (!ui.lang) ui.lang = 'tr';
+    if (ui.theme === 'sutunsor') { ui.theme = 'sutunlar'; ui.ask = true; }
+    if (ui.theme === 'sor') { ui.theme = 'cizelge'; ui.ask = true; }
+    if (ui.theme === 'bilet') ui.theme = 'cizelge';
+    if (ui.theme === 'bozkirday') ui.theme = 'bozkir';
+    state.ppl = state.ppl || {};
+    ui.themeCatalog = THEME_CATALOG;
+    return state;
+  }
   // Resolve storage lazily: disabled storage must not prevent the widget opening.
-  var persistence = MesaiPersistence({ getItem:function(k){return localStorage.getItem(k);}, setItem:function(k,v){localStorage.setItem(k,v);} }, KEY, storedState, {theme:BUILD.theme,allowed:TH.ORDER});
-  // Replay this tab's uncommitted edits after a reload while a shared write is still queued.
-  var pendingKey = KEY + '.pending', pendingSave = null;
+  var browser = typeof window !== 'undefined';
+  var persistence = MesaiPersistence({
+    getItem: function (k) { return localStorage.getItem(k); },
+    setItem: function (k, v) { localStorage.setItem(k, v); },
+    removeItem: function (k) { localStorage.removeItem(k); },
+    keys: browser ? function () { return Object.keys(localStorage); } : null
+  }, KEY, S, { theme: BUILD.theme, allowed: TH.ORDER }, normalize);
+  S = persistence.restore(normalize(S));
+  var legacyKey = KEY + '.pending', legacyDraft;
+  try { S = persistence.refresh(S); } catch (e) { /* The widget can open even when storage needs repair. */ }
+  // 3.6.6 kept pending edits in session storage. Move them into the shared journal on upgrade.
   try {
-    var rawPending = sessionStorage.getItem(pendingKey), edits = JSON.parse(rawPending);
-    if (Array.isArray(edits) && edits.every(function (e) {
-      return Array.isArray(e) && (e.length === 1 || e.length === 2) && Array.isArray(e[0]) && e[0].length &&
-        e[0].every(function (k) { return typeof k === 'string' && k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; });
-    })) {
-      S = persistence.recover(S, edits);
-      pendingSave = rawPending;
+    legacyDraft = sessionStorage.getItem(legacyKey);
+    if (legacyDraft !== null) {
+      S = persistence.recover(S, JSON.parse(legacyDraft));
+      persistence.stage(S);
+      sessionStorage.removeItem(legacyKey);
     }
-  } catch (e) { /* A blocked session store must not disable the widget. */ }
-  S=persistence.restore(S);
+  } catch (e) { /* Leave old pending data in place if the migration could not finish. */ }
   var closed = false, writeLock = typeof navigator !== 'undefined' && navigator.locks;
+  var fallbackLock = browser && typeof indexedDB !== 'undefined' && MesaiPersistence.indexedLock(indexedDB, KEY + '.writes');
   function save(record, backup, undo) {
     syncHistory(record !== false);
-    if (writeLock && !backup && (record !== false || undo)) {
-      try {
-        var draft = persistence.pending(S);
-        if (draft.length || pendingSave !== null) {
-          pendingSave = JSON.stringify(draft);
-          sessionStorage.setItem(pendingKey, pendingSave);
-        }
-      } catch (e) { /* The locked write can still succeed. */ }
+    if (!backup && (record !== false || undo)) {
+      try { persistence.stage(S); } catch (e) { /* The serialized write can still succeed. */ }
     }
     function failed() {
       if (st) st.storageError = true;
-      if (writeLock && !closed) render(nowFn(), false);
+      if (browser && !closed) render(nowFn(), false);
       return false;
     }
     function write() {
@@ -71,18 +74,18 @@
         var changed = JSON.stringify(next) !== JSON.stringify(S), hadError = st && st.storageError;
         if (changed) S = next;
         if (st) st.storageError = false;
-        if (pendingSave !== null) {
-          try { if (sessionStorage.getItem(pendingKey) === pendingSave) sessionStorage.removeItem(pendingKey); } catch (e) { /* optional storage */ }
-          pendingSave = null;
-        }
         if (backup) history = null;
         syncHistory(false);
-        if (writeLock && !closed && (changed || hadError)) render(nowFn(), false);
+        if (browser && !closed && (changed || hadError)) render(nowFn(), false);
         return true;
       } catch (e) { return failed(); }
     }
     // Hold the shared lock from the storage read through the complete write.
-    try { return writeLock ? writeLock.request(KEY, write).catch(failed) : Promise.resolve(write()); }
+    try {
+      if (writeLock) return writeLock.request(KEY, write).catch(failed);
+      if (fallbackLock) return fallbackLock(write).catch(failed);
+      return Promise.resolve(browser ? failed() : write());
+    }
     catch (e) { return Promise.resolve(failed()); }
   }
   var nowFn = function () { return window.__MESAI_NOW ? window.__MESAI_NOW() : C.istanbulNow(); };
@@ -474,8 +477,10 @@
         exit < row.end && !row.held && planRecordNote(row, en)].filter(Boolean).join(' · ')
     };
   }
-  function planLink(v, p) {
-    if (!p.source) return '';
+  function planLink(v, p, glassRow) {
+    var friday = glassRow && fridayExit(v, glassRow);
+    var surface = glassRow ? '<div class="plan-link sy-plan-links sy-gl">' : '<div class="plan-link">';
+    if (!p || !p.source) return friday ? surface + syFridayLine(friday) + '</div>' : '';
     var t = L(), en = S.ui.lang === 'en', other = p.row === p.source ? p.related : p.source;
     var gap = v.shortfall > 1000 ? (en ? 'Weekly plan is ' + planDuration(v.shortfall) + ' short' : 'Haftalık hedefe ' + planDuration(v.shortfall) + ' eksik') : '';
     var change = st.planChange, before = change && change.person === st.person && change.week === v.ws && change.day === p.source.dow && other && change.ends[other.dow];
@@ -485,21 +490,25 @@
       var plan = v.p.plan[r.key];
       return r.office && !r.past && (!plan || (plan.e == null && plan.m == null));
     });
-    return '<div class="plan-link">' + (other && other.end != null ?
-      '<button class="plan-jump" data-a="planJump" data-v="' + other.dow + '" data-from="' + p.source.dow + '"><span>' + esc(label) +
-      (diff && other !== p.source ? '<small>' + esc(planDuration(Math.abs(diff)) + (diff > 0 ? (en ? ' later' : ' daha geç') : (en ? ' earlier' : ' daha erken'))) + '</small>' : '') +
-      '</span><b>' + esc(clk(plannedEnd(v, other), other.date)) + '</b><span aria-hidden="true">' + (S.ui.theme === 'saydam' ? ic('r', 12) : '›') + '</span></button>' : '') +
-      (gap ? '<div class="plan-warning">' + esc(gap) + '</div>' : '') +
-      (choices.length > 1 && p.row === p.source && p.related === v.absorber ? '<label class="plan-choice">' + (en ? 'Balance on' : 'Telafi günü') +
+    var time = other && other.end != null ? clk(plannedEnd(v, other), other.date) : null;
+    var shift = diff && other !== p.source ? planDuration(Math.abs(diff)) + (diff > 0 ? (en ? ' later' : ' daha geç') : (en ? ' earlier' : ' daha erken')) : '';
+    var jumpName = time && [label, time, shift].filter(Boolean).join(' · ');
+    var jump = time ? '<button class="plan-jump" data-a="planJump" data-v="' + other.dow + '" data-from="' + p.source.dow + '"' +
+      (glassRow ? ' title="' + esc(jumpName) + '" aria-label="' + esc(jumpName) + '"' : '') + '><span>' +
+      esc(glassRow ? t.daysL[other.dow] : label) + (!glassRow && shift ? '<small>' + esc(shift) + '</small>' : '') +
+      '</span><b>' + esc(time) + '</b><span aria-hidden="true">' + (glassRow ? ic('r', 12) : '›') + '</span></button>' : '';
+    var forecast = friday && (!time || other.dow !== 4) ? syFridayLine(friday) : '';
+    var choice = choices.length > 1 && p.row === p.source && p.related === v.absorber ? '<label class="plan-choice">' + (en ? 'Balance on' : 'Telafi günü') +
       '<select data-e="balance" aria-label="' + (en ? 'Balance on' : 'Telafi günü') + '">' + choices.map(function (r) {
         return '<option value="' + r.dow + '"' + (r === v.absorber ? ' selected' : '') + '>' + t.daysL[r.dow] + '</option>';
-      }).join('') + '</select></label>' : '') + '</div>';
+      }).join('') + '</select></label>' : '';
+    if (!jump && !forecast && !choice && !gap) return '';
+    return surface + jump + forecast + (gap ? '<div class="plan-warning">' + esc(gap) + '</div>' : '') + choice + '</div>';
   }
-  function planDetail(p, weekly, friday) {
+  function planDetail(p, weekly, quietDaily) {
     return '<div class="plan-meta">' + (weekly
       ? '<span class="sy-plan-week" data-week-forecast>' + esc(weekly.label) + ' <b>' + esc(weekly.time) + '</b></span><span class="sy-daily-ref">' + esc(p.goal) + '</span>'
-      : friday ? '<span class="sy-daily-ref">' + esc(p.goal) + '</span>' : '<b>' + esc(p.goal) + '</b>') + '<span>' + esc(p.detail) + '</span>' +
-      (friday ? syFridayLine(friday) : '') +
+      : quietDaily ? '<span class="sy-daily-ref">' + esc(p.goal) + '</span>' : '<b>' + esc(p.goal) + '</b>') + '<span>' + esc(p.detail) + '</span>' +
       (p.warning ? '<span class="plan-warning">' + esc(p.warning) + '</span>' : '') + '</div>';
   }
   function planHero(v, p, big, moveLink) {
@@ -1461,7 +1470,7 @@
   // Headline for the selected day: kicker, big value, chips.
   function syHead(v, r) {
     var planned = planning(v);
-    if (planned) return planHero(v, planned, 'sy-big');
+    if (planned) return planHero(v, planned, 'sy-big', true);
     var t = L(), y = t.sy, D = v.cfg.D * MIN, k, big, chips = [], extra = '', f = v.thisWeek ? forecastText(v) : null;
     var friday = fridayExit(v, r);
     var fc = function () { if (f && (!friday || v.shortfall)) chips.push([fcLbl(v) + ' ' + f.big, v.shortfall ? 'o' : 'g']); };
@@ -1484,7 +1493,7 @@
       fc();
     } else { k = y.offDay; big = '—'; }
     return '<div class="sy-k">' + esc(k) + '</div><div class="sy-big">' + esc(big) + '</div>' +
-      (chips.length ? '<div class="sy-chips">' + chips.map(function (c) { return '<span class="chip ' + c[1] + '">' + esc(c[0]) + '</span>'; }).join('') + '</div>' : '') + extra + (friday ? syFridayLine(friday) : '');
+      (chips.length ? '<div class="sy-chips">' + chips.map(function (c) { return '<span class="chip ' + c[1] + '">' + esc(c[0]) + '</span>'; }).join('') + '</div>' : '') + extra;
   }
   function syHero(v, r) {
     var t = L(), D = v.cfg.D * MIN, x = syVal(r, v);
@@ -1662,7 +1671,7 @@
     var pops = (st.themes ? themePanel() : '') + (st.set ? settings() : '') + (st.view === 'history' ? savedHistoryPanel() : '') + revPanel(v) + impPanel() +
       (S.ui.ask ? '<section class="sy-askpop" aria-label="' + esc(t.ask) + '">' + panelHead(t.ask, 'question') + askRow(v, false) + '<div class="askp">' + answerPanel(v) + suggestions() + '</div></section>' : '');
     return '<div class="sy' + (kum ? ' kum' : '') + '">' + sySide(v, w) + '<section class="sy-dt">' + tb + (compact ? '<div class="sy-mini"><span>' + t.remaining + ' <b>' + dur(v.remaining, true) + '</b></span><span>' + hm(v.done) + ' / ' + hrs(v.W) + ' ' + t.h + '</span><button class="ibtn" data-a="wreset" aria-label="' + esc(t.resetWeek) + '" title="' + esc(t.resetWeek) + '">' + syIc('reset') + '</button>' + releaseLink() + '</div>' : '') + '<div class="sy-content">' + title + notices(v) + (kum ? syKum(v, w, r) : syHero(v, r) + syLine(v, r)) + (compact ? noteBox : '') + '</div>' +
-      '<div class="sy-low">' + (compact ? '' : noteBox) + '<div class="sy-row">' + syBar(v, r) +
+      '<div class="sy-low">' + (compact ? '' : noteBox) + planLink(v, planning(v), r) + '<div class="sy-row">' + syBar(v, r) +
       '<button class="sy-ask sy-gl' + (S.ui.ask ? ' on' : '') + '" data-a="askOpen" aria-expanded="' + !!S.ui.ask + '" aria-label="' + t.ask + '" title="' + t.ask + ' (Alt+M)">' + syIc('search') + '</button></div></div>' + pops + '</section></div>';
   }
   function isDark() { if (TH.T[S.ui.theme] && TH.T[S.ui.theme].lightOnly) return false; return S.ui.look === 'dark' || (S.ui.look === 'auto' && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)); }
@@ -1835,7 +1844,7 @@
   var rimFrame = 0, rimPointer;
   root.addEventListener('pointermove', function (e) {
     if (S.ui.theme !== 'saydam' || S.ui.motion === false || !glassPointer.matches || e.pointerType !== 'mouse') return;
-    var surface = e.target.closest('.sy-bar,.sy-tb .sy-gl,.sy-ask,.plan-jump');
+    var surface = e.target.closest('.sy-bar,.sy-tb .sy-gl,.sy-ask,.sy-plan-links');
     if (!surface) return;
     rimPointer = { surface:surface, x:e.clientX, y:e.clientY };
     if (rimFrame) return;
@@ -2242,7 +2251,7 @@
     motionState: function(){return Object.assign({openingPending:openingRequested},motion.inspect());}
   };
   tick(true);
-  if(pendingSave!==null||themeNews||BUILD.theme!=='all')save(false);
+  save(false);
 
   if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,embeddedBytes(MesaiFonts[name]),name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;fontLoads++;font.load().then(function(f){document.fonts.add(f);host.setAttribute('data-loaded-fonts',(host.getAttribute('data-loaded-fonts')||'')+'|'+name);if(!closed)render(nowFn(),true);}).catch(function(error){console.warn('Mesai font could not load:',name,error);}).finally(function(){fontLoads--;if(!closed)scheduleOpening();});});
   checkVersion();

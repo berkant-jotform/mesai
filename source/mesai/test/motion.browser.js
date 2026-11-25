@@ -76,7 +76,7 @@ for(const [theme,size,view,effect] of [
   }
   if(theme==='saydam'){
    assert.equal(await host.locator('[data-motion-effect]').count(),0);
-   assert.ok(await host.locator('.plan-jump').evaluate(e=>e.offsetWidth<e.parentElement.clientWidth&&getComputedStyle(e).justifySelf==='start'));
+   assert.ok(await host.locator('.sy-low .plan-jump').evaluate(e=>e.offsetWidth<=e.parentElement.clientWidth));
   }
   assert.equal(await host.locator('[data-planned-exit]').textContent(),'17:00');
   assert.equal(await host.locator('.motion-completion').count(),0);

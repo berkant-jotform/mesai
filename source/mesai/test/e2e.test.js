@@ -76,6 +76,16 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       await click(p);
       await ready(p);
       const pick = i => p.locator(H + '.sy-day[data-v="'+i+'"]').click();
+      const glass = p.locator(H + '.sy-plan-links');
+      const checkStrip = async () => assert.ok(await glass.evaluate(el => {
+        const { previousElementSibling, nextElementSibling } = el;
+        const rect = el.getBoundingClientRect();
+        return !el.getRootNode().querySelector('.sy-content .plan-link') &&
+          rect.bottom <= nextElementSibling.getBoundingClientRect().top &&
+          !previousElementSibling?.classList.contains('sy-row') &&
+          rect.top >= el.closest('.sy-dt').querySelector('.sy-content').getBoundingClientRect().bottom - 1 &&
+          el.scrollWidth <= el.clientWidth + 1;
+      }), 'one glass strip between the progress view and planning controls');
       const exit = async val => {
         await p.locator(H + '.sy-bar [data-e=e]').fill(val);
         await p.locator(H + '.sy-bar [data-e=e]').press('Enter');
@@ -90,13 +100,16 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       assert.equal(await sh(p, '[data-planned-exit]'), '18:30');
       assert.match(await sh(p, '.plan-meta'), /17:30.*10 sa/);
       assert.match(await sh(p, '.plan-meta'), /\+1 sa/);
-      assert.equal(await sh(p, '.sy-friday'), 'Cuma: 17:00');
+      assert.equal(await sh(p, '.sy-friday'), null, 'Friday already appears in the jump control');
+      assert.match(await glass.locator('.plan-jump').getAttribute('aria-label'), /Cuma.*17:00/);
+      await checkStrip();
       assert.equal(await sh(p, '.plan-jump b'), '17:00');
       await p.locator(H + '.plan-jump').click();
       await p.locator(H + '[data-e=balance]').selectOption('2');
       assert.equal(await sh(p, '.plan-jump b'), '19:00');
       await p.locator(H + '.sy [data-v=kum][data-a=syv]').click();
       assert.equal(await sh(p, '.sy-kum [data-planned-exit]'), '17:00');
+      await checkStrip();
       await exit('15:30');
       assert.equal(await sh(p, '.sy-kum [data-planned-exit]'), '15:30');
       assert.match(await sh(p, '.plan-warning'), /16:00/);
@@ -597,7 +610,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       const h = p.locator('#mesai-host');
       assert.equal(await sh(p,'.sy-hero .hx .sy-k'),'Bugünkü çıkış');
       assert.equal(await sh(p,'.sy-hero .hx .sy-big'),'17:24');
-      assert.equal(await sh(p,'.sy-hero .sy-friday'),'Cuma: 18:19');
+      assert.equal(await sh(p,'.sy-low .sy-friday'),'Cuma: 18:19');
       assert.equal(await sh(p,'.sy-hero .earliest'),null);
       assert.match(await sh(p,'.sy-foot'),/Cum 18:19/);
       const earned = (await view(p)).done;
@@ -621,7 +634,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       assert.match(await sh(p,'.sy-kday'),/Çarşamba 4 Kas/);
       assert.equal(await sh(p,'.sy-kum .sy-k'),'Bugün giriş yok');
       assert.equal(await sh(p,'.sy-kum .sy-big'),'—');
-      assert.equal(await sh(p,'.sy-kum .sy-friday'),'Cuma: 17:00');
+      assert.equal(await sh(p,'.sy-low .sy-friday'),'Cuma: 17:00');
     } finally { await p.ctx.close(); }
   });
 

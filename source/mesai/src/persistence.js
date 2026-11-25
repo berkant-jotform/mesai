@@ -1,8 +1,11 @@
 // Apply this instance's edits to the latest saved state, not its stale startup copy.
-var MesaiPersistence = function (storage, key, initial, appearance) {
+var MesaiPersistence = function (storage, key, initial, appearance, normalize) {
   var copy = function (x) { return x === undefined ? undefined : JSON.parse(JSON.stringify(x)); };
   var object = function (x) { return x && typeof x === 'object' && !Array.isArray(x); };
-  var base = copy(initial);
+  normalize = normalize || function (state) { return state; };
+  var seed = normalize(copy(initial)), base = copy(seed);
+  var prefix = key + '.edit.', serial = 0;
+  var writer = storage.keys && (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
   var allowed = appearance && appearance.allowed || [];
   var single = appearance && appearance.theme !== 'all';
   // Both Bozkır bookmarks carry both variants, so they share one remembered choice.
@@ -39,44 +42,89 @@ var MesaiPersistence = function (storage, key, initial, appearance) {
     });
     return result;
   }
-  function latest() {
+  function entries() {
+    return storage.keys ? storage.keys().filter(function (k) { return k.indexOf(prefix) === 0; }).sort() : [];
+  }
+  function apply(state, edits) {
+    var next = copy(state);
+    edits.forEach(function (edit) {
+      var path = edit[0], parent = next;
+      for (var i = 0; i < path.length - 1; i++) {
+        if (!object(parent[path[i]])) parent[path[i]] = {};
+        parent = parent[path[i]];
+      }
+      var last = path[path.length - 1];
+      if (edit.length === 1) delete parent[last]; else parent[last] = edit[1];
+    });
+    return next;
+  }
+  function latest(keys) {
     var raw = storage.getItem(key);
-    if (raw === null) return copy(base);
-    var state = JSON.parse(raw);
+    var state = raw === null ? copy(seed) : JSON.parse(raw);
     if (!MesaiPersistence.valid(state)) throw Error('Invalid Mesai storage');
-    return state;
+    var applied = Array.isArray(state._appliedEdits) ? state._appliedEdits : [];
+    delete state._appliedEdits;
+    state = normalize(state);
+    keys.forEach(function (k) {
+      if (applied.indexOf(k) >= 0) return;
+      try {
+        var edits = JSON.parse(storage.getItem(k));
+        if (MesaiPersistence.validEdits(edits)) {
+          var next = apply(state, edits);
+          if (MesaiPersistence.valid(next)) state = next;
+        }
+      } catch (e) { /* A damaged journal entry must not hide the other changes. */ }
+    });
+    return { state: state, raw: raw };
+  }
+  function checkpoint(next, keys, raw) {
+    var data = keys.length ? Object.assign({}, next, { _appliedEdits: keys }) : next;
+    var json = JSON.stringify(data);
+    if (json !== raw) {
+      var prior = !keys.length && raw ? JSON.parse(raw) : null;
+      if (prior) delete prior._appliedEdits;
+      if (!prior || json !== JSON.stringify(prior)) storage.setItem(key, json);
+    }
+    // Record what was consumed before deleting entries. An interrupted cleanup cannot replay a stale edit.
+    keys.forEach(function (k) {
+      try { storage.removeItem(k); } catch (e) { /* The checkpoint already contains this edit. */ }
+    });
+    base = copy(next);
+    return restore(next);
   }
   return {
     restore: restore,
-    pending: function (current) {
-      var result = [];
-      pending(base, snapshot(current), [], result);
-      return result;
+    stage: function (current) {
+      if (!writer) return;
+      var edits = [];
+      pending(base, snapshot(current), [], edits);
+      // Attendance snapshots are disposable. Record only user-controlled state before yielding to the browser.
+      edits = edits.filter(function (edit) {
+        var path = edit[0];
+        return path[0] === 'ui' || path[0] === 'cfg' ||
+          (path[0] === 'ppl' && ['types','plan','ooo','ovr','pick'].indexOf(path[2]) >= 0);
+      });
+      if (!edits.length) return;
+      var time = typeof performance !== 'undefined' ? Math.floor((performance.timeOrigin + performance.now()) * 1000) : Date.now() * 1000;
+      var id = prefix + String(time).padStart(16, '0') + '.' + writer + '.' + String(++serial).padStart(8, '0');
+      storage.setItem(id, JSON.stringify(edits));
+      base = apply(base, edits);
     },
     recover: function (current, edits) {
-      var next = copy(current);
-      edits.forEach(function (edit) {
-        var path = edit[0], parent = next;
-        for (var i = 0; i < path.length - 1; i++) {
-          var k = path[i];
-          if (!object(parent[k])) parent[k] = {};
-          parent = parent[k];
-        }
-        var last = path[path.length - 1];
-        if (edit.length === 1) delete parent[last]; else parent[last] = edit[1];
-      });
+      if (!MesaiPersistence.validEdits(edits)) return current;
+      var next = apply(current, edits);
       return MesaiPersistence.valid(next) ? restore(next) : current;
     },
-    replace: function(current){if(!MesaiPersistence.valid(current))throw Error('Invalid backup');var next=snapshot(current);storage.setItem(key,JSON.stringify(next));base=copy(next);return restore(next);},
+    replace: function (current) {
+      if (!MesaiPersistence.valid(current)) throw Error('Invalid backup');
+      return checkpoint(snapshot(current), entries());
+    },
     save: function (current) {
-      var saved = latest(), next = merge(base, snapshot(current), saved);
-      var json = JSON.stringify(next);
-      if (json !== JSON.stringify(saved)) storage.setItem(key, json);
-      base = copy(next); // Only advance after a successful write; a failed edit can be retried.
-      return restore(next);
+      var keys = entries(), saved = latest(keys);
+      return checkpoint(merge(base, snapshot(current), saved.state), keys, saved.raw);
     },
     refresh: function (current) {
-      var saved = latest(), next = merge(base, snapshot(current), saved);
+      var saved = latest(entries()).state, next = merge(base, snapshot(current), saved);
       base = copy(saved);
       return restore(next);
     }
@@ -92,6 +140,32 @@ var MesaiPersistence = function (storage, key, initial, appearance) {
       edits.push(local === undefined ? [path] : [path, local]);
     }
   }
+};
+MesaiPersistence.validEdits = function (edits) {
+  return Array.isArray(edits) && edits.every(function (edit) {
+    return Array.isArray(edit) && (edit.length === 1 || edit.length === 2) && Array.isArray(edit[0]) && edit[0].length &&
+      edit[0].every(function (k) { return typeof k === 'string' && k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; });
+  });
+};
+// Read-write transactions on the same store serialize across tabs when Web Locks are unavailable.
+MesaiPersistence.indexedLock = function (indexedDB, name) {
+  var connection;
+  return function (write) {
+    if (!connection) connection = new Promise(function (resolve, reject) {
+      var open = indexedDB.open(name, 1);
+      open.onupgradeneeded = function () { open.result.createObjectStore('write'); };
+      open.onsuccess = function () { resolve(open.result); };
+      open.onerror = open.onblocked = function () { reject(open.error || Error('Mesai storage lock unavailable')); };
+    }).catch(function (error) { connection = null; throw error; });
+    return connection.then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction('write', 'readwrite'), result;
+        tx.objectStore('write').get(0).onsuccess = function () { result = write(); };
+        tx.oncomplete = function () { resolve(result); };
+        tx.onabort = tx.onerror = function () { reject(tx.error || Error('Mesai storage lock interrupted')); };
+      });
+    });
+  };
 };
 // Validate before touching the live state. A wrong file must never partially restore.
 MesaiPersistence.valid = function (s) {

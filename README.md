@@ -4,6 +4,11 @@ ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work h
 
 **Version:** [version.json](version.json) · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
+## 3.6.7
+
+- Kaydetme beklerken sekme kapanırsa değişiklikler Mesai yeniden açıldığında geri gelir. İki sekmede aynı anda yapılan ilk ayarlar da korunur.
+- Saydam’da Cuma çıkışı ve Telafi günü, planlama çubuğunun hemen üstünde.
+
 ## 3.6.6
 
 - Sekmeler aynı anda kaydetmeye çalıştığında izin, plan ve ayarlar sırayla kaydedilir. Yeni yer işaretini ekledikten sonra açık ARGE sekmelerini de yenile.

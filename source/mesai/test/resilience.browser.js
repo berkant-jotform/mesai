@@ -6,6 +6,61 @@ module.exports=async function({test,page,click,ready,until,H,sh,seedFor,DB,NOV3,
   const set=async(p,key,value)=>{await p.fill(H+'[data-c="'+key+'"]',value);await p.press(H+'[data-c="'+key+'"]','Enter');};
   const settings=async p=>{if(!await p.locator(H+'.set').isVisible())await p.locator(H+'[data-a="set"]').last().click();};
   const upload=async(p,body)=>{const chooser=p.waitForEvent('filechooser');await p.click(H+'[data-a="restore"]');await(await chooser).setFiles({name:'mesai-backup.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(body))});await p.waitForTimeout(200);};
+  const hold = p => p.evaluate(() => new Promise(acquired => {
+    navigator.locks.request('mesai.v3', () => new Promise(release => { window.releaseMesaiSave = release; acquired(); }));
+  }));
+  const release = p => p.evaluate(() => window.releaseMesaiSave());
+  const flush = p => p.evaluate(() => navigator.locks.request('mesai.v3', () => {}));
+  const durable = p => p.evaluate(() => JSON.parse(localStorage.getItem('mesai.v3')));
+  await test('Reliability: closing the browser tab during a queued leave write preserves the leave', async () => {
+    const p = await open();
+    try {
+      const q = await page(NOV3, { ctx: p.ctx, fresh: true });
+      await flush(q);
+      await p.locator(H + '[data-a="sel"][data-v="4"]').first().click();
+      await hold(q);
+      await p.locator(H + '[data-a="type"][data-v="izin"]').click();
+      assert.equal((await durable(q)).ppl['1001'].types['2026-11-06'], undefined);
+      assert.ok(await p.evaluate(() => Object.keys(localStorage).some(k => k.startsWith('mesai.v3.edit.'))));
+      await p.close();
+      await release(q);
+      await q.evaluate(() => portal.open());
+      await click(q); await ready(q); await flush(q);
+      assert.equal((await durable(q)).ppl['1001'].types['2026-11-06'], 'izin');
+    } finally { await p.ctx.close(); }
+  });
+  await test('Reliability: first-time settings from two tabs survive before either tab has saved defaults', async () => {
+    const guard = await page(NOV3, { fresh: true });
+    try {
+      await hold(guard);
+      const opts = { ctx: guard.ctx, seed: null, fresh: true };
+      const [p, q] = await Promise.all([open(opts), open(opts)]);
+      await Promise.all([settings(p), settings(q)]);
+      await set(p, 'W', '48');
+      await set(q, 'D', '10');
+      assert.equal(await durable(guard), null);
+      await release(guard); await flush(guard);
+      const saved = await durable(guard);
+      assert.deepEqual([saved.cfg.W, saved.cfg.D], [48, 10]);
+    } finally { await guard.ctx.close(); }
+  });
+  await test('Reliability: writes serialize across tabs with IndexedDB when Web Locks are unavailable', async () => {
+    const p = await page(NOV3, { seed: seedFor({}) });
+    try {
+      await p.ctx.addInitScript(() => Object.defineProperty(navigator, 'locks', { value: undefined }));
+      await p.reload();
+      await p.evaluate(db => { portal.setDB(db); portal.open(); }, DB);
+      await click(p); await ready(p); await settings(p);
+      const q = await open({ ctx: p.ctx });
+      await settings(q);
+      await Promise.all([set(p, 'W', '48'), set(q, 'D', '10')]);
+      await p.waitForFunction(() => {
+        const saved = JSON.parse(localStorage.getItem('mesai.v3'));
+        return saved?.cfg.W === 48 && saved.cfg.D === 10;
+      });
+      assert.equal(await q.evaluate(() => navigator.locks === undefined), true);
+    } finally { await p.ctx.close(); }
+  });
   await test('Reliability: a primitive saved state does not prevent opening or overwrite the original',async()=>{
     const p=await page(NOV3,{fresh:true});try{await p.evaluate(()=>{localStorage.setItem('mesai.v3','true');portal.open();});await click(p);await ready(p);assert.equal(await p.evaluate(()=>localStorage.getItem('mesai.v3')),'true');assert.ok(await sh(p,'.field-error'));}finally{await p.ctx.close();}
   });

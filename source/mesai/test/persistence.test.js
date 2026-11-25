@@ -127,4 +127,29 @@ check('a delayed first save preserves new effect and sound choices from another 
   slow.S.ppl['1001'].months={'2026-11':123};slow.save();
   assert.equal(JSON.parse(saved).ui.motion,false);assert.equal(JSON.parse(saved).ui.sound,true);assert.equal(JSON.parse(saved).ui.soundVolume,.6);assert.equal(JSON.parse(saved).ui.soundLead,15);
 });
+check('an interrupted cleanup cannot replay an edit over a later value', () => {
+  const key = 'mesai.v3', data = new Map([[key, JSON.stringify(initial)]]);
+  let interrupt = true;
+  const storage = {
+    getItem: k => data.get(k) ?? null,
+    setItem: (k, v) => data.set(k, v),
+    keys: () => [...data.keys()],
+    removeItem: k => { if (interrupt) throw Error('interrupted cleanup'); data.delete(k); }
+  };
+  const writer = Persistence(storage, key, initial);
+  const edited = clone(initial);
+  edited.cfg.W = 48;
+  writer.stage(edited);
+  writer.save(edited);
+  const saved = JSON.parse(data.get(key));
+  assert.ok(data.has(saved._appliedEdits[0]));
+  saved.cfg.W = 46;
+  data.set(key, JSON.stringify(saved));
+  const reader = Persistence(storage, key, saved);
+  assert.equal(reader.refresh(saved).cfg.W, 46);
+  interrupt = false;
+  reader.save(reader.refresh(saved));
+  assert.deepEqual([...data.keys()], [key]);
+  assert.equal(JSON.parse(data.get(key)).cfg.W, 46);
+});
 console.log(checks+' persistence checks passed');
