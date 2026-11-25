@@ -35,4 +35,16 @@ const extra = [
   ['Friday 9.25 hours', { kind: 'length', day: 4, m: 555 }]
 ];
 extra.forEach(([q, exp]) => assert.deepEqual(P(q), exp, q));
-console.log((cases.length + extra.length) + ' ask tests passed');
+const leave = [
+  ['cuma izin', 1, 4],
+  ['Cuma günü izinliyim.', 1, 4],
+  ['çarşamba izin olarak kaydet', 1, 2],
+  ['Friday off', 1, 4],
+  ['yarın izin', 6, 7],
+  ['cuma izin?', 1, null],
+  ['cuma izin alsam?', 1, null],
+  ['cuma izinliyim, perşembe kaçta çıkarım?', 1, null],
+  ['cuma 2 saat izin', 1, null]
+];
+leave.forEach(([q, today, exp]) => assert.equal(A.leaveStatement(q, today), exp, q));
+console.log((cases.length + extra.length + leave.length) + ' ask tests passed');

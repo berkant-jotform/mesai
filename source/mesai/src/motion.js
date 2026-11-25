@@ -152,7 +152,8 @@ var MesaiMotion = function(options){
     if(target&&!tiny){const control=target.querySelector('button,a,input,select');if(control){const top=localRect(control.closest('button,a,input,select')).top;box.height=Math.min(box.height,top-box.top-5);passive=Array.from(target.children).filter(n=>localRect(n).top+localRect(n).height<=top-3);}}
     if(!box||box.width<80||box.height<(tiny?24:52))return;
     const card=document.createElement('div');
-    card.className='motion-completion '+(hourglass?'is-hourglass ':'')+(weekly?'weekly ':'')+(tiny?'tiny ':'')+(box.height<125&&!tiny?'condensed ':'')+(theme==='saydam'?'glass':theme==='clock'?'celestial':/^bozkir|knight/.test(theme)?'manuscript':'plain');
+    const condensed=!tiny&&box.height<(compact&&/^bozkir/.test(theme)?170:125);
+    card.className='motion-completion '+(hourglass?'is-hourglass ':'')+(weekly?'weekly ':'')+(tiny?'tiny ':'')+(condensed?'condensed ':'')+(theme==='saydam'?'glass':theme==='clock'?'celestial':/^bozkir|knight/.test(theme)?'manuscript':'plain');
     card.setAttribute('data-motion-effect','');card.setAttribute('aria-hidden','true');
     card.style.cssText=`position:absolute;pointer-events:none;z-index:6;left:${Math.max(2,box.left)}px;top:${Math.max(2,box.top)}px;width:${Math.min(box.width,W.clientWidth-4)}px;height:${Math.max(tiny?52:66,box.height)}px;--completion-ink:${ink}`;
     const time=new Date(v.now),clock=String(time.getUTCHours()).padStart(2,'0')+':'+String(time.getUTCMinutes()).padStart(2,'0');

@@ -84,10 +84,13 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       await exit('17:00');
       assert.equal(await sh(p, '[data-planned-exit]'), '17:00');
       assert.match(await sh(p, '.plan-meta'), /18:00.*8 sa/);
+      assert.match(await sh(p, '.plan-meta'), /−1 sa/);
       assert.equal(await sh(p, '.plan-jump b'), '18:30');
       await p.locator(H + '.plan-jump').click();
       assert.equal(await sh(p, '[data-planned-exit]'), '18:30');
       assert.match(await sh(p, '.plan-meta'), /17:30.*10 sa/);
+      assert.match(await sh(p, '.plan-meta'), /\+1 sa/);
+      assert.equal(await sh(p, '.sy-friday'), 'Cuma: 17:00');
       assert.equal(await sh(p, '.plan-jump b'), '17:00');
       await p.locator(H + '.plan-jump').click();
       await p.locator(H + '[data-e=balance]').selectOption('2');
@@ -127,8 +130,8 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     const p = await page(NOV3, { seed: seedFor(HANDOFF) }); await p.evaluate(() => portal.open()); await click(p); await ready(p);
     const s = await st(p); assert.equal(s.person, '1001'); assert.equal(s.period, '2026-11');
     const side = await sh(p, '.side');
-    assert.match(side, /9 saat tamamlanır17:24/); assert.match(side, /Cum 18:19/); assert.match(side, /31 sa 08 dk/); assert.match(side, /14 sa 52 dk \/ 46 sa/);
-    assert.match(side, /En erken çıkış 16:00/);
+    assert.match(side, /Bugünkü çıkış17:24/); assert.match(side, /Cuma18:19/); assert.match(side, /31 sa 08 dk/); assert.match(side, /14 sa 52 dk \/ 46 sa/);
+    assert.doesNotMatch(side, /En erken çıkış/);
     assert.match(await sh(p, '.strip'), /45 \+ OOO 1:00 = 46 sa/);
     await p.ctx.close();
   });
@@ -292,14 +295,15 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     } finally { await p.ctx.close(); }
   });
 
-  await test('Friday: the headline is when 45 h complete; the forecast slot says when you may leave', async () => {
+  await test('Friday: planned exit is primary and the weekly milestone remains visible', async () => {
     const full = d => wk(d, [['08:30:00', 'G'], ['18:40:00', 'Ç']]);
     const db = { '1001': { '2026-10': [], '2026-11': [full('2026-11-02'), full('2026-11-03'), full('2026-11-04'), full('2026-11-05'), wk('2026-11-06', [['08:30:00', 'G']], { today: true })] } };
     for (const th of ['cizelge', 'knight', 'sutunlar', 'clock']) {
       const p = await page(Date.UTC(2026, 10, 6, 11, 0), { seed: seedFor({}, { theme: th }) });
       await p.evaluate(d => { portal.setDB(d); portal.open(); }, db); await click(p); await ready(p);
       const txt = await sh(p, '.w');
-      assert.match(txt, /45 saat tamamlanır/, th); assert.match(txt, /12:50/, th); assert.match(txt, /Bugün çıkış/, th); assert.ok(!/9 saat tamamlanır/.test(txt), th);
+      assert.match(txt, /45 saat tamamlanır/, th); assert.match(txt, /12:50/, th);
+      assert.match(txt, /Bugünkü çıkış16:00/, th); assert.match(txt, /9 saate göre −1 sa 30 dk/, th);
       await p.ctx.close();
     }
   });
@@ -389,7 +393,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     assert.match(ans, /günde/);assert.match(ans, /Cum · 16:00 çıkış/);const preview=await p.evaluate(()=>window.__mesai.state().st.ask.res);assert.ok(preview.pv.total>=preview.W);assert.equal(preview.pv.rows[4].end,Date.UTC(2026,10,6,16));
     await p.click(H + '[data-a="askApply"]');
     await until(p, async () => clk((await view(p)).rows[4].end) === '16:00', 3000, 'applied');
-    assert.match(await sh(p, '.toast'), /Uygulandı/);
+    await until(p, async () => /Uygulandı/.test(await sh(p, '.toast')));
     await p.click(H + '.toast [data-a="undo"]');
     await until(p, async () => clk((await view(p)).rows[4].end) === '18:19', 3000, 'undone');
     await p.ctx.close();
@@ -405,6 +409,51 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     await p.fill(H + '[data-e="ask"]', 'blabla'); await p.press(H + '[data-e="ask"]', 'Enter');
     assert.match(await sh(p, '.ans'), /anlayamadım/);
     await p.ctx.close();
+  });
+
+  await test('Sor leave: a statement survives reopening the next day, a question is only a preview', async () => {
+    const p = await page(NOV3, { seed: seedFor({}, { theme: 'saydam', ask: true }) });
+    try {
+      await p.evaluate(() => portal.open({ period: '2026-11', person: '1001' })); await click(p); await ready(p, 'before saving Friday leave');
+      const askInput = p.locator(H + '[data-e=ask]');
+      const key = '2026-11-06';
+      const saved = () => p.evaluate(date => JSON.parse(localStorage.getItem('mesai.v3')).ppl['1001'].types[date], key);
+      await askInput.fill('cuma izin alsam?'); await askInput.press('Enter');
+      assert.equal(await saved(), undefined);
+      assert.ok(await p.locator(H + '[data-a=askApply]').count());
+      await askInput.fill('cuma izin'); await askInput.press('Enter');
+      await until(p, async () => /İzin kaydedildi/.test(await sh(p, '.sy-askpop .ans')));
+      assert.equal(await saved(), 'izin');
+      assert.match(await sh(p, '.sy-askpop .ans'), /Cuma 6 Kas.*İzin kaydedildi/);
+      assert.equal((await view(p)).rows[4].type, 'izin');
+
+      await p.reload();
+      await p.evaluate(db => {
+        window.__nowOverride = Date.UTC(2026, 10, 4, 9);
+        portal.setDB(db); portal.open({ period: '2026-11', person: '1001' });
+      }, DB);
+      await click(p); await ready(p, 'the day after using Sor');
+      assert.equal(await saved(), 'izin');
+      assert.equal((await view(p)).rows[4].type, 'izin');
+      assert.match(await sh(p, '.sy-day[data-v="4"]'), /9 sa sayılır/);
+      assert.equal(await sh(p, '.sy-friday'), 'Cuma: İzin');
+      assert.match(await sh(p, '.sy .lt'), /Çarşamba 4 Kas/);
+
+      await p.keyboard.press('Escape');
+      await p.click(H + '.sy-day[data-v="4"]');
+      await p.click(H + '.sy-bar [data-a=type][data-v=ofis]');
+      await p.click(H + '.sy-bar [data-a=type][data-v=izin]');
+      await until(p, async () => /İzin kaydedildi/.test(await sh(p, '.toast')));
+      await p.reload();
+      await p.evaluate(db => {
+        window.__nowOverride = Date.UTC(2026, 10, 5, 9);
+        portal.setDB(db); portal.open({ period: '2026-11', person: '1001' });
+      }, DB);
+      await click(p); await ready(p, 'the day after using the İzin button');
+      assert.equal(await saved(), 'izin');
+      assert.equal((await view(p)).rows[4].type, 'izin');
+      assert.match(await sh(p, '.sy .lt'), /Perşembe 5 Kas/);
+    } finally { await p.ctx.close(); }
   });
 
   await test('reverse calc: Friday 17:00 → stay Wednesday until 19:19', async () => {
@@ -465,9 +514,9 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.theme-panel .theme-choice').length), 6, 'six theme groups; the two Bozkır variants share one group');
     assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.hd .seg, .hd .sws').length), 0, 'language/theme live in Görünüm'); assert.equal(await p.evaluate(() => document.getElementById('mesai-host').shadowRoot.querySelectorAll('.hd [data-a="dark"]').length), 1, 'one light/dark button');
     await p.click(H + '.theme-panel [data-a="lang"][data-v="en"]'); await look(); await p.click(H + '.theme-panel [data-a="look"][data-v="dark"]');
-    assert.match(await sh(p, '.side'), /9-hour target reached at/);
+    assert.match(await sh(p, '.side'), /Today’s exit/);
     await p.reload(); await p.evaluate(([db]) => { portal.setDB(db); portal.setDelay(200); portal.open(); }, [DB]); await click(p); await ready(p);
-    const side = await sh(p, '.side'); assert.match(side, /Week done · 46 h/, JSON.stringify(side));
+    const side = await sh(p, '.side'); assert.match(side, /Friday18:19/, JSON.stringify(side));
     assert.equal(await p.evaluate(() => window.__mesai.state().S.ui.look), 'dark');
     await p.ctx.close();
   });
@@ -540,18 +589,22 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     } finally { await p.ctx.close(); }
   });
 
-  await test('Saydam prioritizes the weekly forecast and then the explicit planned exit', async () => {
+  await test('Saydam puts today or the selected plan first, with the weekly forecast nearby', async () => {
     const p = await page(NOV3, {seed: seedFor(HANDOFF, {theme:'saydam'})});
     try {
       await p.evaluate(() => portal.open());
       await click(p); await ready(p);
       const h = p.locator('#mesai-host');
-      assert.equal(await sh(p,'.sy-hero .hx .sy-big'),'Cum 18:19');
-      assert.match(await sh(p,'.sy-hero .hx .sy-daily-ref'),/9.*17:24/);
+      assert.equal(await sh(p,'.sy-hero .hx .sy-k'),'Bugünkü çıkış');
+      assert.equal(await sh(p,'.sy-hero .hx .sy-big'),'17:24');
+      assert.equal(await sh(p,'.sy-hero .sy-friday'),'Cuma: 18:19');
+      assert.equal(await sh(p,'.sy-hero .earliest'),null);
+      assert.match(await sh(p,'.sy-foot'),/Cum 18:19/);
       const earned = (await view(p)).done;
       await h.locator('.sy [data-a=min]').click();
-      assert.equal(await sh(p,'.pocket-values .pkv:not(.f) b'),'Cum 18:19');
-      assert.equal(await sh(p,'.pocket-values .pkv.f b'),'17:24');
+      assert.equal(await sh(p,'.pocket-values .pkv:not(.f) b'),'17:24');
+      assert.equal(await sh(p,'.pocket-values .pkv.f small'),'Cuma');
+      assert.equal(await sh(p,'.pocket-values .pkv.f b'),'18:19');
       assert.ok(await h.locator('.pocket-values .pkv:not(.f) b').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
       await h.locator('.pocket-heading [data-a=cmpx]').click();
       await h.locator('.sy-day[data-v="4"]').click();
@@ -564,7 +617,50 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       assert.equal(await sh(p,'.sy-kum [data-planned-exit]'),'17:00');
       assert.match(await sh(p,'.sy-kum [data-week-forecast]'),/46.*Cum 17:00/);
       assert.equal((await view(p)).done,earned);
+      await p.evaluate(() => { window.__nowOverride = Date.UTC(2026, 10, 4, 8, 5); window.__mesai.poke(); });
+      assert.match(await sh(p,'.sy-kday'),/Çarşamba 4 Kas/);
+      assert.equal(await sh(p,'.sy-kum .sy-k'),'Bugün giriş yok');
+      assert.equal(await sh(p,'.sy-kum .sy-big'),'—');
+      assert.equal(await sh(p,'.sy-kum .sy-friday'),'Cuma: 17:00');
     } finally { await p.ctx.close(); }
+  });
+
+  await test('Other themes share the Today and Friday hierarchy in all window sizes', async () => {
+    const full = {
+      cizelge: ['.side', '.side .sec'],
+      sutunlar: ['.rp', '.rp .card2'],
+      clock: ['.dial-copy', '.clock-forecast .forecast-block'],
+      knight: ['.side', '.side .sec'],
+      bozkir: ['.side', '.side .sec'],
+      bozkira: ['.side', '.side .sec']
+    };
+    for (const [theme, [primary, secondary]] of Object.entries(full)) {
+      const p = await page(NOV3, { seed: seedFor(HANDOFF, { theme }) });
+      const h = p.locator('#mesai-host');
+      try {
+        await p.evaluate(() => portal.open({ period: '2026-11', person: '1001' }));
+        await click(p); await ready(p);
+        assert.match(await sh(p, primary), /Bugünkü çıkış17:24/, theme);
+        assert.match(await sh(p, secondary), /Cuma18:19/, theme);
+        assert.equal(await h.locator('.earliest').count(), 0, theme);
+        const exit = h.locator('.ed [data-e=e]');
+        await exit.fill('16:30'); await exit.press('Enter');
+        assert.equal(await sh(p,'[data-planned-exit]'),'16:30',theme);
+        assert.match(await sh(p, primary), /−53 dk/, theme);
+        await h.locator('.hd [data-a=cmp]').click();
+        assert.equal(await sh(p,'.cpt [data-planned-exit]'),'16:30',theme);
+        assert.match(await sh(p,'.cpt .cst'),/Cuma/,theme);
+        const question = h.locator('.cask [data-e=ask]');
+        await question.fill('cuma izin'); await question.press('Enter');
+        await until(p,async()=>/İzin kaydedildi/.test(await sh(p,'.cpt .cans')),3000,theme);
+        assert.equal((await view(p)).rows[4].type,'izin',theme);
+        await h.locator('.hd [data-a=min]').click();
+        assert.equal(await sh(p,'.pocket-values .pkv:not(.f) b'),'16:30',theme);
+        assert.equal(await sh(p,'.pocket-values .pkv.f small'),'Cuma',theme);
+        assert.equal(await sh(p,'.pocket-values .pkv.f b'),'İzin',theme);
+        assert.match(await sh(p,'.plan-pocket'),/−53 dk/,theme);
+      } finally { await p.ctx.close(); }
+    }
   });
 
   await test('Saydam labels a fully pinned shortfall as a weekly target in both views', async () => {
@@ -587,8 +683,9 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
       }
       assert.equal((await view(p)).done,earned);
       await h.locator('.sy [data-a=min]').click();
-      assert.equal(await sh(p,'.pocket-values .pkv.f small'),'Hafta açığı');
-      assert.equal(await sh(p,'.pocket-values .pkv.f b'),'2:43');
+      assert.equal(await sh(p,'.pocket-values .pkv.f small'),'Cuma');
+      assert.equal(await sh(p,'.pocket-values .pkv.f b'),'17:00');
+      assert.match(await sh(p,'.plan-pocket'),/Hafta açığı: 2:43/);
       assert.ok(await h.locator('.pocket-values .pkv.f b').evaluate(el => el.scrollWidth <= el.clientWidth + 1));
     } finally { await p.ctx.close(); }
   });
@@ -751,7 +848,7 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     await until(p, async () => (await cls(p)).includes('T-compact'), 2000, 'compact');
     await p.waitForTimeout(250);
     const b1 = await box(p); assert.equal(Math.round(b1.w), 340); assert.ok(Math.abs(b1.r - b0.r) < 2, 'right edge kept');
-    assert.match(await sh(p, '.cpt'), /9 saat tamamlanır/); assert.match(await sh(p, '.cpt'), /17:24/);
+    assert.match(await sh(p, '.cpt'), /Bugünkü çıkış/); assert.match(await sh(p, '.cpt'), /17:24/);
     await p.screenshot({ path: path.join(SHOTS, 'v31-compact.png'), clip: { x: b1.x - 14, y: b1.y - 14, width: b1.w + 28, height: b1.h + 28 } });
     await ask(p, 'yarın izinliyim cuma kaçta çıkarım');
     assert.match(await sh(p, '.cpt'), /Cuma çıkış/);
@@ -761,8 +858,17 @@ async function test(name, fn) { if (process.env.ONLY && !name.includes(process.e
     await until(p, async () => (await cls(p)).includes('T-wide'), 2000, 'wide again');
     await p.waitForTimeout(250);
     assert.equal(Math.round((await box(p)).w), Math.round(b0.w));
-    // persists
-    await p.click(H + '.hd [data-a="cmp"]'); await until(p, async () => (await cls(p)).includes('T-compact'), 2000, 'compact again'); await p.reload(); await p.evaluate(([db]) => { portal.setDB(db); portal.setDelay(200); portal.open(); }, [DB]); await click(p); await ready(p).catch(() => 0);
+    // Reload while a user change is still waiting to write.
+    await p.evaluate(() => navigator.locks.request('mesai.v3', () => 0));
+    await p.evaluate(() => new Promise(acquired => {
+      navigator.locks.request('mesai.v3', () => { acquired(); return new Promise(() => {}); });
+    }));
+    await p.click(H + '.hd [data-a="cmp"]');
+    await until(p, async () => (await cls(p)).includes('T-compact'), 2000, 'compact again');
+    assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('mesai.v3')).ui.cmp), false);
+    await p.reload(); await p.evaluate(([db]) => { portal.setDB(db); portal.setDelay(200); portal.open(); }, [DB]); await click(p);
+    await until(p, async () => (await st(p))?.code === 'ready', 10000, 'portal ready in compact mode');
+    await until(p, () => p.evaluate(() => JSON.parse(localStorage.getItem('mesai.v3')).ui.cmp), 4000, 'compact saved after reload');
     await until(p, async () => (await cls(p).catch(() => '')).includes('T-compact'), 4000, 'compact after reload ' + await p.evaluate(() => localStorage.getItem('mesai.v3').slice(0, 300)));
     await p.ctx.close();
   });

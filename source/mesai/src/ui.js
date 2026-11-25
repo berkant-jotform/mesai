@@ -31,12 +31,60 @@
   S.ui.themeCatalog=THEME_CATALOG;
   // Resolve storage lazily: disabled storage must not prevent the widget opening.
   var persistence = MesaiPersistence({ getItem:function(k){return localStorage.getItem(k);}, setItem:function(k,v){localStorage.setItem(k,v);} }, KEY, storedState, {theme:BUILD.theme,allowed:TH.ORDER});
+  // Replay this tab's uncommitted edits after a reload while a shared write is still queued.
+  var pendingKey = KEY + '.pending', pendingSave = null;
+  try {
+    var rawPending = sessionStorage.getItem(pendingKey), edits = JSON.parse(rawPending);
+    if (Array.isArray(edits) && edits.every(function (e) {
+      return Array.isArray(e) && (e.length === 1 || e.length === 2) && Array.isArray(e[0]) && e[0].length &&
+        e[0].every(function (k) { return typeof k === 'string' && k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; });
+    })) {
+      S = persistence.recover(S, edits);
+      pendingSave = rawPending;
+    }
+  } catch (e) { /* A blocked session store must not disable the widget. */ }
   S=persistence.restore(S);
-  var save = function (record, replace) {
+  var closed = false, writeLock = typeof navigator !== 'undefined' && navigator.locks;
+  function save(record, backup, undo) {
     syncHistory(record !== false);
-    try { S = replace ? persistence.replace(S) : persistence.save(S); syncHistory(false); if(st)st.storageError=false; }
-    catch (e) { if(st)st.storageError=true; }
-  };
+    if (writeLock && !backup && (record !== false || undo)) {
+      try {
+        var draft = persistence.pending(S);
+        if (draft.length || pendingSave !== null) {
+          pendingSave = JSON.stringify(draft);
+          sessionStorage.setItem(pendingKey, pendingSave);
+        }
+      } catch (e) { /* The locked write can still succeed. */ }
+    }
+    function failed() {
+      if (st) st.storageError = true;
+      if (writeLock && !closed) render(nowFn(), false);
+      return false;
+    }
+    function write() {
+      // Keep an edit already made before closing the widget. Skip abandoned background work and imports.
+      if (closed && (record === false || backup)) return false;
+      try {
+        var next = backup ? persistence.replace(Object.assign({}, S, {
+          ppl: backup.ppl, cfg: Object.assign({}, S.cfg, backup.cfg), ui: Object.assign({}, S.ui, backup.ui)
+        })) : persistence.save(S);
+        var changed = JSON.stringify(next) !== JSON.stringify(S), hadError = st && st.storageError;
+        if (changed) S = next;
+        if (st) st.storageError = false;
+        if (pendingSave !== null) {
+          try { if (sessionStorage.getItem(pendingKey) === pendingSave) sessionStorage.removeItem(pendingKey); } catch (e) { /* optional storage */ }
+          pendingSave = null;
+        }
+        if (backup) history = null;
+        syncHistory(false);
+        if (writeLock && !closed && (changed || hadError)) render(nowFn(), false);
+        return true;
+      } catch (e) { return failed(); }
+    }
+    // Hold the shared lock from the storage read through the complete write.
+    try { return writeLock ? writeLock.request(KEY, write).catch(failed) : Promise.resolve(write()); }
+    catch (e) { return Promise.resolve(failed()); }
+  }
   var nowFn = function () { return window.__MESAI_NOW ? window.__MESAI_NOW() : C.istanbulNow(); };
   var L = function () { return TX[S.ui.lang === 'en' ? 'en' : 'tr']; };
 
@@ -52,7 +100,7 @@
     var person=P();if(person)historyEdits.forEach(function(k){person[k]=next.edits[k];});
     st.ask=null;st.rev=null;st.toast=null;st.planChange=null;
     if(JSON.stringify(before.ui.pos)!==JSON.stringify(next.ui.pos)){st.placed=false;}
-    save(false);render(nowFn(),true);return true;
+    save(false,null,true);render(nowFn(),true);return true;
   }
   function historyKey(e){
     if(!(e.metaKey||e.ctrlKey)||e.altKey||e.isComposing)return false;
@@ -213,7 +261,7 @@
     '.pk{display:flex;align-items:center;gap:11px;height:54px;padding:0 6px 0 14px;cursor:grab;position:relative}.pkv{display:flex;flex-direction:column;line-height:1.08;min-width:0}.pkv small{font-size:10px;font-weight:750;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}' +
     '.pkv b{font-family:var(--num);font-size:20px;font-weight:800;letter-spacing:-.03em;white-space:nowrap}.pkv.f b{font-size:15px;color:var(--goldInk)}.pkbar{position:absolute;left:0;bottom:0;height:3px;background:var(--acc);border-radius:0 2px 2px 0}' +
     '.T-pocket .pk.themed-pocket{display:block;height:auto;padding:9px 8px 11px 12px;position:relative}.pocket-heading{display:flex;align-items:center;gap:4px;margin-bottom:10px}.pocket-brand{font-weight:800;font-size:15px;text-decoration:none;color:var(--ink);white-space:nowrap;margin-left:4px}.pocket-brand small{font-size:10px;font-weight:500;color:var(--mut);margin-left:3px}.pocket-heading .ib{width:28px;height:28px}' +
-    '.pocket-values{display:grid;grid-template-columns:1fr 1fr;gap:9px}.pocket-values.week-first{grid-template-columns:1.35fr 1fr}.pocket-meter{height:5px;margin-top:10px;border-radius:3px;position:relative;background:var(--sunk);overflow:hidden}.pocket-meter .pkbar{position:absolute;top:0;left:0;height:100%;border-radius:3px}' +
+    '.pocket-values{display:grid;grid-template-columns:1fr 1fr;gap:9px}.pocket-meter{height:5px;margin-top:10px;border-radius:3px;position:relative;background:var(--sunk);overflow:hidden}.pocket-meter .pkbar{position:absolute;top:0;left:0;height:100%;border-radius:3px}' +
     '.hd.hc{height:46px;padding:0 6px 0 14px}.cpt{padding:12px 14px 14px}.cpt .bb{font-family:var(--num);font-weight:800;letter-spacing:-.04em;font-size:40px;line-height:1.02;margin-top:2px}' +
     '.cst{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,.7fr);gap:6px;margin-top:12px}.cst div{padding:7px 9px;border-radius:10px;background:var(--sunk);min-width:0}.cst b{display:block;font-family:var(--num);font-size:15px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}.cwk button.sel{box-shadow:inset 0 -2px 0 var(--acc);border-radius:4px}.cst small{display:block;font-size:10.5px;color:var(--mut);font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
     '.cwk{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:10px;height:66px}.cwk button{display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:3px;font-size:10px;font-weight:750;color:var(--mut);padding:0}.cwk i{display:block;border-radius:4px;background:var(--acc);min-height:3px}.cwk i.pl{background:var(--accSoft2)}.cwk i.cr{background:var(--ok);opacity:.7}.cwk button.td{color:var(--ink)}' +
@@ -355,7 +403,12 @@
     var p = P(); if (!p) return null;
     var v = C.week(dataOf(p), now, S.cfg, storeOf(p), st.off);
     v.p = p;
-    if (st.sel == null || st.sel > 6) st.sel = v.thisWeek ? Math.min(4, C.dow(now)) : 0;
+    if (v.thisWeek && st.todayKey && st.todayKey !== v.today.key) {
+      st.sel = null;
+      st.planChange = null;
+    }
+    if (st.sel == null || st.sel > 6) st.sel = v.thisWeek ? v.today.dow : 0;
+    if (v.thisWeek) st.todayKey = v.today.key;
     if (st.ask && st.ask.sc && v.thisWeek) {
       var res = SC.solve(C, dataOf(p), now, S.cfg, storeOf(p), st.ask.sc), tr = res.pv && res.day != null && res.pv.rows[res.day];
       st.ask.res = res; st.ask.store = res.store || null; if (res.kind && !/^(outOfWeek|weekend)$/.test(res.kind)) st.lastSc = { sc: st.ask.sc, day: res.day }; st.ask.opts = (res.kind === 'leave' || res.kind === 'earliest') && tr ? { absorb: tr.key } : {};
@@ -379,6 +432,9 @@
 
   function planDuration(ms) {
     return dur(ms, true).replace(/ 00 (dk|m)$/, '').replace(/^0 (sa|h) /, '');
+  }
+  function signedDuration(delta) {
+    return (delta > 0 ? '+' : '−') + planDuration(Math.abs(delta));
   }
   function plannedEnd(v, row) {
     var plan = v.p.plan[row.key];
@@ -409,11 +465,12 @@
     var early = v.cfg.coreE > v.cfg.coreS && exit < coreEnd && (row.held || row.flags.includes('coreEarly') || row.flags.includes('coreUnknown'));
     return {
       row: row, source: source, related: related, exit: exit,
-      label: (S.ui.theme === 'saydam' && tierOf() !== 'pocket' ? '' : t.daysL[row.dow] + ' · ') + (row.auto ? (en ? 'Suggested exit' : 'Önerilen çıkış') : (en ? 'Planned exit' : 'Planlanan çıkış')),
+      label: row.today ? t.todayExit : (S.ui.theme === 'saydam' ? '' : t.daysL[row.dow] + ' · ') + t.sy.planned,
       value: clk(exit, row.date),
       goal: en ? hrs(target) + ' h by ' + clk(goal, row.date) : hrs(target) + ' saat tamamlanır · ' + clk(goal, row.date),
-      detail: planDuration(amount) + (en ? ' planned' : ' planlandı') + (delta ? ' · ' + planDuration(Math.abs(delta)) + (delta > 0 ? (en ? ' over' : ' fazla') : (en ? ' short' : ' eksik')) : ''),
-      warning: [early && (en ? 'Core hours until ' : 'Zorunlu saat sonu ') + clk(coreEnd),
+      detail: planDuration(amount) + (en ? ' planned' : ' planlandı') + (delta ? ' · ' + signedDuration(delta) : ''),
+      delta: delta, target: target,
+      warning: [early && fill(t.teamEnd, { t: clk(coreEnd) }),
         exit < row.end && !row.held && planRecordNote(row, en)].filter(Boolean).join(' · ')
     };
   }
@@ -438,16 +495,18 @@
         return '<option value="' + r.dow + '"' + (r === v.absorber ? ' selected' : '') + '>' + t.daysL[r.dow] + '</option>';
       }).join('') + '</select></label>' : '') + '</div>';
   }
-  function planDetail(p, weekly) {
+  function planDetail(p, weekly, friday) {
     return '<div class="plan-meta">' + (weekly
       ? '<span class="sy-plan-week" data-week-forecast>' + esc(weekly.label) + ' <b>' + esc(weekly.time) + '</b></span><span class="sy-daily-ref">' + esc(p.goal) + '</span>'
-      : '<b>' + esc(p.goal) + '</b>') + '<span>' + esc(p.detail) + '</span>' +
+      : friday ? '<span class="sy-daily-ref">' + esc(p.goal) + '</span>' : '<b>' + esc(p.goal) + '</b>') + '<span>' + esc(p.detail) + '</span>' +
+      (friday ? syFridayLine(friday) : '') +
       (p.warning ? '<span class="plan-warning">' + esc(p.warning) + '</span>' : '') + '</div>';
   }
   function planHero(v, p, big, moveLink) {
-    var weekly = big === 'sy-big' ? syWeekForecast(v) : null;
+    var friday = big === 'sy-big' ? fridayExit(v, p.row) : null;
+    var weekly = big === 'sy-big' && (!friday || v.shortfall) ? weekForecast(v) : null;
     return '<div class="planned-hero"><div class="k">' + esc(p.label) + '</div><div class="' + big + '" data-planned-exit aria-live="polite">' +
-      esc(p.value) + '</div>' + planDetail(p, weekly) + (moveLink ? '' : planLink(v, p)) + '</div>';
+      esc(p.value) + '</div>' + planDetail(p, weekly, friday) + (moveLink ? '' : planLink(v, p)) + '</div>';
   }
   function rememberPlan(v, day, related) {
     st.planChange = { person: st.person, week: v.ws, day: day, related: related, ends: v.rows.map(function (r) { return plannedEnd(v, r); }),
@@ -455,11 +514,37 @@
   }
 
   // ---------------- ask ----------------
+  function setDayType(p, row, type) {
+    if (type === 'ofis' && !row.hol) delete p.types[row.key];
+    else p.types[row.key] = type;
+    delete p.plan[row.key];
+  }
+
   function runAsk(text) {
     var now = nowFn();
     if (st.off) { st.off = 0; }
     var v = compute(now); st.v = v;
     st.askText = text;
+    var leaveDay = Q.leaveStatement(text, C.dow(now));
+    if (leaveDay != null) {
+      var leaveRow = v && v.rows[leaveDay], copy = L();
+      st.ask = { q: text };
+      st.lastSc = null;
+      if (st.code !== 'ready') st.ask.err = copy[st.code] || copy.loading;
+      else if (!leaveRow || leaveRow.past) st.ask.err = copy.leaveWeek;
+      else if (!leaveRow.workday) st.ask.err = copy.sy.offDay;
+      else {
+        setDayType(v.p, leaveRow, 'izin');
+        var confirmation = st.ask;
+        confirmation.leaveDate = leaveRow.date;
+        save().then(function (ok) {
+          if (closed || st.ask !== confirmation) return;
+          confirmation.leaveSaved = ok;
+          render(nowFn(), true);
+        });
+      }
+      return;
+    }
     var sc = null; try { sc = SC.parse(text); } catch (x) { sc = null; }
     // Follow-up ("ya 9'da gelirsem", "peki cuma izin alırsam"): build on the last answered question.
     if (sc && st.lastSc && SC.isFollowUp(sc)) { try { sc = SC.followUp(st.lastSc.sc, sc, st.lastSc.day); } catch (x) { /* keep the plain question */ } }
@@ -484,7 +569,7 @@
     else if (intent.kind === 'plan') { s2.plan[key] = row.first != null ? { e: intent.e } : { s: intent.s, e: intent.e }; delete s2.types[key]; }
     else if (intent.kind === 'arrive') { s2.plan[key] = Object.assign({}, s2.plan[key], { s: intent.s }); delete s2.plan[key].e; delete s2.types[key]; }
     else if (intent.kind === 'length') { var sm = row.first != null ? minOf(row.first, row.date) : (s2.plan[key] && s2.plan[key].s != null ? s2.plan[key].s : C.config(S.cfg).start); s2.plan[key] = row.first != null ? { e: sm + intent.m } : { s: sm, e: sm + intent.m }; }
-    else if (intent.kind === 'type') { if (intent.type === 'ofis') { if (row.hol) s2.types[key] = 'ofis'; else delete s2.types[key]; } else s2.types[key] = intent.type; delete s2.plan[key]; }
+    else if (intent.kind === 'type') { setDayType(s2, row, intent.type); }
     else if (intent.kind === 'ooo') { s2.ooo[key] = { m: intent.m, s: intent.s }; }
     else if (intent.kind === 'leaveAt' || intent.kind === 'leaveNow') {
       var e = intent.kind === 'leaveNow' ? Math.ceil(minOf(now, C.dayStart(now))) : intent.e;
@@ -611,6 +696,11 @@
   }
   function answer(v) {
     var a = st.ask, t = L(), A2 = t.ans, D = hrs(v.cfg.D * MIN);
+    if (a && a.leaveDate != null) {
+      return { kicker: t.daysL[C.dow(a.leaveDate)] + ' ' + dl(a.leaveDate),
+        big: a.leaveSaved == null ? t.saving : a.leaveSaved ? t.leaveSaved : t.leaveSaveFailed,
+        detail: a.leaveSaved ? fill(t.credit9, { D: D }) : '', tags: [] };
+    }
     if (a && a.sc && a.res) return scAnswer(v, a);
     var pv = a && a.pv && a.store ? a.pv : v, out = { tags: [] };
     if (!a || !a.intent) {
@@ -684,28 +774,31 @@
   // ---------------- small sizes ----------------
   function liveOf(v) { return v && v.today && v.today.inside && st.code === 'ready' && !st.off; }
   function pocketView(v) {
-    var t = L(), lbl = '', big = '…', f = '', weekFirst = false, fLabel = v && v.goal && v.goal.week ? t.leaveToday : t.pkW;
-    var planned = planning(v);
+    var t = L(), lbl = '', big = '…', f = '', fLabel = v && v.goal && v.goal.week ? t.leaveToday : t.pkW;
+    var planned = planning(v), row = planned ? planned.row : v && v.today;
+    var daily = v && v.thisWeek ? todayExit(v, row) : null, friday = v ? fridayExit(v, row) : null;
     if (planned) { lbl = t.days[planned.row.dow] + ' · ' + t.out; big = planned.value; }
-    else if (v && v.goal) { lbl = goalLbl(v, 'pkD'); big = clk(v.goal.t); }
+    else if (daily) { lbl = t.today + ' · ' + t.out; big = daily.time; }
+    else if (v && v.thisWeek) { lbl = t.today; big = row && row.credit ? t.types[row.type] : '—'; }
     else if (v) { lbl = t.week; big = hm(v.done); }
     else lbl = L()[st.code] || t.loading;
     if (v && v.thisWeek) {
       f = forecastText(v).big;
-      if (v.shortfall > 0) {
+      if (friday) {
+        fLabel = friday.label;
+        f = friday.time;
+      } else if (v.shortfall > 0) {
         fLabel = t.pkGap;
         f = hm(v.shortfall, true);
-      }
-      if (S.ui.theme === 'saydam' && !planned && !(v.goal && v.goal.week) && f !== '—') {
-        weekFirst = true;
-        var daily = v.goal;
-        lbl = fLabel; big = f;
-        fLabel = daily ? goalLbl(v, 'pkD') : t.sy.worked;
-        f = daily ? clk(v.goal.t) : hm(v.done);
+      } else if (f === big) {
+        fLabel = t.remaining;
+        f = hm(v.remaining, true);
       }
     }
+    var adjustment = planned || daily;
+    var pocketNote = [adjustment && dayBalance(adjustment), friday && v.shortfall && t.pkGap + ': ' + hm(v.shortfall, true)].filter(Boolean).join(' · ');
     var pct = v && v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 0;
-    return '<div class="pk themed-pocket" data-drag><div class="pocket-heading"><span class="dot' + (liveOf(v) ? ' on' : '') + '"></span><a class="pocket-brand" href="'+esc(updateHref())+'" target="_blank" rel="noopener">Mesai <small>v'+VERSION+'</small></a><span class="sp"></span><button class="ib" data-a="cmpx" aria-label="'+t.expand+'" title="'+t.expand+'">'+ic('exp',15)+'</button><button class="ib" data-a="close" aria-label="'+L().closeMesai+'" title="'+L().closeMesai+'">'+ic('x',15)+'</button></div><div class="pocket-values'+(weekFirst?' week-first':'')+'"><span class="pkv"><small>'+esc(lbl)+'</small><b>'+esc(big)+'</b></span><span class="pkv f"><small>'+esc(fLabel)+'</small><b>'+esc(f||'—')+'</b></span></div>'+(planned?'<div class="plan-pocket">'+esc(planned.goal)+'</div>':'')+'<div class="pocket-meter" role="progressbar" aria-label="'+t.week+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i class="pkbar" style="width:'+pct+'%"></i></div></div>';
+    return '<div class="pk themed-pocket" data-drag><div class="pocket-heading"><span class="dot' + (liveOf(v) ? ' on' : '') + '"></span><a class="pocket-brand" href="'+esc(updateHref())+'" target="_blank" rel="noopener">Mesai <small>v'+VERSION+'</small></a><span class="sp"></span><button class="ib" data-a="cmpx" aria-label="'+t.expand+'" title="'+t.expand+'">'+ic('exp',15)+'</button><button class="ib" data-a="close" aria-label="'+L().closeMesai+'" title="'+L().closeMesai+'">'+ic('x',15)+'</button></div><div class="pocket-values"><span class="pkv"><small>'+esc(lbl)+'</small><b>'+esc(big)+'</b></span><span class="pkv f"><small>'+esc(fLabel)+'</small><b>'+esc(f||'—')+'</b></span></div>'+(pocketNote || planned ? '<div class="plan-pocket">'+esc(pocketNote || planned.goal)+'</div>':'')+'<div class="pocket-meter" role="progressbar" aria-label="'+t.week+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i class="pkbar" style="width:'+pct+'%"></i></div></div>';
   }
   function compactView(v) {
     var t = L(), D = hrs((v ? v.cfg.D : 540) * MIN);
@@ -715,20 +808,20 @@
       '<button class="ib" data-a="min" aria-label="' + t.min + '" title="' + t.min + '">' + ic('min', 16) + '</button>' +
       '<button class="ib" data-a="close" aria-label="' + L().closeMesai + '" title="' + L().closeMesai + '">' + ic('x', 15) + '</button></div>';
     if (!v) return head + '<div class="empty">' + (st.code === 'loading' ? '<span class="spin"></span> ' : '') + '<b>' + esc(L()[st.code] || t.loading) + '</b></div>';
-    var body = '', td = v.today, planned = planning(v);
+    var body = '', td = v.today, planned = planning(v), daily = todayExit(v, td);
     if (st.ask) {
       var a = answer(v), tags = a.tags.slice(0, 6).map(function (g) { return '<span class="pill ' + g.k + '">' + esc(g.l) + '</span>'; }).join('');
       body = '<div class="cans"><div class="k2">' + esc(a.kicker || '') + '</div><div class="bb">' + esc(a.big || '') + '</div>' + (a.detail ? '<div class="dd">' + esc(a.detail) + '</div>' : '') +
         (tags ? '<div class="tags">' + tags + '</div>' : '') + '<div class="acts">' + (a.confirm ? '<button class="btn pri" data-a="oooYes">' + t.sc.confYes + '</button>' : a.canApply ? '<button class="btn pri" data-a="askApply">' + t.apply + '</button>' : '') + '<button class="btn" data-a="askClear">' + (a.canApply || a.confirm ? t.cancel : t.close) + '</button></div></div>';
     } else if (planned) body = planHero(v, planned, 'bb');
-    else if (v.goal) {
-      var rem = v.goal.t - v.now;
-      body = '<div class="k">' + goalLbl(v) + '</div><div class="bb">' + clk(v.goal.t) + '</div><div style="margin-top:6px">' + (rem > 0 ? '<span class="pill">' + ic('clock') + dur(rem, true) + ' ' + t.left + '</span>' : '<span class="pill ok">' + ic('check') + t.done + ' +' + hm(-rem) + '</span>') + '</div>' + goalAlso(v);
+    else if (daily) {
+      body = '<div class="k">' + esc(daily.label) + '</div><div class="bb">' + esc(daily.time) + '</div>' + balanceLine(daily);
     } else if (v.thisWeek && td && td.credit) body = '<div class="k">' + t.today + '</div><div class="bb" style="color:var(--ok);font-size:32px">' + esc(td.hol && td.type === 'tatil' ? holName(td.hol) : t.types[td.type]) + '</div>';
     else body = '<div class="k">' + (v.thisWeek ? t.today : t.week) + '</div><div class="bb" style="font-size:32px">' + (v.thisWeek ? '—' : hm(v.done)) + '</div>';
     var pct = v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 100;
+    var f = exitForecast(v, planned ? planned.row : td);
     var stats = '<div class="cst"><div><small>' + t.remaining + '</small><b>' + hm(v.remaining, true) + '</b></div>' +
-      '<div><small>' + fcLbl(v) + '</small><b style="color:' + (v.shortfall ? 'var(--bad)' : 'var(--goldInk)') + '">' + esc(v.thisWeek ? forecastText(v).big : '—') + '</b></div>' +
+      '<div><small>' + esc(f.label) + '</small><b style="color:var(--goldInk)">' + esc(f.time) + '</b>' + (f.detail ? '<small class="exit-detail">' + esc(f.detail) + '</small>' : '') + '</div>' +
       '<div><small>' + t.week + '</small><b>%' + pct + '</b></div></div>';
     var mx = Math.max(v.cfg.D * MIN, Math.max.apply(null, v.rows.slice(0, 5).map(function (r) { return Math.max(r.val || 0, r.count || 0); })));
     var bars = '<div class="cwk">' + v.rows.slice(0, 5).map(function (r, i) {
@@ -802,15 +895,13 @@
     return out;
   }
   function summary(v) {
-    var t = L(), td = v.today, now = v.now, D = hrs(v.cfg.D * MIN), out = '';
-    var planned = planning(v);
+    var t = L(), td = v.today, D = hrs(v.cfg.D * MIN), out = '';
+    var planned = planning(v), daily = todayExit(v, td);
     var moveLink = planned && planned.source && W.classList.contains('L-knight') && tierOf() === 'wide';
     if (planned) out += planHero(v, planned, 'big', moveLink);
-    else if (v.goal) {
-      var rem = v.goal.t - now;
-      out += '<div class="milestone-section"><div class="k">' + goalLbl(v) + '</div><div class="big" style="font-size:50px">' + clk(v.goal.t) + '</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-top:8px">' + (rem > 0 ? '<span class="pill">' + ic('clock') + dur(rem, true) + ' ' + t.left + '</span>' : '<span class="pill ok">' + ic('check') + t.done + ' +' + hm(-rem) + '</span>') +
-        '<button class="ib' + (S.ui.bell ? ' on' : '') + '" data-a="bell" title="' + t.bell + '" aria-label="' + t.bell + '">' + ic('bell', 14) + '</button></div>' + earliestLine(v) + goalAlso(v) + '</div>';
+    else if (daily) {
+      out += '<div class="milestone-section"><div class="k">' + esc(daily.label) + '</div><div class="big" style="font-size:50px">' + esc(daily.time) + '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-top:4px">' + balanceLine(daily) + '<button class="ib' + (S.ui.bell ? ' on' : '') + '" data-a="bell" title="' + t.bell + '" aria-label="' + t.bell + '">' + ic('bell', 14) + '</button></div></div>';
     } else if (v.thisWeek && td && td.credit) {
       out += '<div><div class="k">' + t.today + '</div><div class="big" style="font-size:34px;color:var(--ok)">' + t.types[td.type] + '</div><div class="k" style="margin-top:6px">' + fill(t.credit9, { D: D }) + '</div></div>';
     } else if (v.thisWeek) {
@@ -819,9 +910,13 @@
       out += '<div><div class="k">' + t.week + '</div><div class="big" style="font-size:44px">' + hm(v.done) + '</div><div class="k">/ ' + hrs(v.W) + ' ' + t.h + '</div></div>';
     }
     if (v.thisWeek) {
-      var f = forecastText(v);
-      if (moveLink) out += '<div class="sec plan-week"><div class="k">' + fcLbl(v) + '</div>' + planLink(v, planned) + '<div class="k">' + esc(f.big) + '</div></div>';
-      else out += '<div class="sec"><div class="k">' + fcLbl(v) + '</div><div class="big" style="font-size:28px;color:' + (v.shortfall ? 'var(--bad)' : 'var(--goldInk)') + '">' + esc(f.big) + '</div><div class="k" style="margin-top:2px">' + esc(f.sub) + '</div></div>';
+      var f = exitForecast(v, planned ? planned.row : td);
+      if (moveLink) {
+        var linkDay = planned.row === planned.source ? planned.related : planned.source;
+        var repeated = f.label === t.daysL[4] && linkDay && linkDay.dow === 4 && f.time === clk(plannedEnd(v, linkDay), linkDay.date);
+        out += '<div class="sec plan-week"><div class="k">' + esc(f.label) + '</div>' + planLink(v, planned) +
+          (repeated ? '' : '<div class="k">' + esc(f.time) + '</div>') + '</div>';
+      } else out += '<div class="sec">' + forecastSlot(f, 28) + '</div>';
     }
     var pct = v.W ? Math.min(100, Math.floor(v.done / v.W * 100)) : 100, ppct = v.W ? Math.max(0, Math.min(100 - pct, Math.round((v.total - v.done) / v.W * 100))) : 0;
     out += '<div class="sec"><div style="display:flex;justify-content:space-between"><span class="k">' + t.remaining + '</span><b style="font-size:12px">%' + pct + '</b></div>' +
@@ -832,16 +927,6 @@
   }
   // Headline label for today's goal: "9 saat tamamlanır", or "45 saat tamamlanır" on the day the week completes.
   function goalLbl(v, key) { return fill(L()[key || 'milestone'], { D: hrs(v.goal.week ? v.W : v.cfg.D * MIN) }); }
-  // When the headline is the week, the daily 9 hours stay visible as a small line.
-  function goalAlso(v) { return v.goal && v.goal.week && v.milestone ? '<div class="k goal-also" style="margin-top:5px">' + esc(fill(L().dayAlso, { D: hrs(v.cfg.D * MIN), t: clk(v.milestone) })) + '</div>' : ''; }
-  function earliestLine(v) {
-    var t = L(), td = v.today; if (!td || !td.office || !td.inside || (v.goal && v.goal.week)) return '';
-    var ce = td.date + v.cfg.coreE * MIN;
-    if (v.cfg.coreE > v.cfg.coreS && v.now < ce) return '<div class="k earliest" style="margin-top:7px">' + t.earliest + ' <b style="color:var(--ink)">' + clk(ce) + '</b> · ' + t.core.toLowerCase() + '</div>';
-    var s2 = C.clone(storeOf(v.p)); s2.plan = s2.plan || {}; s2.plan[td.key] = { e: Math.ceil(minOf(v.now, td.date)) };
-    var w2 = C.week(dataOf(v.p), v.now, S.cfg, s2, 0);
-    return '<div class="k earliest" style="margin-top:7px">' + t.leaveNow + ' → <b style="color:var(--goldInk)">' + esc(forecastText(w2).big) + '</b></div>';
-  }
   // On the day the week completes, the headline already shows that moment; the forecast slot shows when you may leave.
   function fcLbl(v) {
     var t = L();
@@ -967,9 +1052,18 @@
     var t = L();
     var notes = [], ncls = '';
     if (r.credit) notes.push(fill(t.credit9, { D: hrs(v.cfg.D * MIN) }));
-    if (r.held) { notes.push(fill(t.held, { t: mm(v.cfg.coreE) })); ncls = 'warn'; }
+    if (r.held) { notes.push(fill(t.teamEnd, { t: mm(Math.min(v.cfg.coreE, r.half ? 780 : 1440)) })); ncls = 'warn'; }
     if (r.auto && !r.held) notes.push(fill(t.autoNote, { W: hrs(v.W) }));
-    r.flags.forEach(function (f) { if (t.flags[f] && !(f === 'open' && r.flags.indexOf('overnight') >= 0)) { notes.push(t.flags[f]); ncls = /core|open|absent|noentry|overnight/.test(f) ? 'bad' : ncls; } });
+    r.flags.forEach(function (f) {
+      if (!t.flags[f] || (f === 'open' && r.flags.indexOf('overnight') >= 0)) return;
+      if (/^core/.test(f)) {
+        if (f !== 'coreEarly' || !r.planned) notes.push(t.flags[f]);
+        if (ncls !== 'bad') ncls = 'warn';
+      } else {
+        notes.push(t.flags[f]);
+        if (/core|open|absent|noentry|overnight/.test(f)) ncls = 'bad';
+      }
+    });
     if (v.thisWeek && r.today && r.office && !r.credit && (r.manual || (r.first == null && v.now > r.date + v.cfg.start * MIN))) notes.push(t.lag);
     var mm2 = r.mismatch, mrow = '';
     if (mm2) {
@@ -1183,12 +1277,17 @@
     return '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px"><b style="font-size:14px">' + t.week + '</b><span class="k"><b style="color:var(--ink)">' + hm(v.done) + '</b> / ' + hrs(w.W) + ' · ' + t.remaining.toLowerCase() + ' <b style="color:var(--ink)">' + dur(w.remaining, true) + '</b>' + (pv ? ' · <span style="color:var(--goldInk)">' + t.ask.toLowerCase() + '</span>' : '') + '</span></div>';
   }
   function rightPanel(v) {
-    var t = L(), td = v.today, D = hrs(v.cfg.D * MIN), f = forecastText(v), out = '';
+    var t = L(), td = v.today, daily = todayExit(v, td), out = '';
     var planned = planning(v);
     if (planned) out += planHero(v, planned, 'big');
-    else if (v.goal) out += '<div><div class="k" style="font-weight:700">' + t.today + ' · ' + goalLbl(v) + '</div><div style="display:flex;align-items:baseline;gap:8px"><span class="big" style="font-size:44px">' + clk(v.goal.t) + '</span><span class="k">' + (v.goal.t > v.now ? dur(v.goal.t - v.now, true) + ' ' + t.left : t.done) + '</span></div>' + earliestLine(v) + goalAlso(v) + '</div>';
+    else if (daily) out += '<div><div class="k" style="font-weight:700">' + esc(daily.label) + '</div><div class="big" style="font-size:44px">' + esc(daily.time) + '</div>' + balanceLine(daily) + '</div>';
     else out += '<div><div class="k" style="font-weight:700">' + (v.thisWeek ? t.today : t.week) + '</div><div class="big" style="font-size:34px">' + (v.thisWeek ? (td && td.credit ? t.types[td.type] : '—') : hm(v.done)) + '</div></div>';
-    if (v.thisWeek) out += '<div class="card2" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--accSoft)"><span class="k" style="font-weight:700">' + fcLbl(v) + '</span><b style="font-size:20px;color:var(--accInk);white-space:nowrap">' + esc(f.big) + '</b></div>';
+    if (v.thisWeek) {
+      var f = exitForecast(v, planned ? planned.row : td);
+      out += '<div class="card2" style="background:var(--accSoft)"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span class="k">' +
+        esc(f.label) + '</span><b style="font-size:20px;color:var(--accInk)">' + esc(f.time) + '</b></div>' +
+        (f.detail ? '<div class="k exit-detail">' + esc(f.detail) + '</div>' : '') + '</div>';
+    }
     if (v.bank > 0) out += '<div class="card2" style="display:flex;align-items:center;gap:10px;background:var(--goldSoft);border:1px solid var(--goldLine)"><span class="coin">+' + Math.round(v.bank / MIN) + '</span><div class="k" style="line-height:1.35"><b style="color:var(--ink);font-size:13px">' + t.bank + ' ' + hm(v.bank) + '</b><br>' + t.bankNote + '</div></div>';
     if (v.thisWeek) out += '<button class="btn" data-a="rev" style="justify-content:center">' + ic('rev', 14) + t.reverse + '</button>';
     return '<div class="rp">' + out + '</div>';
@@ -1265,21 +1364,21 @@
   }
   function heritage(v, pv, lay) {
     if (lay === 'knight') return '<div class="herald-body"><div class="manuscript-main">' + summary(v) + timeline(v,pv) + '</div>' + '</div>' + editor(v);
-    var t=L(), td=v.today, planned=planning(v), daily=!!v.goal && !planned, f=forecastText(v), pct=v.W?Math.min(100,Math.floor(v.done/v.W*100)):100;
+    var t=L(), td=v.today, planned=planning(v), daily=!planned && todayExit(v,td), f=exitForecast(v,planned?planned.row:td), pct=v.W?Math.min(100,Math.floor(v.done/v.W*100)):100;
     var nums='';
     function position(hour, radius) { var a=(hour-14)/24*Math.PI*2;return 'left:'+(49.4+Math.sin(a)*radius)+'%;top:'+(53.6-Math.cos(a)*radius)+'%'; }
     for(var n=1;n<=24;n++) nums+='<span class="dial-number'+(n>=20||n<=6?' night':'')+'" style="'+position(n,34.7)+'">'+n+'</span>';
     var pins='';
     if(v.thisWeek){var nh=(v.now-Math.floor(v.now / DAY) * DAY)/H; pins+='<span class="dial-pin" style="'+position(nh,27.7)+'" title="'+esc(t.today+' '+rec(v.now))+'">'+esc(rec(v.now))+'</span>';}
-    if(daily){var mh=(v.goal.t-td.date)/H;pins+='<span class="dial-pin goal" style="'+position(mh,43.3)+'">'+hrs(v.goal.week?v.W:v.cfg.D*MIN)+' '+t.h+'</span>';}
+    if(daily){var mh=(td.end-td.date)/H;pins+='<span class="dial-pin goal" style="'+position(mh,43.3)+'">'+esc(daily.time)+'</span>';}
     if(planned) pins += '<span class="dial-pin goal plan-pin" style="'+position((planned.exit-planned.row.date)/H,43.3)+'">'+esc(planned.value)+'</span>';
-    var label=planned?planned.label:daily?goalLbl(v):v.thisWeek?t.today:t.week;
-    var value=planned?planned.value:daily?clk(v.goal.t):td&&td.credit?t.types[td.type]:v.thisWeek?'—':hm(v.done);
-    var rem=planned?planned.goal:daily?(v.goal.t>v.now?dur(v.goal.t-v.now,true)+' '+t.left:t.done):'';
-    return '<div class="clock-body"><div class="dial">'+art('face','dial-face')+art('clock','dial-art')+nums+pins+'<div class="dial-copy"><span class="dial-now">'+(v.thisWeek?(L().now+' ')+rec(v.now):esc(fill(t.weekOf,{a:dl(v.ws),b:dl(v.ws+4*DAY)})))+'</span><div class="k">'+esc(label)+'</div><div class="big"'+(planned?' data-planned-exit aria-live="polite"':'')+'>'+esc(value)+'</div><div class="dial-remaining">'+esc(rem)+'</div><span class="dial-today">'+(planned?esc(planned.detail):esc(t.today+' '+(td?hm(td.actual||td.credit||0):'—')+' / '+hrs(v.cfg.D*MIN)+' '+t.h))+'</span></div><div class="dial-caption">'+(td&&td.first?esc(t.in+' '+rec(td.first)):'')+'</div></div><div class="clock-forecast"><div class="forecast-block"><div class="k">'+esc(fcLbl(v))+'</div><div class="big" style="color:var(--goldInk)">'+esc(f.big)+'</div><div class="sub">'+esc(f.sub)+'</div>'+(planned?planLink(v,planned)+(planned.warning?'<div class="plan-warning">'+esc(planned.warning)+'</div>':''):earliestLine(v))+'</div><div><div class="k">'+t.remaining+'</div><div class="big weekly-amount">'+dur(v.remaining,true)+'</div><div class="bar" role="progressbar" aria-label="'+esc(t.week)+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%;background:var(--acc)"></i></div><div class="sub">'+dur(v.done)+' / '+hrs(v.W)+' '+t.h+' · '+pct+'%</div></div>'+art('town','clock-town')+'</div></div>'+weekStrip(v,pv)+editor(v);
+    var label=planned?planned.label:daily?daily.label:v.thisWeek?t.today:t.week;
+    var value=planned?planned.value:daily?daily.time:td&&td.credit?t.types[td.type]:v.thisWeek?'—':hm(v.done);
+    var rem=planned?planned.goal:daily?dayBalance(daily):'';
+    return '<div class="clock-body"><div class="dial">'+art('face','dial-face')+art('clock','dial-art')+nums+pins+'<div class="dial-copy"><span class="dial-now">'+(v.thisWeek?(L().now+' ')+rec(v.now):esc(fill(t.weekOf,{a:dl(v.ws),b:dl(v.ws+4*DAY)})))+'</span><div class="k">'+esc(label)+'</div><div class="big"'+(planned?' data-planned-exit aria-live="polite"':'')+'>'+esc(value)+'</div><div class="dial-remaining">'+esc(rem)+'</div><span class="dial-today">'+(planned?esc(planned.detail):esc(t.today+' '+(td?hm(td.actual||td.credit||0):'—')+' / '+hrs(v.cfg.D*MIN)+' '+t.h))+'</span></div><div class="dial-caption">'+(td&&td.first?esc(t.in+' '+rec(td.first)):'')+'</div></div><div class="clock-forecast"><div class="forecast-block">'+forecastSlot(f)+(planned?planLink(v,planned)+(planned.warning?'<div class="plan-warning">'+esc(planned.warning)+'</div>':''):'')+'</div><div><div class="k">'+t.remaining+'</div><div class="big weekly-amount">'+dur(v.remaining,true)+'</div><div class="bar" role="progressbar" aria-label="'+esc(t.week)+'" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%;background:var(--acc)"></i></div><div class="sub">'+dur(v.done)+' / '+hrs(v.W)+' '+t.h+' · '+pct+'%</div></div>'+art('town','clock-town')+'</div></div>'+weekStrip(v,pv)+editor(v);
   }
   var UPDATE_URL='https://berkant-jotform.github.io/mesai/';
-  var latestVersion=null, updateController=null, updateTimer=null, closed=false;
+  var latestVersion=null, updateController=null, updateTimer=null;
   function updateHref(){return UPDATE_URL+'?'+new URLSearchParams({from:VERSION,theme:BUILD.theme,selected:S.ui.theme,lang:S.ui.lang==='en'?'en':'tr',look:isDark()?'dark':'light',size:tierOf()==='wide'?'full':tierOf(),view:S.ui.syv==='kum'?'kum':'day'}).toString();}
   function versionNewer(a,b){var x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(var i=0;i<3;i++){if(x[i]!==y[i])return x[i]>y[i];}return false;}
   function releaseLink(){var en=S.ui.lang==='en', newer=latestVersion&&versionNewer(latestVersion,VERSION);return '<div class="release-row"><a href="'+esc(updateHref())+'" target="_blank" rel="noopener noreferrer" title="'+(L().updHint)+'">Mesai v'+VERSION+'</a>'+(st.themeNews?'<button class="lnk theme-news-link" data-a="themeNews">'+(en?'New looks':'Yeni görünümler')+'</button>':'')+(newer?'<a class="update-available" href="'+esc(updateHref())+'" target="_blank" rel="noopener noreferrer">'+(L().updAvail)+' · v'+esc(latestVersion)+'</a>':'')+'</div>';}
@@ -1320,41 +1419,72 @@
       '<div class="wsub">' + esc(wk) + (st.name ? ' · ' + esc(st.name.replace(/^\s*\d+\s*[-–:]\s*/, '')) : '') + '</div></div>' +
       '<nav class="sy-days" aria-label="' + esc(t.week) + '" style="--day-count:' + Math.max(1, w.rows.filter(syShown).length) + '">' + days + '</nav>' + foot + '</aside>';
   }
-  function syWeekForecast(v, f) {
+  function weekForecast(v, f) {
     if (!v.thisWeek) return null;
     if (v.goal && v.goal.week) return { label: goalLbl(v), time: clk(v.goal.t) };
     var time = (f || forecastText(v)).big;
     return time !== '—' ? { label: fcLbl(v), time: time } : null;
   }
+  function todayExit(v, r) {
+    if (!r || !r.today || !r.office || r.first == null || r.end == null) return null;
+    var recorded = !r.inside && r.last === r.end, t = L(), target = v.cfg.D * MIN - r.half;
+    return { label: recorded ? t.recordedExit : t.todayExit, time: recorded ? rec(r.last) : clk(r.end, r.date),
+      target: target, delta: Math.round(((recorded ? r.actual : r.plan) - target) / MIN) * MIN };
+  }
+  function dayBalance(exit) {
+    return exit.delta ? fill(L().vsDaily, { d: signedDuration(exit.delta), D: hrs(exit.target) }) : '';
+  }
+  function balanceLine(exit) {
+    return exit.delta ? '<div class="k exit-detail">' + esc(dayBalance(exit)) + '</div>' : '';
+  }
+  function fridayExit(v, selected) {
+    if (!v.thisWeek || !selected || selected.dow === 4) return null;
+    var friday = v.rows[4], t = L(), time;
+    if (friday.credit) time = t.types[friday.type];
+    else if (!friday.office) time = t.sy.offDay;
+    else time = friday.past ? rec(friday.last) : clk(plannedEnd(v, friday), friday.date);
+    return { label: t.daysL[4], time: time };
+  }
+  function syFridayLine(friday) {
+    return '<span class="sy-plan-week sy-friday">' + esc(friday.label) + ': <b>' + esc(friday.time) + '</b></span>';
+  }
+  function exitForecast(v, selected) {
+    var t = L(), friday = fridayExit(v, selected), weekly = weekForecast(v);
+    if (!friday) return weekly || { label: t.weekly, time: '—' };
+    var detail = weekly && weekly.time !== t.days[4] + ' ' + friday.time ? weekly.label + ' · ' + weekly.time : '';
+    return { label: friday.label, time: friday.time, detail: detail };
+  }
+  function forecastSlot(f, size) {
+    return '<div class="k">' + esc(f.label) + '</div><div class="big" style="color:var(--goldInk)' + (size ? ';font-size:' + size + 'px' : '') + '">' + esc(f.time) + '</div>' +
+      (f.detail ? '<div class="k exit-detail">' + esc(f.detail) + '</div>' : '');
+  }
   // Headline for the selected day: kicker, big value, chips.
   function syHead(v, r) {
     var planned = planning(v);
     if (planned) return planHero(v, planned, 'sy-big');
-    var t = L(), y = t.sy, D = v.cfg.D * MIN, k, big, chips = [], extra = '', f = v.thisWeek ? forecastText(v) : null, weekly = false;
-    var fc = function () { if (f) chips.push([fcLbl(v) + ' ' + f.big, v.shortfall ? 'o' : 'g']); };
+    var t = L(), y = t.sy, D = v.cfg.D * MIN, k, big, chips = [], extra = '', f = v.thisWeek ? forecastText(v) : null;
+    var friday = fridayExit(v, r);
+    var fc = function () { if (f && (!friday || v.shortfall)) chips.push([fcLbl(v) + ' ' + f.big, v.shortfall ? 'o' : 'g']); };
     if (r.credit) { k = fill(t.credit9, { D: hrs(D) }); big = r.hol && r.type === 'tatil' ? holName(r.hol) : t.types[r.type]; fc(); }
-    else if (r.today && v.thisWeek && v.goal) {
-      var week = syWeekForecast(v, f);
-      if (week) {
-        weekly = true; k = week.label; big = week.time;
-        if (v.goal.week) fc();
-        if (v.milestone != null) extra = '<div class="sy-daily-ref">' + esc(fill(t.dayAlso, { D: hrs(D - r.half), t: clk(v.milestone) })) + '</div>';
-      } else {
-        var rem = v.goal.t - v.now; k = goalLbl(v); big = clk(v.goal.t);
-        chips.push(rem > 0 ? [dur(rem, true) + ' ' + t.left, ''] : [t.done + ' +' + hm(-rem), 'g']);
+    else if (r.today && v.thisWeek && r.office) {
+      var daily = todayExit(v, r);
+      k = daily ? daily.label : t.noEntry; big = daily ? daily.time : '—';
+      var difference = daily && dayBalance(daily);
+      if (difference) extra = '<div class="sy-daily-ref">' + esc(difference) + '</div>';
+      if (v.shortfall || (!friday && tierOf() === 'compact' && S.ui.syv !== 'kum')) {
+        var week = weekForecast(v, f);
+        if (week && week.time !== big) extra += '<div class="sy-daily-ref" data-week-forecast>' + esc(week.label) + ' <b>' + esc(week.time) + '</b></div>';
       }
-      extra = earliestLine(v) + extra;
     } else if (r.past || !v.thisWeek) {
       k = y.worked; big = hm(r.count || 0);   // the status is already under the title
       if (r.first != null) chips.push(r.last != null ? [rec(r.first) + ' – ' + rec(r.last), ''] : [t.in + ' ' + rec(r.first) + ' · ' + t.out + ' ?', 'o']);
     } else if (r.office) {
-      k = r.today ? t.today + ' · ' + y.planned.toLowerCase() : y.planned; big = r.end != null ? clk(r.end, r.date) : '—';
+      k = y.planned; big = r.end != null ? clk(r.end, r.date) : '—';
       if (r.start != null && r.end != null) chips.push([clk(r.start) + ' – ' + clk(r.end, r.date) + ' · ' + hm(r.plan || 0, true), '']);
-      if (r.today && r.first == null) chips.push([t.noEntry, 'o']);
       fc();
     } else { k = y.offDay; big = '—'; }
-    return '<div class="sy-k">' + esc(k) + '</div><div class="sy-big' + (weekly && v.shortfall ? ' sy-week-gap' : '') + '"' + (weekly ? ' data-week-forecast' : '') + '>' + esc(big) + '</div>' +
-      (chips.length ? '<div class="sy-chips">' + chips.map(function (c) { return '<span class="chip ' + c[1] + '">' + esc(c[0]) + '</span>'; }).join('') + '</div>' : '') + extra;
+    return '<div class="sy-k">' + esc(k) + '</div><div class="sy-big">' + esc(big) + '</div>' +
+      (chips.length ? '<div class="sy-chips">' + chips.map(function (c) { return '<span class="chip ' + c[1] + '">' + esc(c[0]) + '</span>'; }).join('') + '</div>' : '') + extra + (friday ? syFridayLine(friday) : '');
   }
   function syHero(v, r) {
     var t = L(), D = v.cfg.D * MIN, x = syVal(r, v);
@@ -1465,7 +1595,8 @@
       return '<rect data-key="' + key + '" class="water-fill" x="0" y="' + y.toFixed(1) + '" width="360" height="' +
         height.toFixed(1) + '" fill="url(#' + fill + ')"/>';
     };
-    var f = w.thisWeek ? forecastText(w) : null;
+    var f = w.thisWeek ? forecastText(w) : null, friday = fridayExit(v, r);
+    var showFinish = f && !w.shortfall && f.big !== '—' && (!friday || f.big !== t.days[4] + ' ' + friday.time);
     var small = tierOf() === 'compact', svg = '<svg viewBox="' + (small ? '-40 0 440 660' : '0 0 650 660') + '" role="img" aria-label="' + esc(fill(y.kumAria, { d: hm(done), W: hrs(Wt) })) + '"><defs>' +
       '<clipPath id="syV"><path d="' + V + '"/></clipPath>' +
       '<linearGradient id="syLq" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ad3ff"/><stop offset=".55" stop-color="#2a8cf0"/><stop offset="1" stop-color="#0a5fd0"/></linearGradient>' +
@@ -1492,7 +1623,7 @@
       '<path d="M94 72 C96 150 130 236 162 296" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".75"/><path d="M268 80 C264 140 240 200 214 250" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".5"/><path d="M94 570 C96 500 124 420 160 352" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>' +
       '<rect x="22" y="18" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="22" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/><rect x="22" y="592" width="316" height="30" rx="15" fill="url(#syCp)" stroke="rgba(30,50,90,.2)" stroke-width=".8"/><rect x="36" y="596" width="288" height="7" rx="3.5" fill="#fff" opacity=".95"/></g>' +
       (small ? '' : labels) + '</svg>';
-    return '<div class="sy-kum"><div class="kt"><div class="sy-kday">' + t.daysL[r.dow] + ' ' + dl(r.date) + '</div>' + syHead(v, r) + '<div class="sy-knote">' + esc(fill(y.kumNote, { l: dur(left, true), d: hm(done) })) + (f && !w.shortfall && f.big !== '—' ? ' ' + y.lastDrop + ': <b>' + esc(f.big) + '</b>.' : '') + '</div>' +
+    return '<div class="sy-kum"><div class="kt"><div class="sy-kday">' + t.daysL[r.dow] + ' ' + dl(r.date) + '</div>' + syHead(v, r) + '<div class="sy-knote">' + esc(fill(y.kumNote, { l: dur(left, true), d: hm(done) })) + (showFinish ? ' ' + y.lastDrop + ': <b>' + esc(f.big) + '</b>.' : '') + '</div>' +
       '<div class="sy-legend"><span><i class="l-fg"></i>' + t.legend.office + '</span><span><i class="l-pl"></i>' + t.legend.plan + '</span><span><i class="l-off"></i>' + t.legend.credit + '</span><span><i class="l-gap"></i>' + y.unplanned.toLowerCase() + '</span></div></div>' + '<div class="sy-kum-visual">' + svg + shortLabels + '<div class="kum-caption">'+esc(t.days[r.dow])+' · '+hm(syVal(r,v)[0])+'</div></div></div>';
   }
   function syBar(v, r) {
@@ -1778,9 +1909,10 @@
   // ---------------- mutations ----------------
   function mut(fn) {
     var p = P(); if (!p) return;
-    fn(p); save();
+    fn(p); var saved = save();
     if (st.ask && st.ask.store) st.ask = null;
     render(nowFn(), true);
+    return saved;
   }
   function toast(msg) { st.toast = msg; render(nowFn(), true); clearTimeout(st.tt); st.tt = setTimeout(function () { st.toast = null; render(nowFn(), true); }, 5000); }
   function stepEnd(row, delta, minute) {
@@ -1881,7 +2013,7 @@
     if (a === 'bell') { S.ui.bell = !S.ui.bell; save(); if (S.ui.bell && window.Notification && Notification.permission === 'default') { try { Notification.requestPermission(); } catch (x) { /* */ } } render(now, true); return; }
     if (a === 'askOpen') {st.themes=false;st.set=false;st.view='week';st.rev=null;S.ui.ask = !S.ui.ask; save(); if (!S.ui.ask) { st.ask = null; st.askText = ''; } render(now, true); var inp = root.querySelector('[data-e="ask"]'); if (inp) inp.focus(); return; }
     if (a === 'sug') { runAsk(SG()[+v]); render(now, true); return; }
-    if (a === 'askApply') { var s2 = st.ask && st.ask.store; if (s2) { var p1 = P(); p1.types = s2.types; p1.plan = s2.plan; p1.ooo = s2.ooo; p1.ovr = s2.ovr; save(); st.ask = null; st.askText = ''; toast(t.applied); render(now, true); } return; }
+    if (a === 'askApply') { var s2 = st.ask && st.ask.store; if (s2) { var p1 = P(); p1.types = s2.types; p1.plan = s2.plan; p1.ooo = s2.ooo; p1.ovr = s2.ovr; save().then(function(ok){if(ok&&!closed)toast(t.applied);}); st.ask = null; st.askText = ''; render(now, true); } return; }
     if (a === 'oooYes') { if (st.ask && st.ask.sc) { st.ask.sc.oooOK = true; compute(now); } render(now, true); return; }
     if (a === 'askClear') { st.ask = null; st.askText = ''; render(now, true); return; }
     if (a === 'undo') { travelHistory(false); return; }
@@ -1926,9 +2058,13 @@
     if (a === 'core') { S.cfg.coreS = b.dataset.s; S.cfg.coreE = b.dataset.e; save(); render(now, true); return; }
     if (a === 'wday') { var d = +v, ds = S.cfg.days.slice(), ix = ds.indexOf(d); if (ix >= 0) { if (ds.length > 1) ds.splice(ix, 1); } else ds.push(d); S.cfg.days = ds.sort(); save(); render(now, true); return; }
     if (a === 'backup') { var blob = new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), url = URL.createObjectURL(blob), ln = document.createElement('a'); ln.href = url; ln.download = 'mesai-yedek-' + C.dkey(now) + '.json'; document.body.appendChild(ln); ln.click(); ln.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 2000); return; }
-    if (a === 'restore') { var fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'application/json,.json'; fi.onchange = function () { var fl = fi.files[0]; if (!fl) return; fl.text().then(function (txt) { if(closed)return;try { var o = JSON.parse(txt); if (o && o.ppl && MesaiPersistence.valid(o)) { S.cfg = Object.assign(S.cfg, o.cfg || {}); S.ui = Object.assign(S.ui, o.ui || {}); S.ppl = o.ppl; history=null;save(false,true);st.fp='';tick(true); toast(L().applied); render(nowFn(), true); }else toast(S.ui.lang==='en'?'This is not a valid Mesai backup. Nothing changed.':'Geçerli bir Mesai yedeği değil. Hiçbir şey değişmedi.'); } catch (x) { toast(S.ui.lang==='en'?'Backup could not be read. Nothing changed.':'Yedek okunamadı. Hiçbir şey değişmedi.'); } }).catch(function(){toast(S.ui.lang==='en'?'Backup could not be read.':'Yedek okunamadı.');}); }; fi.click(); return; }
+    if (a === 'restore') { var fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'application/json,.json'; fi.onchange = function () { var fl = fi.files[0]; if (!fl) return; fl.text().then(function (txt) { if(closed)return;try { var o = JSON.parse(txt); if (o && o.ppl && MesaiPersistence.valid(o)) { save(false,o).then(function(ok){if(!ok||closed)return;st.fp='';tick(true);toast(L().applied);}); }else toast(S.ui.lang==='en'?'This is not a valid Mesai backup. Nothing changed.':'Geçerli bir Mesai yedeği değil. Hiçbir şey değişmedi.'); } catch (x) { toast(S.ui.lang==='en'?'Backup could not be read. Nothing changed.':'Yedek okunamadı. Hiçbir şey değişmedi.'); } }).catch(function(){toast(S.ui.lang==='en'?'Backup could not be read.':'Yedek okunamadı.');}); }; fi.click(); return; }
     var r = st.v && st.v.rows[st.sel]; if (!r) return;
-    if (a === 'type') { mut(function (p) { if (v === 'ofis') { if (r.hol) p.types[r.key] = 'ofis'; else delete p.types[r.key]; } else p.types[r.key] = v; delete p.plan[r.key]; }); return; }
+    if (a === 'type') {
+      var saved = mut(function (p) { setDayType(p, r, v); });
+      if (v === 'izin' && saved) saved.then(function(ok){if(ok&&!closed)toast(t.daysL[r.dow] + ' ' + dl(r.date) + ' · ' + t.leaveSaved);});
+      return;
+    }
     if (a === 'nuds') { var cs0 = r.first != null ? minOf(r.first, r.date) : r.start != null ? minOf(r.start, r.date) : st.v.cfg.start; editDay('s', mm(Math.max(0, Math.min(1439, cs0 + (+v))))); return; }
     if (a === 'syt') { var tb = b.getBoundingClientRect(); if (!tb.width) return; var hx = +b.dataset.lo + Math.max(0, Math.min(1, (e.clientX - tb.left) / tb.width)) * (+b.dataset.span); stepEnd(r, 0, Math.round(hx * 12) * 5); return; }
     if (a === 'nud') { stepEnd(r, +v); return; }
@@ -1983,7 +2119,7 @@
     }
     if (k === 's' || k === 'e' || k === 'm') { var edited = editDay(k, el.value); if (edited !== true) fieldError(el, edited); return; }
     if (k === 'os') { var r = st.v && st.v.rows[st.sel], m1 = el.value.trim() ? parseTime(el.value) : null; if (!r || (el.value.trim() && m1 == null)) { fieldError(el); return; } mut(function (p) { var o = p.ooo[r.key] || { m: 60 }; p.ooo[r.key] = { m: o.m, s: m1 }; }); return; }
-    if (k === 'tsel') { var d = +el.dataset.d, row = st.v.rows[d]; st.sel = d; mut(function (p) { if (el.value === 'ofis') { if (row.hol) p.types[row.key] = 'ofis'; else delete p.types[row.key]; } else p.types[row.key] = el.value; delete p.plan[row.key]; }); return; }
+    if (k === 'tsel') { var d = +el.dataset.d, row = st.v.rows[d]; st.sel = d; mut(function (p) { setDayType(p, row, el.value); }); return; }
     if (k === 'rd' || k === 'rf' || k === 'rd2') { st.rev[{ rd: 'day', rf: 'from', rd2: 'day2' }[k]] = +el.value; if (k === 'rd' && st.rev.from === st.rev.day) { var c2 = st.v.rows.filter(function (r) { return !r.past && r.office && r.dow !== st.rev.day; }); if (c2.length) st.rev.from = c2[c2.length - 1].dow; } render(nowFn(), true); return; }
     if (st.rev && (k === 'rt' || k === 'rt2')) {
       var timeValue = parseTime(el.value);
@@ -2089,7 +2225,7 @@
   obs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style', 'disabled'], characterData: true });
   function onStorage(e){
     if(e.key!==KEY||!e.newValue||closed)return;
-    try{var before=historyState();S=persistence.refresh(S);syncHistory(false);var after=historyState();if(JSON.stringify([before.cfg,before.edits])!==JSON.stringify([after.cfg,after.edits]))st.ask=null;st.sig='';render(nowFn(),true);}catch(error){st.storageError=true;render(nowFn(),true);}
+    try{var before=historyState();S=persistence.refresh(S);syncHistory(false);var after=historyState();if(st.ask&&st.ask.leaveDate==null&&JSON.stringify([before.cfg,before.edits])!==JSON.stringify([after.cfg,after.edits]))st.ask=null;st.sig='';render(nowFn(),true);}catch(error){st.storageError=true;render(nowFn(),true);}
   }
   window.addEventListener('storage',onStorage);
   var timer = setInterval(tick, 1000);
@@ -2106,7 +2242,7 @@
     motionState: function(){return Object.assign({openingPending:openingRequested},motion.inspect());}
   };
   tick(true);
-  if(themeNews||BUILD.theme!=='all')save(false);
+  if(pendingSave!==null||themeNews||BUILD.theme!=='all')save(false);
 
   if(window.FontFace && document.fonts) Object.keys(MesaiFonts).forEach(function(name){var existing=Array.from(document.fonts).filter(function(f){return f.family.replace(/["']/g,'')===name;});if(existing.some(function(f){return f.mesaiVersion===VERSION;}))return;existing.forEach(function(f){document.fonts.delete(f);});var font=new FontFace(name,embeddedBytes(MesaiFonts[name]),name==='Mesai Gothic'?{weight:'100 900'}:{});font.mesaiVersion=VERSION;fontLoads++;font.load().then(function(f){document.fonts.add(f);host.setAttribute('data-loaded-fonts',(host.getAttribute('data-loaded-fonts')||'')+'|'+name);if(!closed)render(nowFn(),true);}).catch(function(error){console.warn('Mesai font could not load:',name,error);}).finally(function(){fontLoads--;if(!closed)scheduleOpening();});});
   checkVersion();

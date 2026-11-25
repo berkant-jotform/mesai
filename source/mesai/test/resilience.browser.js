@@ -19,11 +19,37 @@ module.exports=async function({test,page,click,ready,until,H,sh,seedFor,DB,NOV3,
     const p=await open();try{await settings(p);const original=await state(p);await set(p,'W','48');await upload(p,original);assert.equal((await state(p)).cfg.W,original.cfg.W);assert.deepEqual((await state(p)).ppl['1001'].plan,original.ppl['1001'].plan);}finally{await p.ctx.close();}
   });
   await test('Reliability: storage denial never drops the unsaved edit during another tab update',async()=>{
-    const p=await open();try{await settings(p);await p.evaluate(()=>{const set=Storage.prototype.setItem;window.__denySave=true;Storage.prototype.setItem=function(k,v){if(k==='mesai.v3'&&window.__denySave)throw new DOMException('full','QuotaExceededError');return set.call(this,k,v);};});await set(p,'W','48');assert.equal((await state(p)).cfg.W,48);assert.ok(await sh(p,'.field-error'));
+    const p=await open();try{await settings(p);await p.evaluate(()=>{const set=Storage.prototype.setItem;window.__denySave=true;Storage.prototype.setItem=function(k,v){if(k==='mesai.v3'&&window.__denySave)throw new DOMException('full','QuotaExceededError');return set.call(this,k,v);};});await set(p,'W','48');assert.equal((await state(p)).cfg.W,48);await until(p,()=>sh(p,'.field-error'));
       await p.evaluate(()=>{const other=JSON.parse(localStorage.getItem('mesai.v3'));other.cfg.D=10;window.__denySave=false;localStorage.setItem('mesai.v3',JSON.stringify(other));window.__denySave=true;dispatchEvent(new StorageEvent('storage',{key:'mesai.v3',newValue:JSON.stringify(other)}));});
       assert.equal((await state(p)).cfg.W,48);assert.equal((await state(p)).cfg.D,10);assert.ok(await sh(p,'.field-error'),'unsaved local changes still need a warning');
-      await p.evaluate(()=>window.__denySave=false);await set(p,'start','08:15');assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('mesai.v3')).cfg.W),48);
+      await p.evaluate(()=>window.__denySave=false);await set(p,'start','08:15');await p.waitForFunction(()=>JSON.parse(localStorage.getItem('mesai.v3')).cfg.W===48);
     }finally{await p.ctx.close();}
+  });
+  await test('Reliability: overlapping refresh, leave and settings saves keep both edits',async()=>{
+    const p=await open();
+    try {
+      const q=await open({ctx:p.ctx});
+      await settings(p);
+      await set(p,'W','44');
+      await p.waitForFunction(()=>JSON.parse(localStorage.getItem('mesai.v3')).cfg.W===44);
+      await q.click(H+'.hd [data-a=askOpen]');
+      await p.waitForFunction(()=>__mesai.state().S.ui.ask===true);
+      const field=q.locator(H+'[data-e=ask]');
+      await p.evaluate(()=>{
+        navigator.locks.request('mesai.v3',()=>new Promise(resolve=>{window.__unlockMesaiSave=resolve;}));
+      });
+      await p.waitForFunction(()=>typeof window.__unlockMesaiSave==='function');
+      await set(p,'W','48');
+      await field.fill('cuma izin');
+      await field.press('Enter');
+      await until(q,async()=>/Kaydediliyor/.test(await sh(q,'.ans')),3000,'waiting for leave write · '+await sh(q,'.ans'));
+      await p.evaluate(()=>{window.__mesai.poke();window.__unlockMesaiSave();});
+      await until(q,async()=>/İzin kaydedildi/.test(await sh(q,'.ans')),3000,'waiting for leave confirmation · '+await sh(q,'.ans'));
+      await p.waitForFunction(()=>{
+        const saved=JSON.parse(localStorage.getItem('mesai.v3'));
+        return saved.cfg.W===48 && saved.ppl['1001'].types['2026-11-06']==='izin';
+      });
+    } finally { await p.ctx.close(); }
   });
   await test('Reliability: focused partial time survives a second tab changing settings',async()=>{
     const p=await open();try{await p.click(H+'[data-a="sel"][data-v="2"]');await p.fill(H+'[data-e="e"]','19:');const q=await page(NOV3,{ctx:p.ctx});await q.evaluate(()=>portal.open());await click(q);await ready(q);await settings(q);await set(q,'W','48');await until(p,async()=>(await state(p)).cfg.W===48);assert.equal(await p.inputValue(H+'[data-e="e"]'),'19:');await p.fill(H+'[data-e="e"]','19:45');await p.press(H+'[data-e="e"]','Enter');assert.equal((await state(p)).ppl['1001'].plan['2026-11-04'].e,1185);}finally{await p.ctx.close();}

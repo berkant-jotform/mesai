@@ -574,8 +574,9 @@
 [data-motion-off] .sy-selection-lens{transition:none}
 .sy-plan-week{flex-basis:100%;color:var(--body);font-weight:600}
 .sy-plan-week b{color:var(--ink);font-weight:750}
+.sy-friday{display:block;font-size:12px;line-height:1.4}
 .sy-daily-ref{font-size:11px;line-height:1.35;color:var(--mut)}
-.sy .sy-big.sy-week-gap{font-size:clamp(24px,3vw,37px);overflow-wrap:anywhere}
+.cst small.exit-detail{white-space:normal;overflow-wrap:anywhere}
 @media(prefers-reduced-transparency:reduce){
   .TH-saydam .sy :is(.sy-bar,.sy-tb .sy-gl,.sy-ask,.plan-jump),.sy-selection-lens{background:#f8faff;-webkit-backdrop-filter:none;backdrop-filter:none}
   .TH-saydam .sy .sy-selection-lens{background:#fff}

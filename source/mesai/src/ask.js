@@ -15,6 +15,13 @@ var MesaiAsk = (function () {
     for (var i = 0; i < DAYS.length; i++) if (DAYS[i][0].test(f)) return DAYS[i][1];
     return null;
   }
+  // A complete statement can save leave. Questions and multi-day scenarios stay previews.
+  function leaveStatement(text, todayDow) {
+    var f = fold(text).replace(/[.!]+$/, '').trim();
+    if (!/^(BUGUN|YARIN|PAZARTESI|SALI|CARSAMBA|PERSEMBE|CUMA|CUMARTESI|PAZAR)( GUNU)? (IZIN|IZINLIYIM|IZINLI OLACAGIM|IZIN ALDIM|IZIN YAZ|IZIN OLARAK KAYDET)$/.test(f) &&
+        !/^(TODAY|TOMORROW|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY) (OFF|DAY OFF|ON LEAVE)$/.test(f)) return null;
+    return /^(YARIN|TOMORROW) /.test(f) ? todayDow + 1 : dayOf(f, todayDow);
+  }
   function durations(f) {
     f = f.replace(/\b(\d{1,2})\s*H\s*(\d{1,2})\s*(?:M(?:IN(?:UTE)?S?)?)?\b/g, '$1 SAAT $2 DK');
     var m = 0, any = false, r;
@@ -57,6 +64,6 @@ var MesaiAsk = (function () {
     if (WHEN.test(f) || day != null) return { kind: 'when', day: day != null ? day : 4 };
     return null;
   }
-  return { parse: parse, fold: fold, times: times, durations: durations };
+  return { parse: parse, fold: fold, times: times, durations: durations, leaveStatement: leaveStatement };
 })();
 if (typeof module !== 'undefined') module.exports = MesaiAsk;

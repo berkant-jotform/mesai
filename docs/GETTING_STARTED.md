@@ -47,7 +47,7 @@ Başlıktaki **Ayarlar**’dan haftalık/günlük hedef, varsayılan giriş, ça
 - `her gün 9 saat 30 dakika çalışsam cuma kaçta çıkarım?`
 - `cuma 14’te çıkmak için her gün kaç saat kalmalıyım?`
 
-Cevabın altındaki **Anladığım** etiketlerini kontrol et. Soru sormak planını değiştirmez; kaydetmek için **Uygula** gerekir. **Ters hesap**, önce çıkmak istediğin günü/saati seçip kalan sürenin nasıl tamamlanacağını hesaplamak içindir.
+Cevabın altındaki **Anladığım** etiketlerini kontrol et. **Cuma izin** yazıp Enter’a bastığında izin planına kaydedilir. **Cuma izin alsam?** bir önizleme açar. Bu planı kaydetmek için **Uygula**’ya bas. **Ters hesap**, önce çıkmak istediğin günü/saati seçip kalan sürenin nasıl tamamlanacağını hesaplamak içindir.
 
 ### Pencere ve görünümler
 
@@ -114,7 +114,7 @@ Open **Ask**, or press **⌥M / Alt+M**. Try:
 - `if I work 9 hours 30 minutes each day, when do I leave Friday?`
 - `leave Friday at 14:00, how many hours per day?`
 
-Check the interpreted assumptions. Asking does not save a plan; choose **Apply** to save a proposal. **Reverse** starts with your desired departure day/time and calculates how to complete the remaining hours.
+Check the interpreted assumptions. Enter **Friday off** to save leave directly. **What if I take Friday off?** opens a preview. Choose **Apply** to save the proposal. **Reverse** starts with your desired departure day/time and calculates how to complete the remaining hours.
 
 ### Window and appearance
 

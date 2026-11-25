@@ -4,6 +4,12 @@ ARGE Portal çalışma saatlerini hesapla ve haftanı planla. / Calculate work h
 
 **Version:** [version.json](version.json) · Tarayıcı yer işareti aracı. Önizleme örnek veri kullanır; gerçek portal hesabı gerektirmez.
 
+## 3.6.6
+
+- Sekmeler aynı anda kaydetmeye çalıştığında izin, plan ve ayarlar sırayla kaydedilir. Yeni yer işaretini ekledikten sonra açık ARGE sekmelerini de yenile.
+- Sor’da **Cuma izin** yazınca izin kaydedilir. **Cuma izin alsam?** bir önizleme açar. Kaydın sonucunu Sor’da görürsün.
+- Büyük saat bugünkü çıkışını ya da seçili günün planını gösterir. Cuma çıkışı ve günlük hedeften fark daha küçük gösterilir.
+
 ## 3.6.5
 
 - Saydam’da planladığın çıkış öne çıkar. Çıkış planı yoksa haftalık hedefin ne zaman dolacağı öne çıkar, 9 saat bilgisi küçük kalır.

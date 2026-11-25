@@ -48,10 +48,30 @@ var MesaiPersistence = function (storage, key, initial, appearance) {
   }
   return {
     restore: restore,
+    pending: function (current) {
+      var result = [];
+      pending(base, snapshot(current), [], result);
+      return result;
+    },
+    recover: function (current, edits) {
+      var next = copy(current);
+      edits.forEach(function (edit) {
+        var path = edit[0], parent = next;
+        for (var i = 0; i < path.length - 1; i++) {
+          var k = path[i];
+          if (!object(parent[k])) parent[k] = {};
+          parent = parent[k];
+        }
+        var last = path[path.length - 1];
+        if (edit.length === 1) delete parent[last]; else parent[last] = edit[1];
+      });
+      return MesaiPersistence.valid(next) ? restore(next) : current;
+    },
     replace: function(current){if(!MesaiPersistence.valid(current))throw Error('Invalid backup');var next=snapshot(current);storage.setItem(key,JSON.stringify(next));base=copy(next);return restore(next);},
     save: function (current) {
-      var next = merge(base, snapshot(current), latest());
-      storage.setItem(key, JSON.stringify(next));
+      var saved = latest(), next = merge(base, snapshot(current), saved);
+      var json = JSON.stringify(next);
+      if (json !== JSON.stringify(saved)) storage.setItem(key, json);
       base = copy(next); // Only advance after a successful write; a failed edit can be retried.
       return restore(next);
     },
@@ -61,6 +81,17 @@ var MesaiPersistence = function (storage, key, initial, appearance) {
       return restore(next);
     }
   };
+  function pending(before, local, path, edits) {
+    if (JSON.stringify(before) === JSON.stringify(local)) return;
+    if (object(local) && (object(before) || before === undefined)) {
+      before = before || {};
+      Array.from(new Set(Object.keys(before).concat(Object.keys(local)))).forEach(function (k) {
+        if (k !== '__proto__' && k !== 'constructor' && k !== 'prototype') pending(before[k], local[k], path.concat(k), edits);
+      });
+    } else {
+      edits.push(local === undefined ? [path] : [path, local]);
+    }
+  }
 };
 // Validate before touching the live state. A wrong file must never partially restore.
 MesaiPersistence.valid = function (s) {
